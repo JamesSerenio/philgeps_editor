@@ -3,7 +3,70 @@ import { Routes, Route, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from './supabase'
 import './App.css'
 
+// Verified against live philgeps_posts rows and Flutter's ProjectPost model.
+function getDeadline(project) {
+  return project.closing_date || project.closingDate || null
+}
+
+function parseProjectDate(value) {
+  if (!value || typeof value !== 'string') return null
+  const text = value.trim()
+  // Supabase supplies timezone-aware ISO dates; unzoned ISO values are Philippine time.
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(text)
+    ? `${text}T00:00:00+08:00`
+    : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(text)
+      ? `${text}+08:00` : text
+  const date = new Date(normalized)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function formatDateTime(value, fallback = 'Not available') {
+  const date = parseProjectDate(value)
+  if (!date) return value ? 'Date unavailable' : fallback
+  const day = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+  const time = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: true }).format(date)
+  return `${day} · ${time}`
+}
+
+function getTimeRemaining(value, now) {
+  const date = parseProjectDate(value)
+  if (!date) return value ? 'Date unavailable' : 'No deadline'
+  const remaining = date.getTime() - now
+  if (remaining <= 0) return 'Expired'
+  const minutes = Math.floor(remaining / 60000)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+  if (days > 0) return `Closes in ${days}d ${hours % 24}h`
+  if (hours > 0) return `Closes in ${hours}h ${minutes % 60}m`
+  return minutes > 0 ? `Closes in ${minutes}m` : 'Closes in <1m'
+}
+
+function formatPeso(value) {
+  if (value == null || String(value).trim() === '') return 'Not available'
+  const amount = typeof value === 'number' ? value : Number(String(value).replace(/PHP|₱|,/gi, '').trim())
+  return Number.isFinite(amount) ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount) : 'Not available'
+}
+
+function DashboardIcon({ name, ...props }) {
+  const paths = {
+    folder: 'M3 7V5a1 1 0 0 1 1-1h5l2 3h9a1 1 0 0 1 1 1v11H3Z',
+    clock: 'M12 8v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
+    spark: 'm12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z',
+    search: 'm21 21-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
+    refresh: 'M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-2l2 3M4 16l2 3a7 7 0 0 0 12-2',
+    arrow: 'M5 12h14m-6-6 6 6-6 6',
+    pin: 'M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0ZM14 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0',
+  }
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}><path d={paths[name] || paths.folder} /></svg>
+}
 function ProjectList() {
+  const [search, setSearch] = useState('')
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30000)
+    return () => window.clearInterval(timer)
+  }, [])
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -69,105 +132,80 @@ function ProjectList() {
       cancelled = true
     }
   }, [])
+  const nearDeadline = projects.filter((project) => {
+    const deadline = parseProjectDate(getDeadline(project))
+    const remaining = deadline ? deadline.getTime() - now : -1
+    return remaining > 0 && remaining <= 72 * 60 * 60 * 1000
+  }).length
+  const newProjects = projects.filter((project) => project.status === 'new').length
+  const query = search.trim().toLowerCase()
+  const visibleProjects = projects.filter((project) => [
+    project.title, project.project_title, project.projectTitle,
+    project.reference_number, project.reference_no, project.referenceNumber,
+    project.procuring_entity, project.entity, project.lgu,
+    project.classification, project.area_of_delivery,
+  ].some((value) => String(value ?? '').toLowerCase().includes(query)))
 
   return (
     <div className="app">
-      <header className="header"><div className="header-inner">
-        <div>
-          <h1>PhilGEPS Bid Docs Editor</h1>
-          <p>Projects marked for bidding document preparation</p>
+      <header className="header">
+        <div className="header-inner">
+          <div><span className="eyebrow">PhilGEPS · Bid Docs Editor</span><h1>Bidding Documents</h1><p>Projects selected for preparation</p></div>
+          <button className="button-secondary refresh-button" onClick={loadProjects} disabled={loading}><DashboardIcon name="refresh" />{loading ? 'Refreshing…' : 'Refresh'}</button>
         </div>
-
-        <button className="button-secondary" onClick={loadProjects} disabled={loading}>{loading ? 'Refreshing…' : '↻ Refresh'}</button>
-      </div></header>
-
+      </header>
       <main className="project-content" aria-busy={loading}>
-      {loading && (
-        <div className="message" role="status">
-          Loading projects...
+        <section className="summary-grid" aria-label="Bidding document summary">
+          {[
+            { label: 'Total Bidding Docs', count: projects.length, note: 'Selected for preparation', icon: 'folder', style: 'total' },
+            { label: 'Near Deadline', count: nearDeadline, note: 'Closing within 72 hours', icon: 'clock', style: 'near' },
+            { label: 'New Projects', count: newProjects, note: 'Recently flagged as new', icon: 'spark', style: 'new' },
+          ].map((stat) => <div className={`summary-card ${stat.style}`} key={stat.label}><div className="summary-top"><h2>{stat.label}</h2><span className="summary-icon"><DashboardIcon name={stat.icon} /></span></div><strong>{loading || error ? '—' : stat.count}</strong><p>{stat.note}</p></div>)}
+        </section>
+        <section className="search-panel" aria-labelledby="search-title">
+          <h2 id="search-title">Search Projects</h2>
+          <p>Find a project by title, LGU, reference number, entity, or delivery area.</p>
+          <div className="search-field"><DashboardIcon name="search" /><input type="search" aria-label="Search bidding document projects" placeholder="Search project title, LGU, reference no., procuring entity…" value={search} onChange={(event) => setSearch(event.target.value)} /></div>
+        </section>
+        {loading && <div className="message" role="status">Loading projects…</div>}
+        {error && <div className="error" role="alert">Unable to load projects: {error}</div>}
+        {!loading && !error && <p className="results-summary" role="status">Showing <span>Bidding Documents</span> {visibleProjects.length} {visibleProjects.length === 1 ? 'result' : 'results'}</p>}
+        <div className="section-heading"><div><h2>Projects for preparation</h2><p>Manage your selected PhilGEPS procurement documents</p></div><span>All times in Philippine time</span></div>
+        {!loading && !error && projects.length === 0 && <div className="message">No projects selected for preparation. Mark a project for bidding documents, then refresh.</div>}
+        {!loading && !error && projects.length > 0 && visibleProjects.length === 0 && <div className="message">No projects match “{search}”. Try another title, reference number, or location.</div>}
+        <div className="project-grid">
+          {visibleProjects.map((project) => {
+            const title = project.title || project.project_title || project.projectTitle || 'Untitled Project'
+            const reference = project.reference_number || project.reference_no || project.referenceNumber || '—'
+            const entity = project.procuring_entity || project.entity || '—'
+            const deadline = getDeadline(project)
+            const countdown = getTimeRemaining(deadline, now)
+            const tags = [
+              { label: 'Municipality / LGU', value: project.lgu, icon: 'folder', style: 'lgu-chip' },
+              { label: 'Procurement category', value: project.classification, icon: null },
+              { label: 'Delivery area', value: project.area_of_delivery, icon: 'pin' },
+            ].filter((tag) => tag.value && String(tag.value).trim())
+            return (
+              <article className="project-card" key={project.id}>
+                <div className="card-badges"><span className="badge">BIDDING DOC</span><span className={`deadline-badge ${countdown === 'Expired' ? 'expired' : ''}`}><DashboardIcon name="clock" />{countdown}</span></div>
+                <h2>{title}</h2>
+                <p className="project-entity">{entity}</p>
+                {tags.length > 0 && <div className="project-tags">{tags.map((tag) => <span className={`project-chip ${tag.style || ''}`} key={tag.label} title={tag.label}>{tag.icon && <DashboardIcon name={tag.icon} />}{tag.value}</span>)}</div>}
+                <dl className="project-info">
+                  <div><dt>Reference No.</dt><dd>{reference}</dd></div>
+                  <div><dt>ABC</dt><dd className="project-amount">{formatPeso(project.abc ?? project.ebc)}</dd></div>
+                  <div><dt>Posted</dt><dd>{formatDateTime(project.posting_date || project.postingDate)}</dd></div>
+                  <div><dt>Closing / Deadline</dt><dd className="project-closing">{formatDateTime(deadline, 'No deadline')}</dd></div>
+                </dl>
+                <div className="card-actions"><button className="edit-button" onClick={() => navigate(`/project/${project.id}`)}>Open Editor <DashboardIcon name="arrow" /></button></div>
+              </article>
+            )
+          })}
         </div>
-      )}
-
-      {error && (
-        <div className="error" role="alert">
-          Supabase error: {error}
-        </div>
-      )}
-
-      {!loading && !error && projects.length === 0 && (
-        <div className="message" role="status">
-          No projects ready for document preparation. Mark a project for bidding documents, then refresh this page.
-        </div>
-      )}
-
-      <div className="section-heading"><h2>Projects</h2><span>{projects.length} {projects.length === 1 ? 'project' : 'projects'}</span></div><div className="project-grid">
-        {projects.map((project) => {
-          const title =
-            project.title ||
-            project.project_title ||
-            project.projectTitle ||
-            'Untitled Project'
-
-          const reference =
-            project.reference_number ||
-            project.reference_no ||
-            project.referenceNumber ||
-            '—'
-
-          const entity =
-            project.procuring_entity ||
-            project.entity ||
-            '—'
-
-          return (
-            <div
-              className="project-card"
-              key={project.id}
-            >
-              <div className="badge">
-                Bidding Doc
-              </div>
-
-              <h2>{title}</h2>
-
-              <div className="details">
-                <p>
-                  <strong>Reference:</strong>{' '}
-                  {reference}
-                </p>
-
-                <p>
-                  <strong>Procuring Entity:</strong>{' '}
-                  {entity}
-                </p>
-
-                <p>
-                  <strong>ABC:</strong>{' '}
-                  {project.abc || project.ebc || '—'}
-                </p>
-
-                <p>
-                  <strong>Deadline:</strong>{' '}
-                  {project.deadline || '—'}
-                </p>
-              </div>
-
-              <button
-                className="edit-button"
-                onClick={() =>
-                  navigate(`/project/${project.id}`)
-                }
-              >
-                Open Editor
-              </button>
-            </div>
-          )
-        })}
-      </div></main>
+      </main>
     </div>
   )
 }
-
 function ProjectEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -274,7 +312,7 @@ function ProjectEditor() {
             <label htmlFor="project-reference">Reference Number</label><input id="project-reference" value={referenceNumber} readOnly />
             <label htmlFor="project-entity">Procuring Entity</label><textarea id="project-entity" value={procuringEntity} readOnly rows={2} />
             <label htmlFor="project-abc">ABC</label><input id="project-abc" value={project?.abc || project?.ebc || ''} readOnly />
-            <label htmlFor="project-deadline">Deadline</label><input id="project-deadline" value={project?.deadline || '—'} readOnly />
+            <label htmlFor="project-deadline">Deadline</label><input id="project-deadline" value={formatDateTime(getDeadline(project), 'No deadline')} readOnly />
           </section>
           <nav className="document-nav" aria-label="Project documents">
             <h2 className="eyebrow">Project documents</h2>
