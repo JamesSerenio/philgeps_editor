@@ -6,12 +6,24 @@ import { projectDocuments } from '../lib/projectDocuments'
 import { getDeadline, formatDateTime } from '../lib/projectFormatters'
 import ProjectSidebar from '../components/ProjectSidebar'
 import PdfPreview from '../components/PdfPreview'
+import TechnicalSpecsEditor from '../editors/TechnicalSpecsEditor'
+import ScheduleEditor from '../editors/ScheduleEditor'
+import { createInitialScheduleItems } from '../lib/scheduleRequirements'
+import { createTechnicalItem } from '../lib/technicalSpecs'
+import { pdfTemplates } from '../lib/pdfTemplates'
 
 export default function ProjectEditorPage() {
+  const { id } = useParams()
+  return <ProjectEditorContent key={id} />
+}
+
+function ProjectEditorContent() {
   const { id } = useParams()
   const navigate = useNavigate()
 
   const [activeDocument, setActiveDocument] = useState('bidSecurity')
+  const [scheduleRequirements, setScheduleRequirements] = useState(createInitialScheduleItems)
+  const [technicalSpecs, setTechnicalSpecs] = useState(() => [createTechnicalItem(1)])
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -114,7 +126,24 @@ export default function ProjectEditorPage() {
           </section>
         </ProjectSidebar>
         <main className="editor-workspace preview-workspace">
-          <div className="workspace-heading"><span>Project documents <span aria-hidden="true">/</span> <strong>{document.title}</strong></span><span className="draft-label">Preview only</span></div>
+          <div className="workspace-heading"><span>Project documents <span aria-hidden="true">/</span> <strong>{document.title}</strong></span><span className="draft-label">{['technical', 'schedule'].includes(activeDocument) ? 'Local draft' : 'Preview only'}</span></div>
+          {activeDocument === 'technical' ? (
+            <div className="technical-split">
+              <TechnicalSpecsEditor project={project} value={technicalSpecs} onChange={setTechnicalSpecs} />
+              <section className="document-card technical-reference" aria-label="Technical specifications reference">
+                <p className="pdf-preview-notice">Static visual reference only. Your draft does not change this PDF.</p>
+                <PdfPreview src={pdfTemplates.reference} title="Technical Specifications reference" />
+              </section>
+            </div>
+          ) : activeDocument === 'schedule' ? (
+            <div className="technical-split">
+              <ScheduleEditor project={project} value={scheduleRequirements} onChange={setScheduleRequirements} />
+              <section className="document-card technical-reference" aria-label="Schedule of requirements reference">
+                <p className="pdf-preview-notice">Static visual reference only. Your draft does not change this PDF.</p>
+                <PdfPreview src={pdfTemplates.reference} title="Schedule of Requirements reference" />
+              </section>
+            </div>
+          ) : (
           <section className="document-card preview-document-card" aria-labelledby="document-title">
             <header className="document-header">
               <div><span className="eyebrow">Bidding documents</span><h2 id="document-title">{document.title}</h2><p>{projectTitle}</p><p className="reference">Reference No. {referenceNumber}</p></div>
@@ -122,6 +151,7 @@ export default function ProjectEditorPage() {
             {src && <p className="pdf-preview-notice">{isReference ? 'Visual reference only. This PDF is not a final document or a generation template.' : 'Template preview only. Project information has not been applied to this PDF.'}</p>}
             <PdfPreview src={src} title={document.title} />
           </section>
+          )}
         </main>
       </div>
     </div>

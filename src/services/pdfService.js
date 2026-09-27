@@ -4,7 +4,7 @@ import { pdfTemplates } from '../lib/pdfTemplates'
 const previewSources = {
   bidSecurity: pdfTemplates.bidSecurity,
   omnibus: pdfTemplates.initao,
-  technicalSpecs: pdfTemplates.reference,
+  technical: pdfTemplates.reference,
   schedule: pdfTemplates.reference,
   manpower: pdfTemplates.reference,
   afterSales: pdfTemplates.reference,

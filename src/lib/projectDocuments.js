@@ -1,6 +1,6 @@
 export const projectDocuments = [
   { id: 'checklist', title: 'Checklist' },
-  { id: 'technicalSpecs', title: 'Technical Specifications' },
+  { id: 'technical', title: 'Technical Specifications' },
   { id: 'schedule', title: 'Schedule of Requirements' },
   { id: 'bidSecurity', title: 'Bid Securing Declaration' },
   { id: 'omnibus', title: 'Omnibus Sworn Statement' },
