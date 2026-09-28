@@ -250,3 +250,13 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .save-saving, .save-unsaved { color: var(--orange); }
 .save-error, .save-error-detail { color: var(--danger); }
 .save-error-detail { width: 100%; overflow-wrap: anywhere; }
+
+.declaration-fields { padding: 16px 20px; }
+.declaration-fields fieldset { margin: 0 0 20px; padding: 14px; border: 1px solid var(--border); border-radius: 8px; min-width: 0; }
+.declaration-fields legend { padding: 0 6px; font-size: 13px; font-weight: 600; color: var(--green); }
+.declaration-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.declaration-fields label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--muted); min-width: 0; }
+.declaration-wide { grid-column: 1 / -1; }
+.declaration-fields select { width: 100%; padding: 10px; font: inherit; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; }
+.declaration-fields select:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+@media (max-width: 600px) { .declaration-grid { grid-template-columns: minmax(0, 1fr); } }

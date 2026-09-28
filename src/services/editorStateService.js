@@ -1,9 +1,17 @@
 import { supabase } from '../supabase'
 
-const fields = ['technical_specs', 'schedule_requirements']
+const fields = ['technical_specs', 'schedule_requirements', 'bid_security', 'omnibus']
 
 // Reject unsafe data rather than silently dropping functions or event objects.
 export function copyEditorItems(value, section) {
+  if (section === 'bid_security' || section === 'omnibus') {
+    if (!value || Object.getPrototypeOf(value) !== Object.prototype) throw new Error('Invalid declaration data.')
+    if (!['old', 'initao_lgu'].includes(value.templateVariant)) throw new Error('Invalid template variant.')
+    return Object.fromEntries(Object.entries(value).map(([key, field]) => {
+      if (typeof field !== 'string') throw new Error('Invalid declaration field: ' + key)
+      return [key, field]
+    }))
+  }
   if (!Array.isArray(value)) throw new Error('Editor data must be an array.')
   const copyString = (object, key) => {
     if (typeof object?.[key] !== 'string') throw new Error('Invalid editor field: ' + key)
@@ -49,4 +57,19 @@ export function saveTechnicalSpecs(projectId, value) {
 
 export function saveScheduleRequirements(projectId, value) {
   return saveEditorState(projectId, { schedule_requirements: value })
+}
+
+export function saveBidSecurity(projectId, value) {
+  return saveEditorState(projectId, { bid_security: value })
+}
+
+export function saveOmnibus(projectId, value) {
+  return saveEditorState(projectId, { omnibus: value })
+}
+
+export async function hasDeclarationColumns() {
+  const { error } = await supabase.from('bid_docs_editor_state').select('bid_security,omnibus').limit(0)
+  if (error && ['42703', 'PGRST204'].includes(error.code)) return false
+  if (error) throw error
+  return true
 }

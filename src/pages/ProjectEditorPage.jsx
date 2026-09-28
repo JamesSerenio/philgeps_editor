@@ -8,8 +8,13 @@ import ProjectSidebar from '../components/ProjectSidebar'
 import PdfPreview from '../components/PdfPreview'
 import TechnicalSpecsEditor from '../editors/TechnicalSpecsEditor'
 import ScheduleEditor from '../editors/ScheduleEditor'
+import BidSecurityEditor from '../editors/BidSecurityEditor'
+import OmnibusEditor from '../editors/OmnibusEditor'
+import { createInitialBidSecurityState } from '../lib/bidSecurity'
+import { createInitialOmnibusState } from '../lib/omnibus'
 import { createInitialScheduleItems } from '../lib/scheduleRequirements'
 import { createTechnicalItem } from '../lib/technicalSpecs'
+import { hasDeclarationColumns } from '../services/editorStateService'
 import useEditorPersistence from '../hooks/useEditorPersistence'
 import { pdfTemplates } from '../lib/pdfTemplates'
 
@@ -25,10 +30,15 @@ function ProjectEditorContent() {
   const [activeDocument, setActiveDocument] = useState('bidSecurity')
   const [scheduleRequirements, setScheduleRequirements] = useState(createInitialScheduleItems)
   const [technicalSpecs, setTechnicalSpecs] = useState(() => [createTechnicalItem(1)])
+  const [bidSecurityState, setBidSecurityState] = useState(null)
+  const [omnibusState, setOmnibusState] = useState(null)
+  const [declarationsReady, setDeclarationsReady] = useState(false)
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const persistence = useEditorPersistence(id, (saved) => {
+    setBidSecurityState(saved?.bid_security ?? null)
+    setOmnibusState(saved?.omnibus ?? null)
     if (saved?.technical_specs != null) setTechnicalSpecs(saved.technical_specs)
     if (saved?.schedule_requirements != null) setScheduleRequirements(saved.schedule_requirements)
   })
@@ -53,7 +63,9 @@ function ProjectEditorContent() {
 
         if (error) throw error
 
+        const columnsReady = await hasDeclarationColumns()
         if (!cancelled) {
+          setDeclarationsReady(columnsReady)
           setProject(data)
         }
       } catch (err) {
@@ -77,6 +89,11 @@ function ProjectEditorContent() {
       cancelled = true
     }
   }, [id])
+
+  const bidSecurityValue = bidSecurityState ?? createInitialBidSecurityState(project || {})
+  const omnibusValue = omnibusState ?? createInitialOmnibusState(project || {})
+  function changeBidSecurity(value) { setBidSecurityState(value); if (declarationsReady) persistence.change('bid_security', value) }
+  function changeOmnibus(value) { setOmnibusState(value); if (declarationsReady) persistence.change('omnibus', value) }
 
   const document = projectDocuments.find((item) => item.id === activeDocument)
   const { src, isReference } = getDocumentPreview(activeDocument)
@@ -145,8 +162,16 @@ function ProjectEditorContent() {
           </section>
         </ProjectSidebar>
         <main className="editor-workspace preview-workspace">
-          <div className="workspace-heading"><span>Project documents <span aria-hidden="true">/</span> <strong>{document.title}</strong></span><span className="draft-label">{['technical', 'schedule'].includes(activeDocument) ? 'Autosave enabled' : 'Preview only'}</span></div>
-          {activeDocument === 'technical' ? (
+          <div className="workspace-heading"><span>Project documents <span aria-hidden="true">/</span> <strong>{document.title}</strong></span><span className="draft-label">{['bidSecurity', 'omnibus'].includes(activeDocument) && !declarationsReady ? 'Migration required' : ['technical', 'schedule', 'bidSecurity', 'omnibus'].includes(activeDocument) ? 'Autosave enabled' : 'Preview only'}</span></div>
+          {activeDocument === 'bidSecurity' || activeDocument === 'omnibus' ? (
+            <div className="technical-split">
+              {activeDocument === 'bidSecurity' ? <BidSecurityEditor project={project} value={bidSecurityValue} onChange={changeBidSecurity} onSave={declarationsReady ? (value) => persistence.save('bid_security', value) : undefined} saveStatus={declarationsReady ? persistence.status : 'Local draft - migration required'} /> : <OmnibusEditor project={project} value={omnibusValue} onChange={changeOmnibus} onSave={declarationsReady ? (value) => persistence.save('omnibus', value) : undefined} saveStatus={declarationsReady ? persistence.status : 'Local draft - migration required'} />}
+              <section className="document-card technical-reference" aria-label="Declaration template preview">
+                <p className="pdf-preview-notice">Template preview only. Form values are not applied to the PDF.</p>
+                <PdfPreview title={document.title} src={activeDocument === 'bidSecurity' ? (bidSecurityValue.templateVariant === 'initao_lgu' ? pdfTemplates.initao : pdfTemplates.bidSecurity) : (omnibusValue.templateVariant === 'initao_lgu' ? pdfTemplates.initao : pdfTemplates.bidocs)} />
+              </section>
+            </div>
+          ) : activeDocument === 'technical' ? (
             <div className="technical-split">
               <TechnicalSpecsEditor project={project} value={technicalSpecs} onChange={changeTechnical} onSave={(value) => persistence.save('technical_specs', value)} />
               <section className="document-card technical-reference" aria-label="Technical specifications reference">

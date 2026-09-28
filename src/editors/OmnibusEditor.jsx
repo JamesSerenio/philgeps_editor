@@ -1,4 +1,5 @@
-// Placeholder for a future document editor; no PDF generation yet.
-export default function OmnibusEditor() {
-  return <div className="editor-placeholder">Omnibus Sworn Statement Editor</div>
+import DeclarationForm from '../components/DeclarationForm'
+
+export default function OmnibusEditor(props) {
+  return <DeclarationForm {...props} title="Omnibus Sworn Statement" designationField="designation" />
 }

@@ -1,4 +1,5 @@
-// Placeholder for a future document editor; no PDF generation yet.
-export default function BidSecurityEditor() {
-  return <div className="editor-placeholder">Bid Securing Declaration Editor</div>
+import DeclarationForm from '../components/DeclarationForm'
+
+export default function BidSecurityEditor(props) {
+  return <DeclarationForm {...props} title="Bid Securing Declaration" designationField="representativeDesignation" />
 }
