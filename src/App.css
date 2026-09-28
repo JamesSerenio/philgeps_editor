@@ -243,3 +243,10 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 /* Keep the flexible delivery period readable without altering Technical Specs. */
 .schedule-editor .technical-table { min-width: 720px; }
 .schedule-editor .technical-compliance { width: 210px; }
+
+.editor-save-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 300px; font-size: 12px; }
+.save-status { color: var(--muted); white-space: nowrap; }
+.save-saved { color: var(--green); }
+.save-saving, .save-unsaved { color: var(--orange); }
+.save-error, .save-error-detail { color: var(--danger); }
+.save-error-detail { width: 100%; overflow-wrap: anywhere; }

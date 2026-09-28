@@ -10,6 +10,7 @@ import TechnicalSpecsEditor from '../editors/TechnicalSpecsEditor'
 import ScheduleEditor from '../editors/ScheduleEditor'
 import { createInitialScheduleItems } from '../lib/scheduleRequirements'
 import { createTechnicalItem } from '../lib/technicalSpecs'
+import useEditorPersistence from '../hooks/useEditorPersistence'
 import { pdfTemplates } from '../lib/pdfTemplates'
 
 export default function ProjectEditorPage() {
@@ -27,6 +28,18 @@ function ProjectEditorContent() {
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const persistence = useEditorPersistence(id, (saved) => {
+    if (saved?.technical_specs != null) setTechnicalSpecs(saved.technical_specs)
+    if (saved?.schedule_requirements != null) setScheduleRequirements(saved.schedule_requirements)
+  })
+  function changeTechnical(value) {
+    setTechnicalSpecs(value)
+    persistence.change('technical_specs', value)
+  }
+  function changeSchedule(value) {
+    setScheduleRequirements(value)
+    persistence.change('schedule_requirements', value)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -68,7 +81,7 @@ function ProjectEditorContent() {
   const document = projectDocuments.find((item) => item.id === activeDocument)
   const { src, isReference } = getDocumentPreview(activeDocument)
 
-  if (loading) {
+  if (loading || (!persistence.ready && !persistence.loadError)) {
     return (
       <div className="editor-page">
         Loading project...
@@ -76,7 +89,7 @@ function ProjectEditorContent() {
     )
   }
 
-  if (error) {
+  if (error || persistence.loadError) {
     return (
       <div className="editor-page">
         <button onClick={() => navigate('/')}>
@@ -84,8 +97,9 @@ function ProjectEditorContent() {
         </button>
 
         <p className="error" role="alert">
-          {error}
+          {error || persistence.loadError}
         </p>
+        <button className="button-secondary" onClick={() => window.location.reload()}>Retry Load</button>
       </div>
     )
   }
@@ -110,9 +124,14 @@ function ProjectEditorContent() {
   return (
     <div className="editor-page">
       <header className="editor-topbar">
-        <button className="button-secondary back-button" onClick={() => navigate('/')}>← Back</button>
+        <button className="button-secondary back-button" onClick={async () => { try { await persistence.retry(); navigate('/') } catch { /* Keep the local draft available for retry. */ } }}>← Back</button>
         <div className="editor-heading"><span className="eyebrow">Bid document editor</span><h1>{projectTitle}</h1><p>Reference No. {referenceNumber}</p></div>
         <span className="badge">Bidding Doc</span>
+        <div className="editor-save-status">
+          <span role="status" className={`save-status save-${persistence.status.split(' ')[0].replace('...', '').toLowerCase()}`}>{persistence.status}</span>
+          {persistence.status === 'Error saving' && <button className="button-secondary" onClick={() => persistence.retry().catch(() => {})}>Retry Save</button>}
+          {persistence.saveError && <span className="save-error-detail">{persistence.saveError}</span>}
+        </div>
       </header>
       <div className="editor-layout">
         <ProjectSidebar activeDocument={activeDocument} onSelectDocument={setActiveDocument}>
@@ -126,10 +145,10 @@ function ProjectEditorContent() {
           </section>
         </ProjectSidebar>
         <main className="editor-workspace preview-workspace">
-          <div className="workspace-heading"><span>Project documents <span aria-hidden="true">/</span> <strong>{document.title}</strong></span><span className="draft-label">{['technical', 'schedule'].includes(activeDocument) ? 'Local draft' : 'Preview only'}</span></div>
+          <div className="workspace-heading"><span>Project documents <span aria-hidden="true">/</span> <strong>{document.title}</strong></span><span className="draft-label">{['technical', 'schedule'].includes(activeDocument) ? 'Autosave enabled' : 'Preview only'}</span></div>
           {activeDocument === 'technical' ? (
             <div className="technical-split">
-              <TechnicalSpecsEditor project={project} value={technicalSpecs} onChange={setTechnicalSpecs} />
+              <TechnicalSpecsEditor project={project} value={technicalSpecs} onChange={changeTechnical} onSave={(value) => persistence.save('technical_specs', value)} />
               <section className="document-card technical-reference" aria-label="Technical specifications reference">
                 <p className="pdf-preview-notice">Static visual reference only. Your draft does not change this PDF.</p>
                 <PdfPreview src={pdfTemplates.reference} title="Technical Specifications reference" />
@@ -137,7 +156,7 @@ function ProjectEditorContent() {
             </div>
           ) : activeDocument === 'schedule' ? (
             <div className="technical-split">
-              <ScheduleEditor project={project} value={scheduleRequirements} onChange={setScheduleRequirements} />
+              <ScheduleEditor project={project} value={scheduleRequirements} onChange={changeSchedule} onSave={(value) => persistence.save('schedule_requirements', value)} />
               <section className="document-card technical-reference" aria-label="Schedule of requirements reference">
                 <p className="pdf-preview-notice">Static visual reference only. Your draft does not change this PDF.</p>
                 <PdfPreview src={pdfTemplates.reference} title="Schedule of Requirements reference" />

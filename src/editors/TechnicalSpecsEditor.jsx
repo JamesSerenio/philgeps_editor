@@ -70,7 +70,7 @@ export default function TechnicalSpecsEditor({ project, value, onChange, onSave 
         {value.length === 0 && <p className="message">No items. Select + Add Item to start drafting.</p>}
       </div>
       <footer className="technical-save">
-        <p>Local draft only. Leaving this project or refreshing clears your changes. Save validates and logs the draft; database saving is not available yet.</p>
+        <p>{onSave ? 'Changes save automatically after you stop typing. Save sends this section immediately. Check the save status before leaving.' : 'Local draft only. Save validates and logs the draft; it does not store it.'}</p>
         <button type="button" onClick={save}>Save</button>
         {errors.length > 0 && <div className="technical-validation" role="alert"><ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
         {saveNote && <p className="technical-save-note" role="status">{saveNote}</p>}
