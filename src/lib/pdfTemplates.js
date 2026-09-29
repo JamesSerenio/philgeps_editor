@@ -1,6 +1,7 @@
 export const pdfTemplates = {
   afs: '/pdf/templates/AFS_template.pdf',
-  bidSecurity: '/pdf/templates/BID SECURING DECLARATION.pdf',
+  bidSecurity: '/pdf/templates/Bid Security without table.pdf',
+  omnibus: '/pdf/templates/Omnibus Sworn Statement.pdf',
   bidocs: '/pdf/templates/bidocs_template.pdf',
   certificate: '/pdf/templates/certificate_template.pdf',
   initao: '/pdf/templates/New_tab_and_pages_Initao_LGU_template.pdf',

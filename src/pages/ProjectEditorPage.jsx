@@ -168,7 +168,7 @@ function ProjectEditorContent() {
               {activeDocument === 'bidSecurity' ? <BidSecurityEditor project={project} value={bidSecurityValue} onChange={changeBidSecurity} onSave={declarationsReady ? (value) => persistence.save('bid_security', value) : undefined} saveStatus={declarationsReady ? persistence.status : 'Local draft - migration required'} /> : <OmnibusEditor project={project} value={omnibusValue} onChange={changeOmnibus} onSave={declarationsReady ? (value) => persistence.save('omnibus', value) : undefined} saveStatus={declarationsReady ? persistence.status : 'Local draft - migration required'} />}
               <section className="document-card technical-reference" aria-label="Declaration template preview">
                 <p className="pdf-preview-notice">Template preview only. Form values are not applied to the PDF.</p>
-                <PdfPreview title={document.title} src={activeDocument === 'bidSecurity' ? (bidSecurityValue.templateVariant === 'initao_lgu' ? pdfTemplates.initao : pdfTemplates.bidSecurity) : (omnibusValue.templateVariant === 'initao_lgu' ? pdfTemplates.initao : pdfTemplates.bidocs)} />
+                <PdfPreview title={document.title} src={activeDocument === 'bidSecurity' ? (bidSecurityValue.templateVariant === 'initao_lgu' ? pdfTemplates.initao : pdfTemplates.bidSecurity) : (omnibusValue.templateVariant === 'initao_lgu' ? pdfTemplates.initao : pdfTemplates.omnibus)} />
               </section>
             </div>
           ) : activeDocument === 'technical' ? (
