@@ -264,3 +264,38 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .bidding-empty { padding: 32px 24px; }
 .bidding-empty h2 { color: var(--text); font-size: 18px; margin-bottom: 8px; }
 .bidding-empty p { color: var(--muted); font-size: 13px; max-width: 660px; }
+
+/* Flutter-style document setup workspace. */
+.pdf-editor-shell { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.pdf-editor-topbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.pdf-editor-topbar h1 { font-size: 20px; flex: 1; }
+.pdf-editor-body { display: grid; grid-template-columns: 350px minmax(0, 1fr); flex: 1; min-height: 0; }
+.setup-panel { overflow-y: auto; min-width: 0; padding: 18px 14px; background: var(--surface); border-right: 1px solid var(--border); }
+.document-setup h2 { font-size: 20px; margin-bottom: 18px; }.document-setup h3 { font-size: 14px; margin-bottom: 12px; }
+.document-setup label, .shared-schedule label { display: grid; gap: 5px; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.document-setup input, .document-setup textarea, .document-setup select { font-size: 13px; padding: 8px; }
+.document-setup select { width: 100%; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.document-setup select:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+.components-heading { font-size: 16px; margin: 24px 0 12px; }
+.component-accordion { border: 1px solid var(--border); border-radius: 9px; overflow: hidden; margin-bottom: 10px; }
+.accordion-trigger { width: 100%; border-radius: 0; background: var(--surface); color: var(--green); display: grid; grid-template-columns: 18px minmax(0, 1fr) 12px; gap: 10px; padding: 13px 10px; text-align: left; }
+.accordion-trigger:hover:not(:disabled), .accordion-trigger[aria-expanded=true] { background: var(--green-soft); color: var(--green); }
+.accordion-trigger strong { display: block; font-size: 11px; text-transform: uppercase; line-height: 1.6; letter-spacing: .2px; }.accordion-trigger small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; margin-top: 3px; }
+.accordion-trigger small.save-error { color: var(--danger); }.accordion-content { border-top: 1px solid var(--border); padding: 10px; min-width: 0; }
+.setup-panel .technical-editor { border: 0; box-shadow: none; border-radius: 0; }.setup-panel .technical-header { padding: 0 0 12px; }.setup-panel .technical-help { padding: 12px 0; }.setup-panel .technical-items { padding: 0; }.setup-panel .technical-save { padding: 12px 0; }
+.setup-panel .technical-table, .setup-panel .technical-table tbody, .setup-panel .technical-table tr, .setup-panel .technical-table td { display: block; width: 100%; min-width: 0; }
+.setup-panel .technical-table colgroup, .setup-panel .technical-table thead { display: none; }
+.setup-panel .technical-table td { border: 0; padding: 5px 10px; }.setup-panel .technical-table tr { border-bottom: 1px solid var(--border); padding: 8px 0; }
+.setup-panel .technical-table td::before { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.setup-panel .technical-table td:has(input[aria-label$="number"])::before { content: 'Item No.'; }
+.setup-panel .technical-table td:has(input[aria-label$="quantity"])::before { content: 'Qty'; }
+.setup-panel .technical-table td:has(input[aria-label$="unit"])::before { content: 'Unit'; }
+.setup-panel .technical-table td:has(textarea[aria-label*="specification"])::before { content: 'Specification'; }
+.setup-panel .technical-table td:has(textarea[aria-label*="compliance"])::before { content: 'Compliance'; }
+.setup-panel .declaration-fields { padding: 0; }.setup-panel .declaration-grid { grid-template-columns: minmax(0, 1fr); }
+.shared-schedule { font-size: 12px; }.shared-schedule > p { color: var(--muted); margin-bottom: 12px; }.shared-schedule fieldset { border: 1px solid var(--border); padding: 10px; margin: 0 0 12px; min-width: 0; border-radius: 6px; }.shared-schedule fieldset p { margin-bottom: 8px; }.shared-description { white-space: pre-wrap; }
+.pending-component { color: var(--muted); font-size: 12px; }.pending-component p { margin-bottom: 10px; }
+.generate-footer { padding: 18px 0 0; }.generate-footer button { width: 100%; }.generate-footer p { font-size: 11px; color: var(--muted); margin-top: 8px; }
+.pdf-preview-workspace { min-width: 0; overflow-y: auto; display: flex; flex-direction: column; padding: 20px; }.pdf-preview-workspace > .pdf-preview { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; overflow: hidden; flex: 1; min-height: 500px; }.preview-heading { margin-bottom: 14px; }.preview-heading h2 { font-size: 20px; }.preview-heading p { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.neutral-preview { margin: auto; padding: 24px; color: var(--muted); text-align: center; }
+@media (max-width: 760px) { .pdf-editor-shell { height: auto; min-height: 100dvh; overflow: visible; }.pdf-editor-body { display: flex; flex-direction: column; }.setup-panel { overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); }.pdf-preview-workspace { min-height: 400px; overflow: visible; }.pdf-editor-topbar h1 { font-size: 17px; } }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createSpecificationLine, createTechnicalItem, validateTechnicalItems } from '../lib/technicalSpecs'
 
-export default function TechnicalSpecsEditor({ project, value, onChange, onSave }) {
+export default function TechnicalSpecsEditor({ project, value, onChange, onSave, compact = false }) {
   const [errors, setErrors] = useState([])
   const [saveNote, setSaveNote] = useState('')
   const title = project?.title || project?.project_title || project?.projectTitle || 'Untitled Project'
@@ -41,7 +41,7 @@ export default function TechnicalSpecsEditor({ project, value, onChange, onSave 
   return (
     <section className="technical-editor" aria-labelledby="technical-title">
       <header className="technical-header">
-        <div><span className="eyebrow">Bidding documents</span><h2 id="technical-title">Technical Specifications</h2><p>{title}</p><p>Reference No. {reference}</p></div>
+        {!compact && <div><span className="eyebrow">Bidding documents</span><h2 id="technical-title">Technical Specifications</h2><p>{title}</p><p>Reference No. {reference}</p></div>}
         <button type="button" className="button-secondary" onClick={() => update([...value, createTechnicalItem(value.length + 1)])}>+ Add Item</button>
       </header>
       <p className="technical-help">Each item shares one quantity and unit. Use + Add line for another specification; Enter adds a newline within the current field.</p>

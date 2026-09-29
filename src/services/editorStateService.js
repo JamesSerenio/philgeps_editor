@@ -8,6 +8,10 @@ export function copyEditorItems(value, section) {
     if (!value || Object.getPrototypeOf(value) !== Object.prototype) throw new Error('Invalid declaration data.')
     if (!['old', 'initao_lgu'].includes(value.templateVariant)) throw new Error('Invalid template variant.')
     return Object.fromEntries(Object.entries(value).map(([key, field]) => {
+      if (key === 'documentSetup' && section === 'bid_security') {
+        if (!field || Object.getPrototypeOf(field) !== Object.prototype || Object.values(field).some((v) => typeof v !== 'string')) throw new Error('Invalid document setup.')
+        return [key, { ...field }]
+      }
       if (typeof field !== 'string') throw new Error('Invalid declaration field: ' + key)
       return [key, field]
     }))
@@ -21,7 +25,7 @@ export function copyEditorItems(value, section) {
     if (!item || Object.getPrototypeOf(item) !== Object.prototype) throw new Error('Invalid editor item.')
     if (!Array.isArray(item.specificationLines) || !item.specificationLines.length) throw new Error('Each item needs a specification line.')
     const result = Object.fromEntries(['id', 'itemNo', 'qty', 'unit'].map((key) => [key, copyString(item, key)]))
-    if (section === 'schedule_requirements') result.deliveryPeriod = copyString(item, 'deliveryPeriod')
+    if (section === 'schedule_requirements') { result.deliveryPeriod = copyString(item, 'deliveryPeriod'); if (item.sharedItemId != null) result.sharedItemId = copyString(item, 'sharedItemId') }
     result.specificationLines = item.specificationLines.map((line) => {
       const row = { id: copyString(line, 'id'), text: copyString(line, 'text') }
       if (section === 'technical_specs') row.compliance = copyString(line, 'compliance')
