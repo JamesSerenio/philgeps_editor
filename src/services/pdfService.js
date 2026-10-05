@@ -1691,3 +1691,526 @@ export async function generateNfccPreview(project) {
     blob,
   )
 }
+
+export async function generateBidSecurityPreview(project) {
+  const templateVariant =
+    project?.templateVariant === 'initao_lgu'
+      ? 'initao_lgu'
+      : 'old_default'
+
+  const templatePath =
+    templateVariant === 'initao_lgu'
+      ? '/pdf/templates/New_tab_and_pages_Initao_LGU_template.pdf'
+      : '/pdf/templates/Bid Security without table.pdf'
+
+  const response = await fetch(templatePath)
+
+  if (!response.ok) {
+    throw new Error(
+      `Unable to load Bid Security template: ${templatePath}`,
+    )
+  }
+
+  const sourceBytes = await response.arrayBuffer()
+  const pdfDoc = await PDFDocument.load(sourceBytes)
+
+  if (pdfDoc.getPageCount() < 2) {
+    throw new Error(
+      'Bid Security template must contain at least 2 pages.',
+    )
+  }
+
+  const regular = await pdfDoc.embedFont(
+    StandardFonts.TimesRoman,
+  )
+
+  const bold = await pdfDoc.embedFont(
+    StandardFonts.TimesRomanBold,
+  )
+
+  const italic = await pdfDoc.embedFont(
+    StandardFonts.TimesRomanItalic,
+  )
+
+  const boldItalic = await pdfDoc.embedFont(
+    StandardFonts.TimesRomanBoldItalic,
+  )
+
+  const white = rgb(1, 1, 1)
+  const black = rgb(0, 0, 0)
+
+  function clean(value) {
+    return String(value ?? '').trim()
+  }
+
+  function titleCase(value) {
+    return clean(value)
+      .toLowerCase()
+      .replace(/\b\w/g, (letter) =>
+        letter.toUpperCase(),
+      )
+  }
+
+  function fitSize(
+    text,
+    font,
+    size,
+    maxWidth,
+    minSize = 7,
+  ) {
+    let current = size
+
+    while (
+      current > minSize &&
+      font.widthOfTextAtSize(
+        text,
+        current,
+      ) > maxWidth
+    ) {
+      current -= 0.2
+    }
+
+    return current
+  }
+
+  function drawFitText({
+    page,
+    text,
+    x,
+    y,
+    maxWidth,
+    size = 10,
+    minSize = 7,
+    font = regular,
+    color = black,
+  }) {
+    const value = clean(text)
+
+    if (!value) return
+
+    const finalSize = fitSize(
+      value,
+      font,
+      size,
+      maxWidth,
+      minSize,
+    )
+
+    page.drawText(value, {
+      x,
+      y,
+      size: finalSize,
+      font,
+      color,
+    })
+  }
+
+  function drawCentered({
+    page,
+    text,
+    y,
+    size = 10,
+    font = regular,
+  }) {
+    const value = clean(text)
+
+    if (!value) return
+
+    const width =
+      font.widthOfTextAtSize(
+        value,
+        size,
+      )
+
+    page.drawText(value, {
+      x:
+        (page.getWidth() - width) /
+        2,
+      y,
+      size,
+      font,
+      color: black,
+    })
+  }
+
+  // ============================================================
+  // VALUES
+  // ============================================================
+
+  const municipality =
+    titleCase(project?.municipality)
+
+  const municipalityUpper =
+    municipality.toUpperCase()
+
+  const referenceNumber =
+    clean(project?.referenceNumber)
+
+  const bidderName =
+    clean(project?.bidderName)
+      .toUpperCase()
+
+  const submittedBy =
+    clean(
+      project?.submittedBy ||
+        project?.authorizedRepresentative,
+    ).toUpperCase()
+
+  const designation =
+    clean(
+      project?.designation ||
+        project?.representativeDesignation,
+    ) ||
+    'Authorized Representative'
+
+  // ============================================================
+  // DATE
+  // ============================================================
+
+  function parseDate(value) {
+    const text = clean(value)
+
+    if (!text) return null
+
+    const iso =
+      text.match(
+        /^(\d{4})-(\d{2})-(\d{2})$/,
+      )
+
+    if (iso) {
+      return new Date(
+        Number(iso[1]),
+        Number(iso[2]) - 1,
+        Number(iso[3]),
+      )
+    }
+
+    const parsed =
+      new Date(text)
+
+    if (
+      Number.isNaN(
+        parsed.getTime(),
+      )
+    ) {
+      return null
+    }
+
+    return parsed
+  }
+
+  const parsedDate =
+    parseDate(project?.date)
+
+  const day =
+    parsedDate
+      ? String(
+          parsedDate.getDate(),
+        ).padStart(2, '0')
+      : ''
+
+  const month =
+    parsedDate
+      ? parsedDate.toLocaleDateString(
+          'en-US',
+          {
+            month: 'long',
+          },
+        )
+      : ''
+
+  const year =
+    parsedDate
+      ? String(
+          parsedDate.getFullYear(),
+        )
+      : ''
+
+  const longDate =
+    parsedDate
+      ? `${month} ${day}, ${year}`
+      : clean(project?.date)
+
+  // ============================================================
+  // PAGE 1
+  // ============================================================
+
+  const page1 =
+    pdfDoc.getPage(0)
+
+  // Clear complete original editable heading area
+  page1.drawRectangle({
+    x: 45,
+    y: 620,
+    width:
+      page1.getWidth() - 90,
+    height: 165,
+    color: white,
+  })
+
+  // Clear old "To: Municipality of Impasugong"
+  page1.drawRectangle({
+    x: 50,
+    y: 535,
+    width: 390,
+    height: 55,
+    color: white,
+  })
+
+  drawCentered({
+    page: page1,
+    text:
+      'REPUBLIC OF THE PHILIPPINES',
+    y: 750,
+    size: 11,
+    font: bold,
+  })
+
+  drawCentered({
+    page: page1,
+    text:
+      `MUNICIPALITY OF ${municipalityUpper}`,
+    y: 734,
+    size: 11,
+    font: bold,
+  })
+
+  drawCentered({
+    page: page1,
+    text:
+      'BID SECURING DECLARATION',
+    y: 690,
+    size: 11,
+    font: bold,
+  })
+
+  drawCentered({
+    page: page1,
+    text:
+      `Project Identification No.: ${referenceNumber}`,
+    y: 675,
+    size: 9.5,
+    font: regular,
+  })
+
+  drawFitText({
+    page: page1,
+    text:
+      `To: Municipality of ${municipality}`,
+    x: 67,
+    y: 558,
+    maxWidth: 350,
+    size: 10.5,
+    minSize: 8,
+    font: boldItalic,
+  })
+
+  // ============================================================
+  // PAGE 2
+  // ============================================================
+
+  const page2 =
+    pdfDoc.getPage(1)
+
+  // ============================================================
+  // REMOVE THE WHOLE OLD TOP SIGNATORY AREA
+  //
+  // This is intentionally wider/taller.
+  // It removes ALL duplicate old text:
+  // - old witness sentence
+  // - Impasugong
+  // - old company
+  // - old representative
+  // - old July 20, 2026
+  //
+  // Stops BEFORE Jurat.
+  // ============================================================
+
+  page2.drawRectangle({
+    x: 45,
+    y: 535,
+    width:
+      page2.getWidth() - 90,
+    height: 245,
+    color: white,
+  })
+
+  // ============================================================
+  // REDRAW CLEAN PAGE 2 TOP
+  // ============================================================
+
+  drawFitText({
+    page: page2,
+    text:
+      `IN WITNESS WHEREOF, I/We have hereunto set my/our hand/s this ${day} day of ${month} ${year} at`,
+    x: 66,
+    y: 740,
+    maxWidth: 470,
+    size: 9.5,
+    minSize: 7,
+    font: bold,
+  })
+
+  drawFitText({
+    page: page2,
+    text:
+      `Municipality of ${municipality}.`,
+    x: 66,
+    y: 724,
+    maxWidth: 300,
+    size: 9.5,
+    minSize: 7,
+    font: boldItalic,
+  })
+
+  drawFitText({
+    page: page2,
+    text:
+      'Duly authorized to sign the Bid for and behalf of:',
+    x: 66,
+    y: 680,
+    maxWidth: 380,
+    size: 9,
+    minSize: 7,
+    font: italic,
+  })
+
+  drawFitText({
+    page: page2,
+    text: bidderName,
+    x: 66,
+    y: 661,
+    maxWidth: 360,
+    size: 10.5,
+    minSize: 8,
+    font: bold,
+  })
+
+  const signerY = 608
+
+  drawFitText({
+    page: page2,
+    text: submittedBy,
+    x: 66,
+    y: signerY,
+    maxWidth: 320,
+    size: 10.5,
+    minSize: 8,
+    font: boldItalic,
+  })
+
+  if (submittedBy) {
+    const signerSize =
+      fitSize(
+        submittedBy,
+        boldItalic,
+        10.5,
+        320,
+        8,
+      )
+
+    const signerWidth =
+      boldItalic.widthOfTextAtSize(
+        submittedBy,
+        signerSize,
+      )
+
+    page2.drawLine({
+      start: {
+        x: 66,
+        y: signerY - 2,
+      },
+      end: {
+        x:
+          66 +
+          Math.min(
+            signerWidth,
+            320,
+          ),
+        y: signerY - 2,
+      },
+      thickness: 0.7,
+      color: black,
+    })
+  }
+
+  drawFitText({
+    page: page2,
+    text: designation,
+    x: 66,
+    y: 590,
+    maxWidth: 320,
+    size: 9.5,
+    minSize: 7,
+    font: boldItalic,
+  })
+
+  drawFitText({
+    page: page2,
+    text: longDate,
+    x: 66,
+    y: 572,
+    maxWidth: 260,
+    size: 9.5,
+    minSize: 7,
+    font: boldItalic,
+  })
+
+  // ============================================================
+  // JURAT
+  // ============================================================
+
+  // Cover the ENTIRE first Jurat sentence.
+  // This is more reliable than covering only "Impasugong".
+  page2.drawRectangle({
+    x: 55,
+    y: 385,
+    width:
+      page2.getWidth() - 110,
+    height: 28,
+    color: white,
+  })
+
+  drawFitText({
+    page: page2,
+    text:
+      `SUBSCRIBED AND SWORN to before me this ____ day of ______ ${year} at Municipality of ${municipality},`,
+    x: 66,
+    y: 398,
+    maxWidth:
+      page2.getWidth() - 132,
+    size: 8.7,
+    minSize: 7,
+    font: regular,
+  })
+
+  drawFitText({
+    page: page2,
+    text: 'Philippines.',
+    x: 66,
+    y: 384,
+    maxWidth: 120,
+    size: 8.7,
+    minSize: 7,
+    font: regular,
+  })
+
+  // ============================================================
+  // SAVE
+  // ============================================================
+
+  const bytes =
+    await pdfDoc.save()
+
+  const blob =
+    new Blob(
+      [bytes],
+      {
+        type: 'application/pdf',
+      },
+    )
+
+  return URL.createObjectURL(
+    blob,
+  )
+}

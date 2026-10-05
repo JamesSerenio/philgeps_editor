@@ -17,6 +17,7 @@ import {
   generateNfccPreview,
   generateOngoingContractsPreview,
   generateTableOfContentsPreview,
+  generateBidSecurityPreview,
 } from '../services/pdfService'
 
 import useEditorPersistence from '../hooks/useEditorPersistence'
@@ -77,11 +78,8 @@ export default function ProjectEditorPage() {
 // EDITOR CONTENT
 // ============================================================
 
-function ProjectEditorContent({
-  id,
-}) {
-  const navigate =
-    useNavigate()
+function ProjectEditorContent({ id }) {
+  const navigate = useNavigate()
 
   // ==========================================================
   // MAIN STATE
@@ -121,6 +119,15 @@ function ProjectEditorContent({
     setNfccPreview,
   ] = useState(null)
 
+  const [
+    bidSecurityPreview,
+    setBidSecurityPreview,
+  ] = useState(null)
+
+  // ==========================================================
+  // PREVIEW URL REFS
+  // ==========================================================
+
   const contentsPreviewRef =
     useRef(null)
 
@@ -128,6 +135,9 @@ function ProjectEditorContent({
     useRef(null)
 
   const nfccPreviewRef =
+    useRef(null)
+
+  const bidSecurityPreviewRef =
     useRef(null)
 
   // ==========================================================
@@ -168,40 +178,33 @@ function ProjectEditorContent({
   const persistence =
     useEditorPersistence(
       id,
+
       (saved) => {
         const items =
           saved?.technical_specs ??
           [
-            createTechnicalItem(
-              1,
-            ),
+            createTechnicalItem(1),
           ]
 
-        setTechnical(
-          items,
-        )
+        setTechnical(items)
 
         setSchedule(
           alignScheduleItems(
             items,
-            saved?.schedule_requirements ??
-              [],
+            saved?.schedule_requirements ?? [],
           ),
         )
 
         setBidSecurity(
-          saved?.bid_security ??
-            null,
+          saved?.bid_security ?? null,
         )
 
         setOmnibus(
-          saved?.omnibus ??
-            null,
+          saved?.omnibus ?? null,
         )
 
         setDocumentSetup(
-          saved?.bid_security
-            ?.documentSetup ??
+          saved?.bid_security?.documentSetup ??
             null,
         )
       },
@@ -212,24 +215,20 @@ function ProjectEditorContent({
   // ==========================================================
 
   useEffect(() => {
-    let cancelled =
-      false
+    let cancelled = false
 
     getProjectById(id)
       .then(
         ({
           data,
-          error:
-            projectError,
+          error: projectError,
         }) => {
           if (projectError) {
             throw projectError
           }
 
           if (!cancelled) {
-            setProject(
-              data,
-            )
+            setProject(data)
           }
         },
       )
@@ -250,11 +249,7 @@ function ProjectEditorContent({
   }, [id])
 
   // ==========================================================
-  // SAFE DOCUMENT SETUP
-  //
-  // IMPORTANT:
-  // These values are declared BEFORE all useEffect hooks.
-  // That prevents conditional Hook errors.
+  // DOCUMENT SETUP
   // ==========================================================
 
   const setup =
@@ -269,54 +264,42 @@ function ProjectEditorContent({
 
   const sharedProject =
     setup
-      ? setupProject(
-          setup,
-        )
+      ? setupProject(setup)
       : null
 
   // ==========================================================
-  // PRIMITIVE PREVIEW VALUES
+  // PREVIEW PRIMITIVE VALUES
   // ==========================================================
 
   const previewProvince =
-    setup?.province ??
-    ''
+    setup?.province ?? ''
 
   const previewMunicipality =
-    setup?.municipality ??
-    ''
+    setup?.municipality ?? ''
 
   const previewProjectTitle =
-    setup?.projectTitle ??
-    ''
+    setup?.projectTitle ?? ''
 
   const previewReferenceNumber =
-    setup?.referenceNumber ??
-    ''
+    setup?.referenceNumber ?? ''
 
   const previewProcuringEntity =
-    setup?.procuringEntity ??
-    ''
+    setup?.procuringEntity ?? ''
 
   const previewDate =
-    setup?.date ??
-    ''
+    setup?.date ?? ''
 
   const previewBidderName =
-    setup?.bidderName ??
-    ''
+    setup?.bidderName ?? ''
 
   const previewBusinessAddress =
-    setup?.businessAddress ??
-    ''
+    setup?.businessAddress ?? ''
 
   const previewSubmittedBy =
-    setup?.submittedBy ??
-    ''
+    setup?.submittedBy ?? ''
 
   const previewDesignation =
-    setup?.designation ??
-    ''
+    setup?.designation ?? ''
 
   // ==========================================================
   // TABLE OF CONTENTS LIVE PREVIEW
@@ -324,92 +307,59 @@ function ProjectEditorContent({
 
   useEffect(() => {
     if (
-      activeDocument !==
-        'contents' ||
+      activeDocument !== 'contents' ||
       !setup
     ) {
       return undefined
     }
 
-    let cancelled =
-      false
+    let cancelled = false
 
     const previewData = {
-      province:
-        previewProvince,
-
-      municipality:
-        previewMunicipality,
-
-      projectTitle:
-        previewProjectTitle,
-
-      referenceNumber:
-        previewReferenceNumber,
-
-      procuringEntity:
-        previewProcuringEntity,
-
-      date:
-        previewDate,
-
-      bidderName:
-        previewBidderName,
-
-      businessAddress:
-        previewBusinessAddress,
-
-      submittedBy:
-        previewSubmittedBy,
-
-      designation:
-        previewDesignation,
+      province: previewProvince,
+      municipality: previewMunicipality,
+      projectTitle: previewProjectTitle,
+      referenceNumber: previewReferenceNumber,
+      procuringEntity: previewProcuringEntity,
+      date: previewDate,
+      bidderName: previewBidderName,
+      businessAddress: previewBusinessAddress,
+      submittedBy: previewSubmittedBy,
+      designation: previewDesignation,
     }
 
     generateTableOfContentsPreview(
       previewData,
     )
-      .then(
-        (url) => {
-          if (cancelled) {
-            URL.revokeObjectURL(
-              url,
-            )
+      .then((url) => {
+        if (cancelled) {
+          URL.revokeObjectURL(url)
+          return
+        }
 
-            return
-          }
-
-          if (
-            contentsPreviewRef.current &&
-            contentsPreviewRef.current.startsWith(
-              'blob:',
-            )
-          ) {
-            URL.revokeObjectURL(
-              contentsPreviewRef.current,
-            )
-          }
-
-          contentsPreviewRef.current =
-            url
-
-          setContentsPreview(
-            url,
+        if (
+          contentsPreviewRef.current &&
+          contentsPreviewRef.current.startsWith(
+            'blob:',
           )
-        },
-      )
-      .catch(
-        (previewError) => {
-          if (cancelled) {
-            return
-          }
-
-          console.error(
-            'Table of Contents preview failed',
-            previewError,
+        ) {
+          URL.revokeObjectURL(
+            contentsPreviewRef.current,
           )
-        },
-      )
+        }
+
+        contentsPreviewRef.current = url
+
+        setContentsPreview(url)
+      })
+      .catch((previewError) => {
+        if (cancelled) return
+
+        console.error(
+          'Table of Contents preview failed',
+          previewError,
+        )
+      })
 
     return () => {
       cancelled = true
@@ -435,92 +385,59 @@ function ProjectEditorContent({
 
   useEffect(() => {
     if (
-      activeDocument !==
-        'ongoing' ||
+      activeDocument !== 'ongoing' ||
       !setup
     ) {
       return undefined
     }
 
-    let cancelled =
-      false
+    let cancelled = false
 
     const previewData = {
-      province:
-        previewProvince,
-
-      municipality:
-        previewMunicipality,
-
-      projectTitle:
-        previewProjectTitle,
-
-      referenceNumber:
-        previewReferenceNumber,
-
-      procuringEntity:
-        previewProcuringEntity,
-
-      date:
-        previewDate,
-
-      bidderName:
-        previewBidderName,
-
-      businessAddress:
-        previewBusinessAddress,
-
-      submittedBy:
-        previewSubmittedBy,
-
-      designation:
-        previewDesignation,
+      province: previewProvince,
+      municipality: previewMunicipality,
+      projectTitle: previewProjectTitle,
+      referenceNumber: previewReferenceNumber,
+      procuringEntity: previewProcuringEntity,
+      date: previewDate,
+      bidderName: previewBidderName,
+      businessAddress: previewBusinessAddress,
+      submittedBy: previewSubmittedBy,
+      designation: previewDesignation,
     }
 
     generateOngoingContractsPreview(
       previewData,
     )
-      .then(
-        (url) => {
-          if (cancelled) {
-            URL.revokeObjectURL(
-              url,
-            )
+      .then((url) => {
+        if (cancelled) {
+          URL.revokeObjectURL(url)
+          return
+        }
 
-            return
-          }
-
-          if (
-            ongoingPreviewRef.current &&
-            ongoingPreviewRef.current.startsWith(
-              'blob:',
-            )
-          ) {
-            URL.revokeObjectURL(
-              ongoingPreviewRef.current,
-            )
-          }
-
-          ongoingPreviewRef.current =
-            url
-
-          setOngoingPreview(
-            url,
+        if (
+          ongoingPreviewRef.current &&
+          ongoingPreviewRef.current.startsWith(
+            'blob:',
           )
-        },
-      )
-      .catch(
-        (previewError) => {
-          if (cancelled) {
-            return
-          }
-
-          console.error(
-            'Ongoing Contracts preview failed',
-            previewError,
+        ) {
+          URL.revokeObjectURL(
+            ongoingPreviewRef.current,
           )
-        },
-      )
+        }
+
+        ongoingPreviewRef.current = url
+
+        setOngoingPreview(url)
+      })
+      .catch((previewError) => {
+        if (cancelled) return
+
+        console.error(
+          'Ongoing Contracts preview failed',
+          previewError,
+        )
+      })
 
     return () => {
       cancelled = true
@@ -546,92 +463,59 @@ function ProjectEditorContent({
 
   useEffect(() => {
     if (
-      activeDocument !==
-        'nfcc' ||
+      activeDocument !== 'nfcc' ||
       !setup
     ) {
       return undefined
     }
 
-    let cancelled =
-      false
+    let cancelled = false
 
     const previewData = {
-      province:
-        previewProvince,
-
-      municipality:
-        previewMunicipality,
-
-      projectTitle:
-        previewProjectTitle,
-
-      referenceNumber:
-        previewReferenceNumber,
-
-      procuringEntity:
-        previewProcuringEntity,
-
-      date:
-        previewDate,
-
-      bidderName:
-        previewBidderName,
-
-      businessAddress:
-        previewBusinessAddress,
-
-      submittedBy:
-        previewSubmittedBy,
-
-      designation:
-        previewDesignation,
+      province: previewProvince,
+      municipality: previewMunicipality,
+      projectTitle: previewProjectTitle,
+      referenceNumber: previewReferenceNumber,
+      procuringEntity: previewProcuringEntity,
+      date: previewDate,
+      bidderName: previewBidderName,
+      businessAddress: previewBusinessAddress,
+      submittedBy: previewSubmittedBy,
+      designation: previewDesignation,
     }
 
     generateNfccPreview(
       previewData,
     )
-      .then(
-        (url) => {
-          if (cancelled) {
-            URL.revokeObjectURL(
-              url,
-            )
+      .then((url) => {
+        if (cancelled) {
+          URL.revokeObjectURL(url)
+          return
+        }
 
-            return
-          }
-
-          if (
-            nfccPreviewRef.current &&
-            nfccPreviewRef.current.startsWith(
-              'blob:',
-            )
-          ) {
-            URL.revokeObjectURL(
-              nfccPreviewRef.current,
-            )
-          }
-
-          nfccPreviewRef.current =
-            url
-
-          setNfccPreview(
-            url,
+        if (
+          nfccPreviewRef.current &&
+          nfccPreviewRef.current.startsWith(
+            'blob:',
           )
-        },
-      )
-      .catch(
-        (previewError) => {
-          if (cancelled) {
-            return
-          }
-
-          console.error(
-            'NFCC preview failed',
-            previewError,
+        ) {
+          URL.revokeObjectURL(
+            nfccPreviewRef.current,
           )
-        },
-      )
+        }
+
+        nfccPreviewRef.current = url
+
+        setNfccPreview(url)
+      })
+      .catch((previewError) => {
+        if (cancelled) return
+
+        console.error(
+          'NFCC preview failed',
+          previewError,
+        )
+      })
 
     return () => {
       cancelled = true
@@ -652,7 +536,100 @@ function ProjectEditorContent({
   ])
 
   // ==========================================================
-  // CLEANUP GENERATED PDF URLS
+  // BID SECURITY LIVE PREVIEW
+  // ==========================================================
+
+  useEffect(() => {
+    if (
+      activeDocument !== 'bidSecurity' ||
+      !setup
+    ) {
+      return undefined
+    }
+
+    let cancelled = false
+
+    const templateVariant =
+      bidSecurity?.templateVariant ===
+      'initao_lgu'
+        ? 'initao_lgu'
+        : 'old_default'
+
+    const previewData = {
+      province: previewProvince,
+      municipality: previewMunicipality,
+      projectTitle: previewProjectTitle,
+      referenceNumber: previewReferenceNumber,
+      procuringEntity: previewProcuringEntity,
+      date: previewDate,
+      bidderName: previewBidderName,
+      businessAddress: previewBusinessAddress,
+      submittedBy: previewSubmittedBy,
+      authorizedRepresentative:
+        previewSubmittedBy,
+      designation: previewDesignation,
+      representativeDesignation:
+        previewDesignation,
+      templateVariant,
+    }
+
+    generateBidSecurityPreview(
+      previewData,
+    )
+      .then((url) => {
+        if (cancelled) {
+          URL.revokeObjectURL(url)
+          return
+        }
+
+        if (
+          bidSecurityPreviewRef.current &&
+          bidSecurityPreviewRef.current.startsWith(
+            'blob:',
+          )
+        ) {
+          URL.revokeObjectURL(
+            bidSecurityPreviewRef.current,
+          )
+        }
+
+        bidSecurityPreviewRef.current =
+          url
+
+        setBidSecurityPreview(url)
+      })
+      .catch((previewError) => {
+        if (cancelled) return
+
+        console.error(
+          'Bid Security preview failed',
+          previewError,
+        )
+
+        setBidSecurityPreview(null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    activeDocument,
+    setup,
+    previewProvince,
+    previewMunicipality,
+    previewProjectTitle,
+    previewReferenceNumber,
+    previewProcuringEntity,
+    previewDate,
+    previewBidderName,
+    previewBusinessAddress,
+    previewSubmittedBy,
+    previewDesignation,
+    bidSecurity?.templateVariant,
+  ])
+
+  // ==========================================================
+  // CLEANUP GENERATED BLOB URLS
   // ==========================================================
 
   useEffect(() => {
@@ -666,9 +643,6 @@ function ProjectEditorContent({
         URL.revokeObjectURL(
           contentsPreviewRef.current,
         )
-
-        contentsPreviewRef.current =
-          null
       }
 
       if (
@@ -680,9 +654,6 @@ function ProjectEditorContent({
         URL.revokeObjectURL(
           ongoingPreviewRef.current,
         )
-
-        ongoingPreviewRef.current =
-          null
       }
 
       if (
@@ -694,10 +665,30 @@ function ProjectEditorContent({
         URL.revokeObjectURL(
           nfccPreviewRef.current,
         )
-
-        nfccPreviewRef.current =
-          null
       }
+
+      if (
+        bidSecurityPreviewRef.current &&
+        bidSecurityPreviewRef.current.startsWith(
+          'blob:',
+        )
+      ) {
+        URL.revokeObjectURL(
+          bidSecurityPreviewRef.current,
+        )
+      }
+
+      contentsPreviewRef.current =
+        null
+
+      ongoingPreviewRef.current =
+        null
+
+      nfccPreviewRef.current =
+        null
+
+      bidSecurityPreviewRef.current =
+        null
     }
   }, [])
 
@@ -759,7 +750,7 @@ function ProjectEditorContent({
   }
 
   // ==========================================================
-  // COMMON DOCUMENT VALUES
+  // SHARED VALUES
   // ==========================================================
 
   const common = {
@@ -787,7 +778,13 @@ function ProjectEditorContent({
     companyAddress:
       setup.businessAddress,
 
+    businessAddress:
+      setup.businessAddress,
+
     authorizedRepresentative:
+      setup.submittedBy,
+
+    submittedBy:
       setup.submittedBy,
   }
 
@@ -795,15 +792,26 @@ function ProjectEditorContent({
   // BID SECURITY
   // ==========================================================
 
+  const savedBidTemplate =
+    bidSecurity?.templateVariant ===
+    'initao_lgu'
+      ? 'initao_lgu'
+      : 'old_default'
+
   const bidValue = {
-    ...(bidSecurity ??
-      createInitialBidSecurityState(
-        sharedProject,
-      )),
+    ...createInitialBidSecurityState(
+      sharedProject,
+    ),
 
     ...common,
 
+    templateVariant:
+      savedBidTemplate,
+
     representativeDesignation:
+      setup.designation,
+
+    designation:
       setup.designation,
   }
 
@@ -845,28 +853,22 @@ function ProjectEditorContent({
     )
 
   // ==========================================================
-  // PDF PREVIEW SOURCE
+  // PREVIEW SOURCE
   // ==========================================================
 
   const preview =
-    activeDocument ===
-    'contents'
+    activeDocument === 'contents'
       ? contentsPreview
 
-      : activeDocument ===
-          'ongoing'
+      : activeDocument === 'ongoing'
         ? ongoingPreview
 
-        : activeDocument ===
-            'nfcc'
+        : activeDocument === 'nfcc'
           ? nfccPreview
 
           : activeDocument ===
               'bidSecurity'
-            ? bidValue.templateVariant ===
-              'initao_lgu'
-              ? pdfTemplates.initao
-              : pdfTemplates.bidSecurity
+            ? bidSecurityPreview
 
             : activeDocument ===
                 'omnibus'
@@ -880,42 +882,36 @@ function ProjectEditorContent({
                 : null
 
   // ==========================================================
-  // DOCUMENT SETUP CHANGE
+  // DOCUMENT SETUP
   // ==========================================================
 
-  function changeSetup(
-    value,
-  ) {
-    setDocumentSetup(
-      value,
-    )
+  function changeSetup(value) {
+    setDocumentSetup(value)
 
-    const next = {
-      ...bidValue,
+    const nextBidSecurity = {
+      templateVariant:
+        savedBidTemplate,
+
       documentSetup:
         value,
     }
 
     setBidSecurity(
-      next,
+      nextBidSecurity,
     )
 
     persistence.change(
       'bid_security',
-      next,
+      nextBidSecurity,
     )
   }
 
   // ==========================================================
-  // TECHNICAL SPECS
+  // TECHNICAL
   // ==========================================================
 
-  function changeTechnical(
-    value,
-  ) {
-    setTechnical(
-      value,
-    )
+  function changeTechnical(value) {
+    setTechnical(value)
 
     persistence.change(
       'technical_specs',
@@ -927,9 +923,7 @@ function ProjectEditorContent({
   // SCHEDULE
   // ==========================================================
 
-  function schedulePayload(
-    value,
-  ) {
+  function schedulePayload(value) {
     return [
       ...value,
 
@@ -937,24 +931,17 @@ function ProjectEditorContent({
         (item) =>
           !value.some(
             (row) =>
-              row.id ===
-              item.id,
+              row.id === item.id,
           ),
       ),
     ]
   }
 
-  function changeSchedule(
-    value,
-  ) {
+  function changeSchedule(value) {
     const next =
-      schedulePayload(
-        value,
-      )
+      schedulePayload(value)
 
-    setSchedule(
-      next,
-    )
+    setSchedule(next)
 
     persistence.change(
       'schedule_requirements',
@@ -963,24 +950,44 @@ function ProjectEditorContent({
   }
 
   // ==========================================================
-  // BID SECURITY
+  // BID SECURITY TEMPLATE CHANGE
   // ==========================================================
 
-  function changeBid(
-    value,
-  ) {
+  function changeBid(value) {
     const next = {
-      ...value,
+      templateVariant:
+        value?.templateVariant ===
+        'initao_lgu'
+          ? 'initao_lgu'
+          : 'old_default',
 
       documentSetup:
         setup,
     }
 
-    setBidSecurity(
-      next,
-    )
+    setBidSecurity(next)
 
     persistence.change(
+      'bid_security',
+      next,
+    )
+  }
+
+  function saveBid(value) {
+    const next = {
+      templateVariant:
+        value?.templateVariant ===
+        'initao_lgu'
+          ? 'initao_lgu'
+          : 'old_default',
+
+      documentSetup:
+        setup,
+    }
+
+    setBidSecurity(next)
+
+    return persistence.save(
       'bid_security',
       next,
     )
@@ -990,12 +997,8 @@ function ProjectEditorContent({
   // OMNIBUS
   // ==========================================================
 
-  function changeOmnibus(
-    value,
-  ) {
-    setOmnibus(
-      value,
-    )
+  function changeOmnibus(value) {
+    setOmnibus(value)
 
     persistence.change(
       'omnibus',
@@ -1007,22 +1010,17 @@ function ProjectEditorContent({
   // EDITOR RENDERER
   // ==========================================================
 
-  function renderEditor(
-    document,
-  ) {
+  function renderEditor(document) {
     // --------------------------------------------------------
     // TABLE OF CONTENTS
     // --------------------------------------------------------
 
     if (
-      document.id ===
-      'contents'
+      document.id === 'contents'
     ) {
       return (
         <TableOfContentsEditor
-          project={
-            setup
-          }
+          project={setup}
         />
       )
     }
@@ -1032,76 +1030,62 @@ function ProjectEditorContent({
     // --------------------------------------------------------
 
     if (
-      document.id ===
-      'ongoing'
+      document.id === 'ongoing'
     ) {
       return (
         <div className="pending-component">
           <p>
-            Project information is filled automatically from Document Setup.
+            Project information is filled
+            automatically from Document Setup.
           </p>
 
           <p>
             <strong>
               Procuring Entity:
             </strong>{' '}
-            {
-              setup.procuringEntity
-            }
+            {setup.procuringEntity}
           </p>
 
           <p>
             <strong>
               Project Title:
             </strong>{' '}
-            {
-              setup.projectTitle
-            }
+            {setup.projectTitle}
           </p>
 
           <p>
             <strong>
               Reference Number:
             </strong>{' '}
-            {
-              setup.referenceNumber
-            }
+            {setup.referenceNumber}
           </p>
 
           <p>
             <strong>
               Registered Business Name:
             </strong>{' '}
-            {
-              setup.bidderName
-            }
+            {setup.bidderName}
           </p>
 
           <p>
             <strong>
               Business Address:
             </strong>{' '}
-            {
-              setup.businessAddress
-            }
+            {setup.businessAddress}
           </p>
 
           <p>
             <strong>
               Submitted By:
             </strong>{' '}
-            {
-              setup.submittedBy
-            }
+            {setup.submittedBy}
           </p>
 
           <p>
             <strong>
               Designation:
             </strong>{' '}
-            {
-              setup.designation
-            }
+            {setup.designation}
           </p>
         </div>
       )
@@ -1112,101 +1096,80 @@ function ProjectEditorContent({
     // --------------------------------------------------------
 
     if (
-      document.id ===
-      'nfcc'
+      document.id === 'nfcc'
     ) {
       return (
         <div className="pending-component">
           <p>
-            NFCC project information is filled automatically from Document Setup.
+            NFCC project information is filled
+            automatically from Document Setup.
           </p>
 
           <p>
             <strong>
               Procuring Entity:
             </strong>{' '}
-            {
-              setup.procuringEntity
-            }
+            {setup.procuringEntity}
           </p>
 
           <p>
             <strong>
               Project Title:
             </strong>{' '}
-            {
-              setup.projectTitle
-            }
+            {setup.projectTitle}
           </p>
 
           <p>
             <strong>
               Reference Number:
             </strong>{' '}
-            {
-              setup.referenceNumber
-            }
+            {setup.referenceNumber}
           </p>
 
           <p>
             <strong>
               Contractor:
             </strong>{' '}
-            {
-              setup.bidderName
-            }
+            {setup.bidderName}
           </p>
 
           <p>
             <strong>
               Address:
             </strong>{' '}
-            {
-              setup.businessAddress
-            }
+            {setup.businessAddress}
           </p>
 
           <p>
             <strong>
               Submitted By:
             </strong>{' '}
-            {
-              setup.submittedBy
-            }
+            {setup.submittedBy}
           </p>
 
           <p>
             <strong>
               Designation:
             </strong>{' '}
-            {
-              setup.designation
-            }
+            {setup.designation}
           </p>
         </div>
       )
     }
 
     // --------------------------------------------------------
-    // TECHNICAL SPECIFICATIONS
+    // TECHNICAL
     // --------------------------------------------------------
 
     if (
-      document.id ===
-      'technical'
+      document.id === 'technical'
     ) {
       return (
         <TechnicalSpecsEditor
           compact
-          project={
-            sharedProject
-          }
-          value={
-            technical
-          }
-          onChange={
-            changeTechnical
-          }
+          project={sharedProject}
+          value={technical}
+          onChange={changeTechnical}
           onSave={(value) =>
             persistence.save(
               'technical_specs',
@@ -1222,26 +1185,17 @@ function ProjectEditorContent({
     // --------------------------------------------------------
 
     if (
-      document.id ===
-      'schedule'
+      document.id === 'schedule'
     ) {
       return (
         <ScheduleEditor
-          project={
-            sharedProject
-          }
-          value={
-            scheduleItems
-          }
-          onChange={
-            changeSchedule
-          }
+          project={sharedProject}
+          value={scheduleItems}
+          onChange={changeSchedule}
           onSave={(value) =>
             persistence.save(
               'schedule_requirements',
-              schedulePayload(
-                value,
-              ),
+              schedulePayload(value),
             )
           }
         />
@@ -1258,27 +1212,9 @@ function ProjectEditorContent({
     ) {
       return (
         <BidSecurityEditor
-          compact
-          project={
-            sharedProject
-          }
-          value={
-            bidValue
-          }
-          onChange={
-            changeBid
-          }
-          onSave={(value) =>
-            persistence.save(
-              'bid_security',
-              {
-                ...value,
-
-                documentSetup:
-                  setup,
-              },
-            )
-          }
+          value={bidValue}
+          onChange={changeBid}
+          onSave={saveBid}
           saveStatus={
             persistence
               .sectionStatuses
@@ -1293,21 +1229,14 @@ function ProjectEditorContent({
     // --------------------------------------------------------
 
     if (
-      document.id ===
-      'omnibus'
+      document.id === 'omnibus'
     ) {
       return (
         <OmnibusEditor
           compact
-          project={
-            sharedProject
-          }
-          value={
-            omnibusValue
-          }
-          onChange={
-            changeOmnibus
-          }
+          project={sharedProject}
+          value={omnibusValue}
+          onChange={changeOmnibus}
           onSave={(value) =>
             persistence.save(
               'omnibus',
@@ -1345,27 +1274,16 @@ function ProjectEditorContent({
         ) && (
           <>
             <p>
-              Shared items from Technical Specifications:
+              Shared items from Technical
+              Specifications:
             </p>
 
             {technical.map(
               (item) => (
-                <p
-                  key={
-                    item.id
-                  }
-                >
-                  Item{' '}
-                  {
-                    item.itemNo
-                  }
-                  :{' '}
-                  {
-                    item.qty
-                  }{' '}
-                  {
-                    item.unit
-                  }
+                <p key={item.id}>
+                  Item {item.itemNo}:{' '}
+                  {item.qty}{' '}
+                  {item.unit}
                   {' — '}
 
                   {item.specificationLines
@@ -1373,9 +1291,7 @@ function ProjectEditorContent({
                       (line) =>
                         line.text,
                     )
-                    .join(
-                      '; ',
-                    )}
+                    .join('; ')}
                 </p>
               ),
             )}
@@ -1384,6 +1300,17 @@ function ProjectEditorContent({
       </div>
     )
   }
+
+  // ==========================================================
+  // LIVE PREVIEW IDS
+  // ==========================================================
+
+  const livePreviewDocuments = [
+    'contents',
+    'ongoing',
+    'nfcc',
+    'bidSecurity',
+  ]
 
   // ==========================================================
   // PAGE
@@ -1424,9 +1351,7 @@ function ProjectEditorContent({
           }
           role="status"
         >
-          {
-            persistence.status
-          }
+          {persistence.status}
         </span>
 
         {persistence.status ===
@@ -1436,9 +1361,7 @@ function ProjectEditorContent({
             onClick={() =>
               persistence
                 .retry()
-                .catch(
-                  () => {},
-                )
+                .catch(() => {})
             }
           >
             Retry Save
@@ -1450,9 +1373,7 @@ function ProjectEditorContent({
             role="alert"
             className="save-error-detail"
           >
-            {
-              persistence.saveError
-            }
+            {persistence.saveError}
           </span>
         )}
       </header>
@@ -1473,71 +1394,52 @@ function ProjectEditorContent({
           }
         >
           <DocumentSetup
-            value={
-              setup
-            }
-            onChange={
-              changeSetup
-            }
+            value={setup}
+            onChange={changeSetup}
           />
         </ProjectSidebar>
 
         <main className="pdf-preview-workspace">
           {!selected ? (
             <p className="neutral-preview">
-              Select a document component to preview.
+              Select a document component
+              to preview.
             </p>
           ) : (
             <>
               <header className="preview-heading">
                 <h2>
-                  {
-                    selected.title
-                  }
+                  {selected.title}
                 </h2>
 
                 <p>
-                  {
-                    setup.projectTitle
-                  }
+                  {setup.projectTitle}
                 </p>
 
                 <p>
                   Reference No.{' '}
-                  {
-                    setup.referenceNumber
-                  }
+                  {setup.referenceNumber}
                 </p>
               </header>
 
               {preview ? (
                 <>
                   <p className="pdf-preview-notice">
-                    {[
-                      'contents',
-                      'ongoing',
-                      'nfcc',
-                    ].includes(
+                    {livePreviewDocuments.includes(
                       activeDocument,
                     )
-                      ? 'Live preview — project information is filled automatically.'
+                      ? 'Live preview — project information is filled automatically from Document Setup.'
                       : 'Static template preview. Editing fields does not modify this PDF yet.'}
                   </p>
 
                   <PdfPreview
-                    src={
-                      preview
-                    }
+                    src={preview}
                     title={
                       selected.title
                     }
                   />
                 </>
-              ) : [
-                  'contents',
-                  'ongoing',
-                  'nfcc',
-                ].includes(
+              ) : livePreviewDocuments.includes(
                   activeDocument,
                 ) ? (
                 <p className="neutral-preview">
@@ -1546,9 +1448,7 @@ function ProjectEditorContent({
               ) : (
                 <p className="neutral-preview">
                   A template for{' '}
-                  {
-                    selected.title
-                  }{' '}
+                  {selected.title}{' '}
                   is not available yet.
                 </p>
               )}
