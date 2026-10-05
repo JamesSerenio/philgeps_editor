@@ -2,7 +2,6 @@ export const projectDocuments = [
   {
     id: 'contents',
     title: 'Table of Contents',
-    section: 'contents',
     template: 'TABLE OF CONTENTS.pdf',
   },
   {

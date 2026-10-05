@@ -12,7 +12,6 @@ import {
 } from '../services/editorStateService'
 
 const persistedSections = [
-  'contents',
   'technical_specs',
   'schedule_requirements',
   'bid_security',
@@ -85,14 +84,12 @@ export default function useEditorPersistence(
 
         setSectionStatuses(
           Object.fromEntries(
-            persistedSections.map(
-              (key) => [
-                key,
-                data?.[key] != null
-                  ? 'Saved'
-                  : 'Unsaved',
-              ],
-            ),
+            persistedSections.map((key) => [
+              key,
+              data?.[key] != null
+                ? 'Saved'
+                : 'Unsaved',
+            ]),
           ),
         )
       })
@@ -113,6 +110,7 @@ export default function useEditorPersistence(
     return () => {
       cancelled = true
       current.alive = false
+
       clearTimeout(
         current.timer,
       )
@@ -152,24 +150,17 @@ export default function useEditorPersistence(
       current.pending = {}
 
       if (current.alive) {
-        setStatus(
-          'Saving...',
-        )
-
+        setStatus('Saving...')
         setSaveError('')
 
         setSectionStatuses(
           (previous) => ({
             ...previous,
             ...Object.fromEntries(
-              Object.keys(
-                patch,
-              ).map(
-                (key) => [
-                  key,
-                  'Saving...',
-                ],
-              ),
+              Object.keys(patch).map((key) => [
+                key,
+                'Saving...',
+              ]),
             ),
           }),
         )
@@ -197,19 +188,15 @@ export default function useEditorPersistence(
             (previous) => ({
               ...previous,
               ...Object.fromEntries(
-                Object.keys(
-                  patch,
-                ).map(
-                  (key) => [
+                Object.keys(patch).map((key) => [
+                  key,
+                  Object.hasOwn(
+                    current.pending,
                     key,
-                    Object.hasOwn(
-                      current.pending,
-                      key,
-                    )
-                      ? 'Unsaved'
-                      : 'Saved',
-                  ],
-                ),
+                  )
+                    ? 'Unsaved'
+                    : 'Saved',
+                ]),
               ),
             }),
           )
@@ -238,14 +225,10 @@ export default function useEditorPersistence(
             (previous) => ({
               ...previous,
               ...Object.fromEntries(
-                Object.keys(
-                  patch,
-                ).map(
-                  (key) => [
-                    key,
-                    'Error saving',
-                  ],
-                ),
+                Object.keys(patch).map((key) => [
+                  key,
+                  'Error saving',
+                ]),
               ),
             }),
           )
@@ -282,7 +265,9 @@ export default function useEditorPersistence(
           section,
         )
 
-        setStatus('Unsaved')
+        setStatus(
+          'Unsaved',
+        )
 
         setSectionStatuses(
           (previous) => ({
@@ -330,8 +315,7 @@ export default function useEditorPersistence(
     ) => {
       if (
         Object.keys(
-          state.current
-            .pending,
+          state.current.pending,
         ).length ||
         state.current.flight
       ) {

@@ -1,83 +1,23 @@
 import { supabase } from '../supabase'
 
 const fields = [
-  'contents',
   'technical_specs',
   'schedule_requirements',
   'bid_security',
   'omnibus',
 ]
 
-function copyContents(value) {
-  if (
-    !value ||
-    Object.getPrototypeOf(value) !== Object.prototype
-  ) {
-    throw new Error('Invalid Table of Contents data.')
-  }
-
-  if (!Array.isArray(value.rows)) {
-    throw new Error(
-      'Table of Contents rows must be an array.',
-    )
-  }
-
-  return {
-    rows: value.rows.map((row) => {
-      if (
-        !row ||
-        Object.getPrototypeOf(row) !== Object.prototype
-      ) {
-        throw new Error(
-          'Invalid Table of Contents row.',
-        )
-      }
-
-      if (typeof row.id !== 'string') {
-        throw new Error(
-          'Invalid Table of Contents row id.',
-        )
-      }
-
-      if (typeof row.title !== 'string') {
-        throw new Error(
-          'Invalid Table of Contents title.',
-        )
-      }
-
-      if (typeof row.included !== 'boolean') {
-        throw new Error(
-          'Invalid Table of Contents included value.',
-        )
-      }
-
-      return {
-        id: row.id,
-        title: row.title,
-        included: row.included,
-      }
-    }),
-  }
-}
-
-// Reject unsafe data rather than silently dropping
-// functions or event objects.
 export function copyEditorItems(
   value,
   section,
 ) {
-  if (section === 'contents') {
-    return copyContents(value)
-  }
-
   if (
     section === 'bid_security' ||
     section === 'omnibus'
   ) {
     if (
       !value ||
-      Object.getPrototypeOf(value) !==
-        Object.prototype
+      Object.getPrototypeOf(value) !== Object.prototype
     ) {
       throw new Error(
         'Invalid declaration data.',
@@ -95,43 +35,39 @@ export function copyEditorItems(
     }
 
     return Object.fromEntries(
-      Object.entries(value).map(
-        ([key, field]) => {
+      Object.entries(value).map(([key, field]) => {
+        if (
+          key === 'documentSetup' &&
+          section === 'bid_security'
+        ) {
           if (
-            key === 'documentSetup' &&
-            section === 'bid_security'
+            !field ||
+            Object.getPrototypeOf(field) !== Object.prototype ||
+            Object.values(field).some(
+              (v) => typeof v !== 'string',
+            )
           ) {
-            if (
-              !field ||
-              Object.getPrototypeOf(field) !==
-                Object.prototype ||
-              Object.values(field).some(
-                (v) => typeof v !== 'string',
-              )
-            ) {
-              throw new Error(
-                'Invalid document setup.',
-              )
-            }
-
-            return [
-              key,
-              {
-                ...field,
-              },
-            ]
-          }
-
-          if (typeof field !== 'string') {
             throw new Error(
-              'Invalid declaration field: ' +
-                key,
+              'Invalid document setup.',
             )
           }
 
-          return [key, field]
-        },
-      ),
+          return [
+            key,
+            {
+              ...field,
+            },
+          ]
+        }
+
+        if (typeof field !== 'string') {
+          throw new Error(
+            'Invalid declaration field: ' + key,
+          )
+        }
+
+        return [key, field]
+      }),
     )
   }
 
@@ -159,8 +95,7 @@ export function copyEditorItems(
   return value.map((item) => {
     if (
       !item ||
-      Object.getPrototypeOf(item) !==
-        Object.prototype
+      Object.getPrototypeOf(item) !== Object.prototype
     ) {
       throw new Error(
         'Invalid editor item.',
@@ -192,8 +127,7 @@ export function copyEditorItems(
       )
 
     if (
-      section ===
-      'schedule_requirements'
+      section === 'schedule_requirements'
     ) {
       result.deliveryPeriod =
         copyString(
@@ -213,33 +147,30 @@ export function copyEditorItems(
     }
 
     result.specificationLines =
-      item.specificationLines.map(
-        (line) => {
-          const row = {
-            id: copyString(
-              line,
-              'id',
-            ),
-            text: copyString(
-              line,
-              'text',
-            ),
-          }
+      item.specificationLines.map((line) => {
+        const row = {
+          id: copyString(
+            line,
+            'id',
+          ),
+          text: copyString(
+            line,
+            'text',
+          ),
+        }
 
-          if (
-            section ===
-            'technical_specs'
-          ) {
-            row.compliance =
-              copyString(
-                line,
-                'compliance',
-              )
-          }
+        if (
+          section === 'technical_specs'
+        ) {
+          row.compliance =
+            copyString(
+              line,
+              'compliance',
+            )
+        }
 
-          return row
-        },
-      )
+        return row
+      })
 
     return result
   })
@@ -285,13 +216,10 @@ export async function saveEditorState(
       new Date().toISOString(),
   }
 
-  for (const field of Object.keys(
-    patch,
-  )) {
+  for (const field of Object.keys(patch)) {
     if (!fields.includes(field)) {
       throw new Error(
-        'Unsupported editor section: ' +
-          field,
+        'Unsupported editor section: ' + field,
       )
     }
 
@@ -317,27 +245,13 @@ export async function saveEditorState(
 
   const { error } =
     await supabase
-      .from(
-        'bid_docs_editor_state',
-      )
+      .from('bid_docs_editor_state')
       .upsert(payload, {
         onConflict: 'project_id',
         defaultToNull: false,
       })
 
   if (error) throw error
-}
-
-export function saveContents(
-  projectId,
-  value,
-) {
-  return saveEditorState(
-    projectId,
-    {
-      contents: value,
-    },
-  )
 }
 
 export function saveTechnicalSpecs(
@@ -359,8 +273,7 @@ export function saveScheduleRequirements(
   return saveEditorState(
     projectId,
     {
-      schedule_requirements:
-        value,
+      schedule_requirements: value,
     },
   )
 }
@@ -392,9 +305,7 @@ export function saveOmnibus(
 export async function hasDeclarationColumns() {
   const { error } =
     await supabase
-      .from(
-        'bid_docs_editor_state',
-      )
+      .from('bid_docs_editor_state')
       .select(
         'bid_security,omnibus',
       )
