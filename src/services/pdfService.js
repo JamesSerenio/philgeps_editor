@@ -1186,24 +1186,22 @@ export async function generateNfccPreview(project) {
   )
 
   // =========================================================
-  // LOCAL DRAW TEXT
+  // LOCAL HELPERS
   // =========================================================
 
   function drawText(
-    text,
+    value,
     x,
     y,
-    size = 10,
+    size = 9,
     font = regular,
     color = black,
   ) {
-    const value = clean(text)
+    const text = clean(value)
 
-    if (!value) {
-      return
-    }
+    if (!text) return
 
-    page.drawText(value, {
+    page.drawText(text, {
       x,
       y,
       size,
@@ -1212,81 +1210,115 @@ export async function generateNfccPreview(project) {
     })
   }
 
-  // =========================================================
-  // LOCAL WRAPPED TEXT
-  // =========================================================
+  function fitFontSize(
+    value,
+    font,
+    startSize,
+    maxWidth,
+    minSize = 6,
+  ) {
+    const text = clean(value)
 
-  function drawWrappedText(
-    text,
+    if (!text) {
+      return startSize
+    }
+
+    let size = startSize
+
+    while (
+      size > minSize &&
+      font.widthOfTextAtSize(
+        text,
+        size,
+      ) > maxWidth
+    ) {
+      size -= 0.15
+    }
+
+    return Math.max(
+      size,
+      minSize,
+    )
+  }
+
+  function drawFitText({
+    value,
     x,
     y,
-    maxWidth,
-    size = 10,
+    width,
+    size = 9,
+    minSize = 6,
     font = regular,
     color = black,
-    lineHeight = 12,
-  ) {
-    const lines = wrapText(
+  }) {
+    const text = clean(value)
+
+    if (!text) return
+
+    const finalSize = fitFontSize(
       text,
       font,
       size,
-      maxWidth,
+      width,
+      minSize,
     )
 
-    lines.forEach(
-      (line, index) => {
-        page.drawText(line, {
-          x,
-          y: y - index * lineHeight,
-          size,
-          font,
-          color,
-        })
-      },
-    )
-
-    return lines.length
+    page.drawText(text, {
+      x,
+      y,
+      size: finalSize,
+      font,
+      color,
+    })
   }
 
   // =========================================================
-  // CLEAN OLD HEADER VALUES
-  // =========================================================
+  // CLEAR OLD HEADER ONLY
   //
-  // Tatakpan lang ang old editable information.
-  //
-  // HINDI gagalawin:
-  // - NFCC title
-  // - body paragraph
-  // - computation formula
-  // - computation table
+  // IMPORTANT:
+  // Hindi gagalawin ang paragraph/body/table.
   // =========================================================
 
   page.drawRectangle({
     x: 18,
-    y: 655,
+    y: 675,
     width: 560,
-    height: 118,
+    height: 100,
     color: white,
   })
 
   // =========================================================
   // NEW HEADER
+  //
+  // SAME LABELS AS YOUR FIRST PDF:
+  //
+  // NAME OF THE PROCURING ENTITY
+  // PROJECT TITLE
+  // REFERENCE NUMBER
+  // CONTRACTOR
+  // ADDRESS
+  //
+  // Values = RED
+  // Labels = BLACK
   // =========================================================
 
-  const labelX = 28
-  const colonX = 165
-  const valueX = 178
-  const valueWidth = 385
+  const labelX = 29
+  const colonX = 203
+  const valueX = 220
+  const valueWidth = 345
+
+  const labelSize = 9.4
+  const valueSize = 10.2
 
   // ---------------------------------------------------------
-  // PROCURING ENTITY
+  // NAME OF THE PROCURING ENTITY
   // ---------------------------------------------------------
 
   drawText(
-    'PROCURING ENTITY',
+    'NAME OF THE PROCURING ENTITY',
     labelX,
-    742,
-    10.5,
+    760,
+    labelSize,
     regular,
     black,
   )
@@ -1294,32 +1326,32 @@ export async function generateNfccPreview(project) {
   drawText(
     ':',
     colonX,
-    742,
-    10.5,
+    760,
+    labelSize,
     regular,
     black,
   )
 
-  drawWrappedText(
-    procuringEntity,
-    valueX,
-    742,
-    valueWidth,
-    10.5,
-    bold,
-    red,
-    12,
-  )
+  drawFitText({
+    value: procuringEntity,
+    x: valueX,
+    y: 760,
+    width: valueWidth,
+    size: valueSize,
+    minSize: 7.4,
+    font: bold,
+    color: red,
+  })
 
   // ---------------------------------------------------------
-  // PROJECT NUMBER
+  // PROJECT TITLE
   // ---------------------------------------------------------
 
   drawText(
-    'Project Number',
+    'PROJECT TITLE',
     labelX,
-    722,
-    10,
+    741,
+    labelSize,
     regular,
     black,
   )
@@ -1327,30 +1359,32 @@ export async function generateNfccPreview(project) {
   drawText(
     ':',
     colonX,
-    722,
-    10,
+    741,
+    labelSize,
     regular,
     black,
   )
 
-  drawText(
-    referenceNumber,
-    valueX,
-    722,
-    10.5,
-    bold,
-    red,
-  )
+  drawFitText({
+    value: projectTitle,
+    x: valueX,
+    y: 741,
+    width: valueWidth,
+    size: valueSize,
+    minSize: 6.8,
+    font: bold,
+    color: red,
+  })
 
   // ---------------------------------------------------------
-  // CONTRACT / PROJECT TITLE
+  // REFERENCE NUMBER
   // ---------------------------------------------------------
 
   drawText(
-    'CONTRACT',
+    'REFERENCE NUMBER',
     labelX,
-    702,
-    10.5,
+    715,
+    labelSize,
     regular,
     black,
   )
@@ -1358,32 +1392,32 @@ export async function generateNfccPreview(project) {
   drawText(
     ':',
     colonX,
-    702,
-    10.5,
+    715,
+    labelSize,
     regular,
     black,
   )
 
-  drawWrappedText(
-    projectTitle,
-    valueX,
-    702,
-    valueWidth,
-    10,
-    bold,
-    red,
-    11.5,
-  )
+  drawFitText({
+    value: referenceNumber,
+    x: valueX,
+    y: 715,
+    width: valueWidth,
+    size: valueSize,
+    minSize: 8,
+    font: bold,
+    color: red,
+  })
 
   // ---------------------------------------------------------
   // CONTRACTOR
   // ---------------------------------------------------------
 
   drawText(
-    'Supplier/Contractor',
+    'CONTRACTOR',
     labelX,
-    680,
-    10,
+    696,
+    labelSize,
     regular,
     black,
   )
@@ -1391,30 +1425,32 @@ export async function generateNfccPreview(project) {
   drawText(
     ':',
     colonX,
-    680,
-    10,
+    696,
+    labelSize,
     regular,
     black,
   )
 
-  drawText(
-    bidderName,
-    valueX,
-    680,
-    10,
-    regular,
-    black,
-  )
+  drawFitText({
+    value: bidderName,
+    x: valueX,
+    y: 696,
+    width: valueWidth,
+    size: valueSize,
+    minSize: 7.4,
+    font: bold,
+    color: red,
+  })
 
   // ---------------------------------------------------------
   // ADDRESS
   // ---------------------------------------------------------
 
   drawText(
-    'Address',
+    'ADDRESS',
     labelX,
-    662,
-    10,
+    677,
+    labelSize,
     regular,
     black,
   )
@@ -1422,75 +1458,59 @@ export async function generateNfccPreview(project) {
   drawText(
     ':',
     colonX,
-    662,
-    10,
+    677,
+    labelSize,
     regular,
     black,
   )
 
-  drawWrappedText(
-    businessAddress,
-    valueX,
-    662,
-    valueWidth,
-    9,
-    regular,
-    black,
-    10.5,
-  )
+  drawFitText({
+    value: businessAddress,
+    x: valueX,
+    y: 677,
+    width: valueWidth,
+    size: 9.5,
+    minSize: 6.5,
+    font: bold,
+    color: red,
+  })
 
   // =========================================================
-  // REMOVE OLD NFCC FOOTER
-  // =========================================================
+  // REMOVE OLD SIGNATORY ONLY
   //
-  // Tatanggalin nito:
-  //
-  // Submitted:
-  // MARLJONE BLAIRE B. TINGTING
-  //
-  // Designation:
-  // Authorized Representative
-  //
-  // Date:
-  // August 5, 2026
-  //
-  // Malapad ang white box para siguradong walang matitirang
-  // old text sa kanan.
-  //
-  // HINDI nito gagalawin ang NFCC table sa taas.
+  // Hindi gagalawin ang NFCC computation table.
   // =========================================================
 
   page.drawRectangle({
     x: 18,
-    y: 105,
+    y: 155,
     width: 560,
-    height: 145,
+    height: 132,
     color: white,
   })
 
   // =========================================================
-  // NEW FOOTER
-  // =========================================================
-  //
-  // Inakyat para pumalit mismo sa OLD footer.
-  // Bigger font.
+  // NEW SIGNATORY
   // =========================================================
 
-  const footerLabelX = 30
-  const footerColonX = 120
-  const footerValueX = 145
+  const footerLabelX = 32
+  const footerColonX = 128
+  const footerValueX = 155
+
+  const footerLabelSize = 10
+  const footerValueSize = 10.3
 
   // ---------------------------------------------------------
   // SUBMITTED
   // ---------------------------------------------------------
 
-  const submittedY = 215
+  const submittedY = 258
 
   drawText(
     'Submitted',
     footerLabelX,
     submittedY,
-    12,
+    footerLabelSize,
     regular,
     black,
   )
@@ -1499,27 +1519,35 @@ export async function generateNfccPreview(project) {
     ':',
     footerColonX,
     submittedY,
-    12,
+    footerLabelSize,
     regular,
     black,
+  )
+
+  const submittedSize = fitFontSize(
+    submittedBy,
+    bold,
+    footerValueSize,
+    300,
+    8,
   )
 
   drawText(
     submittedBy,
     footerValueX,
     submittedY,
-    12,
+    submittedSize,
     bold,
     black,
   )
 
-  const submittedWidth =
-    bold.widthOfTextAtSize(
-      submittedBy,
-      12,
-    )
-
   if (submittedBy) {
+    const submittedWidth =
+      bold.widthOfTextAtSize(
+        submittedBy,
+        submittedSize,
+      )
+
     page.drawLine({
       start: {
         x: footerValueX,
@@ -1529,11 +1557,9 @@ export async function generateNfccPreview(project) {
         x:
           footerValueX +
           submittedWidth,
-        y:
-          submittedY -
-          2,
+        y: submittedY - 2,
       },
-      thickness: 0.8,
+      thickness: 0.7,
       color: black,
     })
   }
@@ -1541,8 +1567,8 @@ export async function generateNfccPreview(project) {
   drawText(
     '(Printed Name & Signature)',
     footerValueX,
-    201,
-    8,
+    246,
+    6.3,
     regular,
     black,
   )
@@ -1554,8 +1580,8 @@ export async function generateNfccPreview(project) {
   drawText(
     'Designation',
     footerLabelX,
-    178,
-    12,
+    223,
+    footerLabelSize,
     regular,
     black,
   )
@@ -1563,20 +1589,22 @@ export async function generateNfccPreview(project) {
   drawText(
     ':',
     footerColonX,
-    178,
-    12,
+    223,
+    footerLabelSize,
     regular,
     black,
   )
 
-  drawText(
-    designation,
-    footerValueX,
-    178,
-    12,
-    italic,
-    black,
-  )
+  drawFitText({
+    value: designation,
+    x: footerValueX,
+    y: 223,
+    width: 300,
+    size: footerValueSize,
+    minSize: 8,
+    font: italic,
+    color: black,
+  })
 
   // ---------------------------------------------------------
   // NAME OF FIRM
@@ -1585,8 +1613,8 @@ export async function generateNfccPreview(project) {
   drawText(
     'Name of Firm',
     footerLabelX,
-    153,
-    12,
+    200,
+    footerLabelSize,
     regular,
     black,
   )
@@ -1594,20 +1622,22 @@ export async function generateNfccPreview(project) {
   drawText(
     ':',
     footerColonX,
-    153,
-    12,
+    200,
+    footerLabelSize,
     regular,
     black,
   )
 
-  drawText(
-    bidderName,
-    footerValueX,
-    153,
-    12,
-    bold,
-    black,
-  )
+  drawFitText({
+    value: bidderName,
+    x: footerValueX,
+    y: 200,
+    width: 300,
+    size: footerValueSize,
+    minSize: 8,
+    font: bold,
+    color: black,
+  })
 
   // ---------------------------------------------------------
   // DATE
@@ -1616,8 +1646,8 @@ export async function generateNfccPreview(project) {
   drawText(
     'Date',
     footerLabelX,
-    128,
-    12,
+    177,
+    footerLabelSize,
     regular,
     black,
   )
@@ -1625,33 +1655,39 @@ export async function generateNfccPreview(project) {
   drawText(
     ':',
     footerColonX,
-    128,
-    12,
+    177,
+    footerLabelSize,
     regular,
     black,
   )
 
-  drawText(
-    date,
-    footerValueX,
-    128,
-    12,
-    regular,
-    black,
-  )
+  drawFitText({
+    value: date,
+    x: footerValueX,
+    y: 177,
+    width: 300,
+    size: footerValueSize,
+    minSize: 8,
+    font: regular,
+    color: black,
+  })
 
   // =========================================================
   // SAVE
   // =========================================================
 
-  const bytes = await pdfDoc.save()
+  const bytes =
+    await pdfDoc.save()
 
-  const blob = new Blob(
-    [bytes],
-    {
-      type: 'application/pdf',
-    },
+  const blob =
+    new Blob(
+      [bytes],
+      {
+        type: 'application/pdf',
+      },
+    )
+
+  return URL.createObjectURL(
+    blob,
   )
-
-  return URL.createObjectURL(blob)
 }
