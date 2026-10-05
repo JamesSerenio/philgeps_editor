@@ -4,33 +4,64 @@ import {
   rgb,
 } from 'pdf-lib'
 
-import { pdfTemplates } from '../lib/pdfTemplates'
+import {
+  pdfTemplates,
+} from '../lib/pdfTemplates'
+
+import {
+  formatLongDate,
+} from '../lib/documentSetup'
 
 // ============================================================
 // STATIC PREVIEW SOURCES
 // ============================================================
 
 const previewSources = {
-  bidSecurity: pdfTemplates.bidSecurity,
-  omnibus: pdfTemplates.initao,
-  technical: pdfTemplates.reference,
-  schedule: pdfTemplates.reference,
-  manpower: pdfTemplates.reference,
-  afterSales: pdfTemplates.reference,
-  warranty: pdfTemplates.reference,
-  bidForm: pdfTemplates.reference,
-  priceSchedule: pdfTemplates.reference,
-  summary: pdfTemplates.reference,
+  bidSecurity:
+    pdfTemplates.bidSecurity,
+
+  omnibus:
+    pdfTemplates.initao,
+
+  technical:
+    pdfTemplates.reference,
+
+  schedule:
+    pdfTemplates.reference,
+
+  manpower:
+    pdfTemplates.reference,
+
+  afterSales:
+    pdfTemplates.reference,
+
+  warranty:
+    pdfTemplates.reference,
+
+  bidForm:
+    pdfTemplates.reference,
+
+  priceSchedule:
+    pdfTemplates.reference,
+
+  summary:
+    pdfTemplates.reference,
 }
 
-export function getDocumentPreview(documentId) {
+export function getDocumentPreview(
+  documentId,
+) {
   const src =
-    previewSources[documentId] || null
+    previewSources[
+      documentId
+    ] || null
 
   return {
     src,
+
     isReference:
-      src === pdfTemplates.reference,
+      src ===
+      pdfTemplates.reference,
   }
 }
 
@@ -39,7 +70,9 @@ export function getDocumentPreview(documentId) {
 // ============================================================
 
 function clean(value) {
-  return String(value ?? '').trim()
+  return String(
+    value ?? '',
+  ).trim()
 }
 
 function titleCase(value) {
@@ -58,7 +91,8 @@ function wrapText(
   size,
   maxWidth,
 ) {
-  const value = clean(text)
+  const value =
+    clean(text)
 
   if (!value) {
     return []
@@ -71,7 +105,9 @@ function wrapText(
 
   let current = ''
 
-  for (const word of words) {
+  for (
+    const word of words
+  ) {
     const candidate =
       current
         ? `${current} ${word}`
@@ -87,15 +123,22 @@ function wrapText(
       width <= maxWidth ||
       !current
     ) {
-      current = candidate
+      current =
+        candidate
     } else {
-      lines.push(current)
-      current = word
+      lines.push(
+        current,
+      )
+
+      current =
+        word
     }
   }
 
   if (current) {
-    lines.push(current)
+    lines.push(
+      current,
+    )
   }
 
   return lines
@@ -108,7 +151,8 @@ function drawCentered(
   size,
   y,
 ) {
-  const value = clean(text)
+  const value =
+    clean(text)
 
   if (!value) {
     return
@@ -127,10 +171,15 @@ function drawCentered(
         (page.getWidth() -
           width) /
         2,
+
       y,
+
       size,
+
       font,
-      color: rgb(0, 0, 0),
+
+      color:
+        rgb(0, 0, 0),
     },
   )
 }
@@ -154,19 +203,30 @@ function drawWrappedText({
     )
 
   lines.forEach(
-    (line, index) => {
+    (
+      line,
+      index,
+    ) => {
       page.drawText(
         line,
         {
           x,
+
           y:
             y -
             index *
               lineHeight,
+
           size,
+
           font,
+
           color:
-            rgb(0, 0, 0),
+            rgb(
+              0,
+              0,
+              0,
+            ),
         },
       )
     },
@@ -187,11 +247,14 @@ function drawHorizontalLine(
       x: x1,
       y,
     },
+
     end: {
       x: x2,
       y,
     },
+
     thickness,
+
     color:
       rgb(0, 0, 0),
   })
@@ -209,11 +272,14 @@ function drawVerticalLine(
       x,
       y: y1,
     },
+
     end: {
       x,
       y: y2,
     },
+
     thickness,
+
     color:
       rgb(0, 0, 0),
   })
@@ -248,10 +314,11 @@ function drawTableRow({
 
   if (code) {
     const codeWidth =
-      boldFont.widthOfTextAtSize(
-        code,
-        8.5,
-      )
+      boldFont
+        .widthOfTextAtSize(
+          code,
+          8.5,
+        )
 
     page.drawText(
       code,
@@ -262,14 +329,24 @@ function drawTableRow({
             codeX -
             codeWidth) /
             2,
+
         y:
           y -
           rowHeight +
           4,
-        size: 8.5,
-        font: boldFont,
+
+        size:
+          8.5,
+
+        font:
+          boldFont,
+
         color:
-          rgb(0, 0, 0),
+          rgb(
+            0,
+            0,
+            0,
+          ),
       },
     )
   }
@@ -281,20 +358,28 @@ function drawTableRow({
     {
       x:
         dividerX + 8,
+
       y:
         y -
         rowHeight +
         4,
+
       size:
         bullet
           ? 7.7
           : 8.2,
+
       font:
         bullet
           ? font
           : boldFont,
+
       color:
-        rgb(0, 0, 0),
+        rgb(
+          0,
+          0,
+          0,
+        ),
     },
   )
 
@@ -309,11 +394,7 @@ export async function generateTableOfContentsPreview(
   project,
 ) {
   // ==========================================================
-  // CREATE A NEW CLEAN PDF
-  // ==========================================================
-  //
-  // We no longer draw over the old template.
-  // This removes all overlap / ghost text problems.
+  // CREATE CLEAN PDF
   // ==========================================================
 
   const pdfDoc =
@@ -327,13 +408,19 @@ export async function generateTableOfContentsPreview(
 
   const regular =
     await pdfDoc.embedFont(
-      StandardFonts.TimesRoman,
+      StandardFonts
+        .TimesRoman,
     )
 
   const bold =
     await pdfDoc.embedFont(
-      StandardFonts.TimesRomanBold,
+      StandardFonts
+        .TimesRomanBold,
     )
+
+  // ==========================================================
+  // PROJECT DATA
+  // ==========================================================
 
   const province =
     clean(
@@ -342,16 +429,21 @@ export async function generateTableOfContentsPreview(
 
   const municipality =
     titleCase(
-      project?.municipality,
+      project
+        ?.municipality,
     )
 
   const projectTitle =
     clean(
-      project?.projectTitle,
+      project
+        ?.projectTitle,
     )
 
+  // IMPORTANT:
+  // display as:
+  // October 05, 2026
   const date =
-    clean(
+    formatLongDate(
       project?.date,
     )
 
@@ -436,51 +528,85 @@ export async function generateTableOfContentsPreview(
   const projectLines =
     drawWrappedText({
       page,
+
       text:
         projectTitle,
-      font: bold,
-      size: 9,
-      x: valueX,
-      y: 720,
+
+      font:
+        bold,
+
+      size:
+        9,
+
+      x:
+        valueX,
+
+      y:
+        720,
+
       maxWidth:
         valueWidth,
-      lineHeight: 10,
+
+      lineHeight:
+        10,
     })
 
   const dateY =
     projectLines > 1
       ? 720 -
-        projectLines * 10 -
+        projectLines *
+          10 -
         5
       : 700
 
   page.drawText(
     'Date',
     {
-      x: labelX,
-      y: dateY,
-      size: 9,
-      font: regular,
+      x:
+        labelX,
+
+      y:
+        dateY,
+
+      size:
+        9,
+
+      font:
+        regular,
     },
   )
 
   page.drawText(
     ':',
     {
-      x: colonX,
-      y: dateY,
-      size: 9,
-      font: regular,
+      x:
+        colonX,
+
+      y:
+        dateY,
+
+      size:
+        9,
+
+      font:
+        regular,
     },
   )
 
   page.drawText(
     date,
     {
-      x: valueX,
-      y: dateY,
-      size: 9,
-      font: bold,
+      x:
+        valueX,
+
+      y:
+        dateY,
+
+      size:
+        9,
+
+      font:
+        bold,
     },
   )
 
@@ -490,38 +616,64 @@ export async function generateTableOfContentsPreview(
   page.drawText(
     'Name of Bidder',
     {
-      x: labelX,
-      y: bidderY,
-      size: 9,
-      font: regular,
+      x:
+        labelX,
+
+      y:
+        bidderY,
+
+      size:
+        9,
+
+      font:
+        regular,
     },
   )
 
   page.drawText(
     ':',
     {
-      x: colonX,
-      y: bidderY,
-      size: 9,
-      font: regular,
+      x:
+        colonX,
+
+      y:
+        bidderY,
+
+      size:
+        9,
+
+      font:
+        regular,
     },
   )
 
   drawWrappedText({
     page,
+
     text:
       bidderName,
-    font: bold,
-    size: 9,
-    x: valueX,
-    y: bidderY,
+
+    font:
+      bold,
+
+    size:
+      9,
+
+    x:
+      valueX,
+
+    y:
+      bidderY,
+
     maxWidth:
       valueWidth,
-    lineHeight: 10,
+
+    lineHeight:
+      10,
   })
 
   // ==========================================================
-  // TABLE OF CONTENTS TITLE
+  // TABLE OF CONTENTS
   // ==========================================================
 
   drawCentered(
@@ -531,10 +683,6 @@ export async function generateTableOfContentsPreview(
     10,
     650,
   )
-
-  // ==========================================================
-  // ELIGIBILITY DOCUMENTS
-  // ==========================================================
 
   const codeX = 72
   const dividerX = 132
@@ -750,7 +898,7 @@ export async function generateTableOfContentsPreview(
   )
 
   // ==========================================================
-  // TECHNICAL DOCUMENTS TITLE
+  // TECHNICAL DOCUMENTS
   // ==========================================================
 
   const technicalTitleY =
@@ -767,10 +915,6 @@ export async function generateTableOfContentsPreview(
   y =
     technicalTitleY -
     18
-
-  // ==========================================================
-  // TECHNICAL DOCUMENTS TABLE
-  // ==========================================================
 
   y = drawTableRow({
     page,
