@@ -13,17 +13,28 @@ export const representatives = [
   },
 ]
 
+// ============================================================
+// BIDDER / COMPANY OPTIONS
+// ============================================================
+
+export const bidders = [
+  {
+    name: 'MIKATA CORPORATION',
+    address:
+      'ZONE 13, CARMEN, CAGAYAN DE ORO CITY, MISAMIS ORIENTAL, 9000',
+  },
+]
+
+// ============================================================
+// DATE FORMAT
+// ============================================================
+
 export function formatLongDate(value) {
   const text = String(value ?? '').trim()
 
   if (!text) {
     return ''
   }
-
-  // Handles:
-  // 2026-10-05
-  // 10/05/2026
-  // October 05, 2026
 
   let year
   let month
@@ -49,31 +60,21 @@ export function formatLongDate(value) {
     } else {
       const parsed = new Date(text)
 
-      if (
-        Number.isNaN(
-          parsed.getTime(),
-        )
-      ) {
+      if (Number.isNaN(parsed.getTime())) {
         return text
       }
 
-      year =
-        parsed.getFullYear()
-
-      month =
-        parsed.getMonth() + 1
-
-      day =
-        parsed.getDate()
+      year = parsed.getFullYear()
+      month = parsed.getMonth() + 1
+      day = parsed.getDate()
     }
   }
 
-  const date =
-    new Date(
-      year,
-      month - 1,
-      day,
-    )
+  const date = new Date(
+    year,
+    month - 1,
+    day,
+  )
 
   return new Intl.DateTimeFormat(
     'en-US',
@@ -85,12 +86,15 @@ export function formatLongDate(value) {
   ).format(date)
 }
 
+// ============================================================
+// DOCUMENT SETUP
+// ============================================================
+
 export function createDocumentSetup(
   project,
   bid = {},
   omnibus = {},
 ) {
-  // Preserve saved document setup.
   if (bid.documentSetup) {
     return bid.documentSetup
   }
@@ -138,28 +142,21 @@ export function createDocumentSetup(
       new Intl.DateTimeFormat(
         'en-CA',
         {
-          timeZone:
-            'Asia/Manila',
+          timeZone: 'Asia/Manila',
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
         },
-      ).format(
-        new Date(),
-      ),
+      ).format(new Date()),
 
     bidderName:
       prior('bidderName'),
 
     businessAddress:
-      prior(
-        'companyAddress',
-      ),
+      prior('companyAddress'),
 
     submittedBy:
-      prior(
-        'authorizedRepresentative',
-      ),
+      prior('authorizedRepresentative'),
 
     designation:
       bid.representativeDesignation ||
@@ -168,167 +165,128 @@ export function createDocumentSetup(
   }
 }
 
-export function setupProject(
-  setup,
-) {
+// ============================================================
+// SHARED PROJECT
+// ============================================================
+
+export function setupProject(setup) {
   return {
-    // Shared field names
     province:
-      setup.province ||
-      '',
+      setup.province || '',
 
     municipality:
-      setup.municipality ||
-      '',
+      setup.municipality || '',
 
     projectTitle:
-      setup.projectTitle ||
-      '',
+      setup.projectTitle || '',
 
     referenceNumber:
-      setup.referenceNumber ||
-      '',
+      setup.referenceNumber || '',
 
     procuringEntity:
-      setup.procuringEntity ||
-      '',
+      setup.procuringEntity || '',
 
     date:
-      setup.date ||
-      '',
+      setup.date || '',
 
     bidderName:
-      setup.bidderName ||
-      '',
+      setup.bidderName || '',
 
     businessAddress:
-      setup.businessAddress ||
-      '',
+      setup.businessAddress || '',
 
     submittedBy:
-      setup.submittedBy ||
-      '',
+      setup.submittedBy || '',
 
     designation:
-      setup.designation ||
-      '',
+      setup.designation || '',
 
-    // Compatibility aliases
+    // Legacy aliases
     title:
-      setup.projectTitle ||
-      '',
+      setup.projectTitle || '',
 
     reference_number:
-      setup.referenceNumber ||
-      '',
+      setup.referenceNumber || '',
 
     procuring_entity:
-      setup.procuringEntity ||
-      '',
+      setup.procuringEntity || '',
 
     lgu:
-      setup.municipality ||
-      '',
+      setup.municipality || '',
 
     area_of_delivery:
-      setup.province ||
-      '',
+      setup.province || '',
 
     project_title:
-      setup.projectTitle ||
-      '',
+      setup.projectTitle || '',
 
     reference_no:
-      setup.referenceNumber ||
-      '',
+      setup.referenceNumber || '',
 
     municipality_name:
-      setup.municipality ||
-      '',
+      setup.municipality || '',
 
     province_name:
-      setup.province ||
-      '',
+      setup.province || '',
   }
 }
+
+// ============================================================
+// SCHEDULE
+// ============================================================
 
 export function alignScheduleItems(
   technical,
   schedule,
 ) {
-  return schedule.map(
-    (item) => {
-      if (
-        item.sharedItemId
-      ) {
-        return item
-      }
+  return schedule.map((item) => {
+    if (item.sharedItemId) {
+      return item
+    }
 
-      const master =
-        technical.find(
-          (row) =>
-            row.id ===
-            item.id,
-        ) ||
-        technical.find(
-          (row) =>
-            row.itemNo ===
-            item.itemNo,
-        )
+    const master =
+      technical.find(
+        (row) =>
+          row.id === item.id,
+      ) ||
+      technical.find(
+        (row) =>
+          row.itemNo === item.itemNo,
+      )
 
-      return master
-        ? {
-            ...item,
-            id:
-              master.id,
-            sharedItemId:
-              master.id,
-          }
-        : item
-    },
-  )
+    return master
+      ? {
+          ...item,
+          id: master.id,
+          sharedItemId: master.id,
+        }
+      : item
+  })
 }
 
 export function sharedScheduleItems(
   technical,
   schedule,
 ) {
-  return technical.map(
-    (item) => ({
-      id:
-        item.id,
+  return technical.map((item) => ({
+    id: item.id,
+    sharedItemId: item.id,
+    itemNo: item.itemNo,
+    qty: item.qty,
+    unit: item.unit,
 
-      sharedItemId:
-        item.id,
+    specificationLines:
+      item.specificationLines.map(
+        ({ id, text }) => ({
+          id,
+          text,
+        }),
+      ),
 
-      itemNo:
-        item.itemNo,
-
-      qty:
-        item.qty,
-
-      unit:
-        item.unit,
-
-      specificationLines:
-        item.specificationLines.map(
-          ({
-            id,
-            text,
-          }) => ({
-            id,
-            text,
-          }),
-        ),
-
-      deliveryPeriod:
-        schedule.find(
-          (row) =>
-            row.id ===
-            item.id,
-        )
-          ?.deliveryPeriod ||
-        '',
-    }),
-  )
+    deliveryPeriod:
+      schedule.find(
+        (row) =>
+          row.id === item.id,
+      )?.deliveryPeriod || '',
+  }))
 }

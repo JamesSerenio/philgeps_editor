@@ -1,5 +1,7 @@
 import { useRef } from 'react'
+
 import {
+  bidders,
   formatLongDate,
   representatives,
 } from '../lib/documentSetup'
@@ -10,22 +12,18 @@ export default function DocumentSetup({
 }) {
   const dateInputRef = useRef(null)
 
-  const fields = [
+  const textFields = [
     ['province', 'Province'],
     ['municipality', 'Municipality'],
     ['projectTitle', 'Project Title'],
     ['referenceNumber', 'Reference Number'],
     ['procuringEntity', 'Procuring Entity'],
-    ['bidderName', 'Bidder Name'],
-    ['businessAddress', 'Business Address'],
   ]
 
   function openDatePicker() {
     const input = dateInputRef.current
 
-    if (!input) {
-      return
-    }
+    if (!input) return
 
     if (typeof input.showPicker === 'function') {
       input.showPicker()
@@ -34,10 +32,42 @@ export default function DocumentSetup({
     }
   }
 
-  function handleDateChange(event) {
+  function handleBidderChange(event) {
+    const bidderName = event.target.value
+
+    const selectedBidder =
+      bidders.find(
+        (bidder) =>
+          bidder.name === bidderName,
+      )
+
     onChange({
       ...value,
-      date: event.target.value,
+      bidderName,
+      businessAddress:
+        selectedBidder?.address || '',
+    })
+  }
+
+  function handleRepresentativeChange(
+    event,
+  ) {
+    const submittedBy =
+      event.target.value
+
+    const representative =
+      representatives.find(
+        (person) =>
+          person.name ===
+          submittedBy,
+      )
+
+    onChange({
+      ...value,
+      submittedBy,
+      designation:
+        representative?.designation ||
+        '',
     })
   }
 
@@ -47,40 +77,98 @@ export default function DocumentSetup({
 
       <h3>Project Information</h3>
 
-      {fields.map(([key, label]) => (
-        <label key={key}>
-          {label}
+      {textFields.map(
+        ([key, label]) => (
+          <label key={key}>
+            {label}
 
-          {[
-            'projectTitle',
-            'businessAddress',
-          ].includes(key) ? (
-            <textarea
-              aria-label={label}
-              rows={2}
-              value={value[key] || ''}
-              onChange={(event) =>
-                onChange({
-                  ...value,
-                  [key]: event.target.value,
-                })
-              }
-            />
-          ) : (
-            <input
-              aria-label={label}
-              type="text"
-              value={value[key] || ''}
-              onChange={(event) =>
-                onChange({
-                  ...value,
-                  [key]: event.target.value,
-                })
-              }
-            />
+            {key === 'projectTitle' ? (
+              <textarea
+                aria-label={label}
+                rows={2}
+                value={value[key] || ''}
+                onChange={(event) =>
+                  onChange({
+                    ...value,
+                    [key]:
+                      event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <input
+                aria-label={label}
+                type="text"
+                value={value[key] || ''}
+                onChange={(event) =>
+                  onChange({
+                    ...value,
+                    [key]:
+                      event.target.value,
+                  })
+                }
+              />
+            )}
+          </label>
+        ),
+      )}
+
+      <label>
+        Bidder Name
+
+        <select
+          aria-label="Bidder Name"
+          value={value.bidderName || ''}
+          onChange={handleBidderChange}
+        >
+          <option value="">
+            Select bidder
+          </option>
+
+          {value.bidderName &&
+            !bidders.some(
+              (bidder) =>
+                bidder.name ===
+                value.bidderName,
+            ) && (
+              <option
+                value={value.bidderName}
+              >
+                {value.bidderName}
+              </option>
+            )}
+
+          {bidders.map(
+            (bidder) => (
+              <option
+                key={bidder.name}
+                value={bidder.name}
+              >
+                {bidder.name}
+              </option>
+            ),
           )}
-        </label>
-      ))}
+        </select>
+      </label>
+
+      <label>
+        Business Address
+
+        <textarea
+          aria-label="Business Address"
+          rows={2}
+          value={
+            value.businessAddress || ''
+          }
+          onChange={(event) =>
+            onChange({
+              ...value,
+              businessAddress:
+                event.target.value,
+            })
+          }
+        />
+      </label>
 
       <label>
         Date
@@ -94,7 +182,8 @@ export default function DocumentSetup({
             aria-label="Date"
             type="text"
             value={
-              formatLongDate(value.date) || ''
+              formatLongDate(value.date) ||
+              ''
             }
             readOnly
             onClick={openDatePicker}
@@ -113,9 +202,11 @@ export default function DocumentSetup({
               position: 'absolute',
               right: '6px',
               top: '50%',
-              transform: 'translateY(-50%)',
+              transform:
+                'translateY(-50%)',
               border: 'none',
-              background: 'transparent',
+              background:
+                'transparent',
               cursor: 'pointer',
               padding: '4px 6px',
               fontSize: '16px',
@@ -129,7 +220,13 @@ export default function DocumentSetup({
             ref={dateInputRef}
             type="date"
             value={value.date || ''}
-            onChange={handleDateChange}
+            onChange={(event) =>
+              onChange({
+                ...value,
+                date:
+                  event.target.value,
+              })
+            }
             tabIndex={-1}
             aria-hidden="true"
             style={{
@@ -148,26 +245,12 @@ export default function DocumentSetup({
 
         <select
           aria-label="Submitted By"
-          value={value.submittedBy || ''}
-          onChange={(event) => {
-            const submittedBy =
-              event.target.value
-
-            const representative =
-              representatives.find(
-                (person) =>
-                  person.name ===
-                  submittedBy,
-              )
-
-            onChange({
-              ...value,
-              submittedBy,
-              designation:
-                representative?.designation ||
-                '',
-            })
-          }}
+          value={
+            value.submittedBy || ''
+          }
+          onChange={
+            handleRepresentativeChange
+          }
         >
           <option value="">
             Select representative
@@ -205,14 +288,10 @@ export default function DocumentSetup({
         <input
           aria-label="Designation"
           type="text"
-          value={value.designation || ''}
-          onChange={(event) =>
-            onChange({
-              ...value,
-              designation:
-                event.target.value,
-            })
+          value={
+            value.designation || ''
           }
+          readOnly
         />
       </label>
     </section>

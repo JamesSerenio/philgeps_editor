@@ -17,51 +17,26 @@ import {
 // ============================================================
 
 const previewSources = {
-  bidSecurity:
-    pdfTemplates.bidSecurity,
-
-  omnibus:
-    pdfTemplates.initao,
-
-  technical:
-    pdfTemplates.reference,
-
-  schedule:
-    pdfTemplates.reference,
-
-  manpower:
-    pdfTemplates.reference,
-
-  afterSales:
-    pdfTemplates.reference,
-
-  warranty:
-    pdfTemplates.reference,
-
-  bidForm:
-    pdfTemplates.reference,
-
-  priceSchedule:
-    pdfTemplates.reference,
-
-  summary:
-    pdfTemplates.reference,
+  bidSecurity: pdfTemplates.bidSecurity,
+  omnibus: pdfTemplates.initao,
+  technical: pdfTemplates.reference,
+  schedule: pdfTemplates.reference,
+  manpower: pdfTemplates.reference,
+  afterSales: pdfTemplates.reference,
+  warranty: pdfTemplates.reference,
+  bidForm: pdfTemplates.reference,
+  priceSchedule: pdfTemplates.reference,
+  summary: pdfTemplates.reference,
 }
 
-export function getDocumentPreview(
-  documentId,
-) {
+export function getDocumentPreview(documentId) {
   const src =
-    previewSources[
-      documentId
-    ] || null
+    previewSources[documentId] || null
 
   return {
     src,
-
     isReference:
-      src ===
-      pdfTemplates.reference,
+      src === pdfTemplates.reference,
   }
 }
 
@@ -70,9 +45,7 @@ export function getDocumentPreview(
 // ============================================================
 
 function clean(value) {
-  return String(
-    value ?? '',
-  ).trim()
+  return String(value ?? '').trim()
 }
 
 function titleCase(value) {
@@ -91,8 +64,7 @@ function wrapText(
   size,
   maxWidth,
 ) {
-  const value =
-    clean(text)
+  const value = clean(text)
 
   if (!value) {
     return []
@@ -102,12 +74,9 @@ function wrapText(
     value.split(/\s+/)
 
   const lines = []
-
   let current = ''
 
-  for (
-    const word of words
-  ) {
+  for (const word of words) {
     const candidate =
       current
         ? `${current} ${word}`
@@ -123,22 +92,15 @@ function wrapText(
       width <= maxWidth ||
       !current
     ) {
-      current =
-        candidate
+      current = candidate
     } else {
-      lines.push(
-        current,
-      )
-
-      current =
-        word
+      lines.push(current)
+      current = word
     }
   }
 
   if (current) {
-    lines.push(
-      current,
-    )
+    lines.push(current)
   }
 
   return lines
@@ -151,8 +113,7 @@ function drawCentered(
   size,
   y,
 ) {
-  const value =
-    clean(text)
+  const value = clean(text)
 
   if (!value) {
     return
@@ -171,13 +132,9 @@ function drawCentered(
         (page.getWidth() -
           width) /
         2,
-
       y,
-
       size,
-
       font,
-
       color:
         rgb(0, 0, 0),
     },
@@ -203,24 +160,17 @@ function drawWrappedText({
     )
 
   lines.forEach(
-    (
-      line,
-      index,
-    ) => {
+    (line, index) => {
       page.drawText(
         line,
         {
           x,
-
           y:
             y -
             index *
               lineHeight,
-
           size,
-
           font,
-
           color:
             rgb(
               0,
@@ -247,14 +197,11 @@ function drawHorizontalLine(
       x: x1,
       y,
     },
-
     end: {
       x: x2,
       y,
     },
-
     thickness,
-
     color:
       rgb(0, 0, 0),
   })
@@ -272,18 +219,19 @@ function drawVerticalLine(
       x,
       y: y1,
     },
-
     end: {
       x,
       y: y2,
     },
-
     thickness,
-
     color:
       rgb(0, 0, 0),
   })
 }
+
+// ============================================================
+// TABLE OF CONTENTS ROW
+// ============================================================
 
 function drawTableRow({
   page,
@@ -314,33 +262,28 @@ function drawTableRow({
 
   if (code) {
     const codeWidth =
-      boldFont
-        .widthOfTextAtSize(
-          code,
-          8.5,
-        )
+      boldFont.widthOfTextAtSize(
+        code,
+        8.5,
+      )
 
     page.drawText(
       code,
       {
         x:
           codeX +
-          (dividerX -
+          (
+            dividerX -
             codeX -
-            codeWidth) /
+            codeWidth
+          ) /
             2,
-
         y:
           y -
           rowHeight +
           4,
-
-        size:
-          8.5,
-
-        font:
-          boldFont,
-
+        size: 8.5,
+        font: boldFont,
         color:
           rgb(
             0,
@@ -358,22 +301,18 @@ function drawTableRow({
     {
       x:
         dividerX + 8,
-
       y:
         y -
         rowHeight +
         4,
-
       size:
         bullet
           ? 7.7
           : 8.2,
-
       font:
         bullet
           ? font
           : boldFont,
-
       color:
         rgb(
           0,
@@ -393,10 +332,6 @@ function drawTableRow({
 export async function generateTableOfContentsPreview(
   project,
 ) {
-  // ==========================================================
-  // CREATE CLEAN PDF
-  // ==========================================================
-
   const pdfDoc =
     await PDFDocument.create()
 
@@ -408,19 +343,13 @@ export async function generateTableOfContentsPreview(
 
   const regular =
     await pdfDoc.embedFont(
-      StandardFonts
-        .TimesRoman,
+      StandardFonts.TimesRoman,
     )
 
   const bold =
     await pdfDoc.embedFont(
-      StandardFonts
-        .TimesRomanBold,
+      StandardFonts.TimesRomanBold,
     )
-
-  // ==========================================================
-  // PROJECT DATA
-  // ==========================================================
 
   const province =
     clean(
@@ -429,19 +358,14 @@ export async function generateTableOfContentsPreview(
 
   const municipality =
     titleCase(
-      project
-        ?.municipality,
+      project?.municipality,
     )
 
   const projectTitle =
     clean(
-      project
-        ?.projectTitle,
+      project?.projectTitle,
     )
 
-  // IMPORTANT:
-  // display as:
-  // October 05, 2026
   const date =
     formatLongDate(
       project?.date,
@@ -484,10 +408,6 @@ export async function generateTableOfContentsPreview(
     779,
   )
 
-  // ==========================================================
-  // DOCUMENT TITLE
-  // ==========================================================
-
   drawCentered(
     page,
     'CHECKLIST OF ELIGIBILITY REQUIREMENTS FOR GOODS',
@@ -528,25 +448,18 @@ export async function generateTableOfContentsPreview(
   const projectLines =
     drawWrappedText({
       page,
-
       text:
         projectTitle,
-
       font:
         bold,
-
       size:
         9,
-
       x:
         valueX,
-
       y:
         720,
-
       maxWidth:
         valueWidth,
-
       lineHeight:
         10,
     })
@@ -564,13 +477,10 @@ export async function generateTableOfContentsPreview(
     {
       x:
         labelX,
-
       y:
         dateY,
-
       size:
         9,
-
       font:
         regular,
     },
@@ -581,13 +491,10 @@ export async function generateTableOfContentsPreview(
     {
       x:
         colonX,
-
       y:
         dateY,
-
       size:
         9,
-
       font:
         regular,
     },
@@ -598,13 +505,10 @@ export async function generateTableOfContentsPreview(
     {
       x:
         valueX,
-
       y:
         dateY,
-
       size:
         9,
-
       font:
         bold,
     },
@@ -618,13 +522,10 @@ export async function generateTableOfContentsPreview(
     {
       x:
         labelX,
-
       y:
         bidderY,
-
       size:
         9,
-
       font:
         regular,
     },
@@ -635,13 +536,10 @@ export async function generateTableOfContentsPreview(
     {
       x:
         colonX,
-
       y:
         bidderY,
-
       size:
         9,
-
       font:
         regular,
     },
@@ -649,25 +547,18 @@ export async function generateTableOfContentsPreview(
 
   drawWrappedText({
     page,
-
     text:
       bidderName,
-
     font:
       bold,
-
     size:
       9,
-
     x:
       valueX,
-
     y:
       bidderY,
-
     maxWidth:
       valueWidth,
-
     lineHeight:
       10,
   })
@@ -1028,8 +919,399 @@ export async function generateTableOfContentsPreview(
     y,
   )
 
+  const bytes =
+    await pdfDoc.save()
+
+  return URL.createObjectURL(
+    new Blob(
+      [bytes],
+      {
+        type:
+          'application/pdf',
+      },
+    ),
+  )
+}
+
+// ============================================================
+// ONGOING GOVERNMENT & PRIVATE CONTRACTS
+// ============================================================
+
+export async function generateOngoingContractsPreview(
+  project,
+) {
   // ==========================================================
-  // SAVE PDF
+  // LOAD ORIGINAL TEMPLATE
+  // ==========================================================
+
+  const response = await fetch(
+    '/pdf/templates/Statement of Ongoing Government and Private Contracts,.pdf',
+  )
+
+  if (!response.ok) {
+    throw new Error(
+      'Unable to load Statement of Ongoing Government and Private Contracts,.pdf',
+    )
+  }
+
+  const sourceBytes =
+    await response.arrayBuffer()
+
+  const pdfDoc =
+    await PDFDocument.load(
+      sourceBytes,
+    )
+
+  if (pdfDoc.getPageCount() === 0) {
+    throw new Error(
+      'Ongoing Contracts template contains no pages.',
+    )
+  }
+
+  const page =
+    pdfDoc.getPage(0)
+
+  const regular =
+    await pdfDoc.embedFont(
+      StandardFonts.TimesRoman,
+    )
+
+  const bold =
+    await pdfDoc.embedFont(
+      StandardFonts.TimesRomanBold,
+    )
+
+  const white =
+    rgb(1, 1, 1)
+
+  const black =
+    rgb(0, 0, 0)
+
+  // ==========================================================
+  // DOCUMENT SETUP VALUES
+  // ==========================================================
+
+  const procuringEntity =
+    clean(
+      project?.procuringEntity,
+    ).toUpperCase()
+
+  const projectTitle =
+    clean(
+      project?.projectTitle,
+    ).toUpperCase()
+
+  const referenceNumber =
+    clean(
+      project?.referenceNumber,
+    )
+
+  const bidderName =
+    clean(
+      project?.bidderName,
+    ).toUpperCase()
+
+  const businessAddress =
+    clean(
+      project?.businessAddress,
+    ).toUpperCase()
+
+  const submittedBy =
+    clean(
+      project?.submittedBy,
+    ).toUpperCase()
+
+  const designation =
+    clean(
+      project?.designation,
+    )
+
+  const date =
+    formatLongDate(
+      project?.date,
+    )
+
+  // ==========================================================
+  // REPLACE ONLY OLD VALUE TEXT
+  // ==========================================================
+
+  function replaceValue({
+    value,
+    x,
+    y,
+    width,
+    height,
+    size = 9,
+    font = bold,
+    lineHeight = 10,
+  }) {
+    page.drawRectangle({
+      x,
+      y,
+      width,
+      height,
+      color: white,
+    })
+
+    const lines =
+      wrapText(
+        value,
+        font,
+        size,
+        width - 6,
+      )
+
+    lines.forEach(
+      (line, index) => {
+        page.drawText(
+          line,
+          {
+            x: x + 3,
+
+            y:
+              y +
+              height -
+              size -
+              2 -
+              index *
+                lineHeight,
+
+            size,
+
+            font,
+
+            color: black,
+          },
+        )
+      },
+    )
+  }
+
+  // ==========================================================
+  // TOP INFORMATION
+  //
+  // These coordinates are aligned to the ORIGINAL template.
+  // ==========================================================
+
+  // NAME OF THE PROCURING ENTITY
+  replaceValue({
+    value:
+      procuringEntity,
+
+    x: 290,
+
+    y: 542,
+
+    width: 485,
+
+    height: 18,
+
+    size: 9,
+
+    font: bold,
+  })
+
+  // PROJECT TITLE
+  replaceValue({
+    value:
+      projectTitle,
+
+    x: 290,
+
+    y: 511,
+
+    width: 485,
+
+    height: 31,
+
+    size: 9,
+
+    font: bold,
+
+    lineHeight: 10,
+  })
+
+  // REFERENCE NUMBER
+  replaceValue({
+    value:
+      referenceNumber,
+
+    x: 290,
+
+    y: 500,
+
+    width: 250,
+
+    height: 17,
+
+    size: 9,
+
+    font: bold,
+  })
+
+  // ==========================================================
+  // IMPORTANT:
+  // DO NOT TOUCH DOCUMENT TITLE
+  //
+  // STATEMENT OF ALL ITS ONGOING...
+  //
+  // stays 100% original.
+  // ==========================================================
+
+  // ==========================================================
+  // BIDDER INFORMATION
+  // ==========================================================
+
+  // REGISTERED BUSINESS NAME OF BIDDER
+  replaceValue({
+    value:
+      bidderName,
+
+    x: 390,
+
+    y: 391,
+
+    width: 375,
+
+    height: 18,
+
+    size: 9,
+
+    font: bold,
+  })
+
+  // BUSINESS ADDRESS
+  replaceValue({
+    value:
+      businessAddress,
+
+    x: 390,
+
+    y: 359,
+
+    width: 375,
+
+    height: 32,
+
+    size: 9,
+
+    font: bold,
+
+    lineHeight: 10,
+  })
+
+  // ==========================================================
+  // TABLE AREA
+  // ==========================================================
+  //
+  // NOTHING IS DRAWN HERE.
+  //
+  // The following stay exactly from the original PDF:
+  //
+  // Name of Contract
+  // Owner's Name
+  // Address
+  // Telephone
+  // Number
+  // Nature of Work
+  // Bidder's Role
+  // Description
+  // %
+  // Amount of Award
+  // Completion Duration
+  // Date Awarded
+  // Contract Effectivity
+  // Date Completed
+  // GOVERNMENT
+  // PRIVATE
+  // NONE
+  //
+  // ==========================================================
+
+  // ==========================================================
+  // FOOTER / SIGNATORY
+  // ==========================================================
+
+  // Submitted by
+  replaceValue({
+    value:
+      submittedBy,
+
+    x: 147,
+
+    y: 157,
+
+    width: 285,
+
+    height: 18,
+
+    size: 9,
+
+    font: bold,
+  })
+
+  // ==========================================================
+  // IMPORTANT:
+  // "(Printed Name & Signature)" from original PDF is untouched.
+  // ==========================================================
+
+  // Designation
+  replaceValue({
+    value:
+      designation,
+
+    x: 147,
+
+    y: 128,
+
+    width: 285,
+
+    height: 17,
+
+    size: 9,
+
+    font: regular,
+  })
+
+  // Name of Firm
+  // Automatically same as Bidder Name
+  replaceValue({
+    value:
+      bidderName,
+
+    x: 147,
+
+    y: 110,
+
+    width: 320,
+
+    height: 17,
+
+    size: 9,
+
+    font: bold,
+  })
+
+  // Date
+  replaceValue({
+    value:
+      date,
+
+    x: 147,
+
+    y: 92,
+
+    width: 230,
+
+    height: 17,
+
+    size: 9,
+
+    font: regular,
+  })
+
+  // ==========================================================
+  // SAVE
   // ==========================================================
 
   const bytes =
