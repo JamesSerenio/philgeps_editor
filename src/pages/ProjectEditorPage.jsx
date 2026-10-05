@@ -456,23 +456,20 @@ function ProjectEditorContent({
       'contents'
     ) {
       return (
-        <TableOfContentsEditor
-          value={contents}
-          onChange={
-            changeContents
-          }
-          onSave={(value) =>
-            persistence.save(
-              'contents',
-              value,
-            )
-          }
-          saveStatus={
-            persistence
-              .sectionStatuses
-              .contents
-          }
-        />
+          <TableOfContentsEditor
+            value={contents}
+            project={sharedProject}
+            onChange={changeContents}
+            onSave={(value) =>
+              persistence.save(
+                'contents',
+                value,
+              )
+            }
+            saveStatus={
+              persistence.sectionStatuses.contents
+            }
+          />
       )
     }
 

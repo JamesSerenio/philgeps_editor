@@ -45,12 +45,6 @@ function copyContents(value) {
         )
       }
 
-      if (typeof row.page !== 'string') {
-        throw new Error(
-          'Invalid Table of Contents page.',
-        )
-      }
-
       if (typeof row.included !== 'boolean') {
         throw new Error(
           'Invalid Table of Contents included value.',
@@ -60,7 +54,6 @@ function copyContents(value) {
       return {
         id: row.id,
         title: row.title,
-        page: row.page,
         included: row.included,
       }
     }),
