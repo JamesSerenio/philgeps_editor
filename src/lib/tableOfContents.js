@@ -1,74 +1,88 @@
-export const projectDocuments = [
-  {
-    id: 'contents',
-    title: 'Table of Contents',
-    section: 'contents',
-    template: 'TABLE OF CONTENTS.pdf',
-  },
+export const defaultTableOfContentsRows = [
   {
     id: 'ongoing',
     title: 'Statement of Ongoing Government & Private Contracts',
-    template: 'Statement of Ongoing Government and Private Contracts,.pdf',
+    page: '',
+    included: true,
   },
   {
     id: 'slcc',
     title: 'SLCC',
+    page: '',
+    included: true,
   },
   {
     id: 'nfcc',
     title: 'NFCC',
-    template: 'NFCC_Template.pdf',
+    page: '',
+    included: true,
   },
   {
     id: 'technical',
     title: 'Technical Specifications',
-    section: 'technical_specs',
-    template: 'Technical Specifications.pdf',
+    page: '',
+    included: true,
   },
   {
     id: 'bidSecurity',
     title: 'Bid Securing Declaration',
-    section: 'bid_security',
+    page: '',
+    included: true,
   },
   {
     id: 'schedule',
     title: 'Schedule of Requirements / Production Delivery Schedule',
-    section: 'schedule_requirements',
-    template: 'Production Delivery Schedule.pdf',
+    page: '',
+    included: true,
   },
   {
     id: 'manpower',
     title: 'Manpower Requirements',
-    template: 'Manpower Requirements.pdf',
+    page: '',
+    included: true,
   },
   {
     id: 'omnibus',
     title: 'Omnibus Sworn Statement',
-    section: 'omnibus',
+    page: '',
+    included: true,
   },
   {
     id: 'afterSales',
     title: 'After-Sales Service Certificate',
-    template: 'After Sales.pdf',
+    page: '',
+    included: true,
   },
   {
     id: 'warranty',
     title: 'Certificate of Product Warranty',
-    template: 'Warranty.pdf',
+    page: '',
+    included: true,
   },
   {
     id: 'bidForm',
     title: 'Bid Form',
-    template: 'BID FORM.pdf',
+    page: '',
+    included: true,
   },
   {
     id: 'priceSchedule',
     title: 'Price Schedule for Goods',
-    template: 'PRICE SCHEDULE FOR GOODS.pdf',
+    page: '',
+    included: true,
   },
   {
     id: 'summary',
     title: 'Summary of Bid Prices',
-    template: 'SUMMARY OF BID PRICES.pdf',
+    page: '',
+    included: true,
   },
 ]
+
+export function createInitialContentsState() {
+  return {
+    rows: defaultTableOfContentsRows.map((row) => ({
+      ...row,
+    })),
+  }
+}
