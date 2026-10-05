@@ -937,13 +937,7 @@ export async function generateTableOfContentsPreview(
 // ONGOING GOVERNMENT & PRIVATE CONTRACTS
 // ============================================================
 
-export async function generateOngoingContractsPreview(
-  project,
-) {
-  // ==========================================================
-  // LOAD ORIGINAL TEMPLATE
-  // ==========================================================
-
+export async function generateOngoingContractsPreview(project) {
   const response = await fetch(
     '/pdf/templates/Statement of Ongoing Government and Private Contracts,.pdf',
   )
@@ -954,13 +948,8 @@ export async function generateOngoingContractsPreview(
     )
   }
 
-  const sourceBytes =
-    await response.arrayBuffer()
-
-  const pdfDoc =
-    await PDFDocument.load(
-      sourceBytes,
-    )
+  const sourceBytes = await response.arrayBuffer()
+  const pdfDoc = await PDFDocument.load(sourceBytes)
 
   if (pdfDoc.getPageCount() === 0) {
     throw new Error(
@@ -968,365 +957,701 @@ export async function generateOngoingContractsPreview(
     )
   }
 
-  const page =
-    pdfDoc.getPage(0)
+  const page = pdfDoc.getPage(0)
 
-  const regular =
-    await pdfDoc.embedFont(
-      StandardFonts.TimesRoman,
-    )
+  const regular = await pdfDoc.embedFont(StandardFonts.TimesRoman)
+  const bold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold)
 
-  const bold =
-    await pdfDoc.embedFont(
-      StandardFonts.TimesRomanBold,
-    )
+  const white = rgb(1, 1, 1)
+  const black = rgb(0, 0, 0)
 
-  const white =
-    rgb(1, 1, 1)
+  const procuringEntity = clean(project?.procuringEntity).toUpperCase()
+  const projectTitle = clean(project?.projectTitle).toUpperCase()
+  const referenceNumber = clean(project?.referenceNumber)
+  const bidderName = clean(project?.bidderName).toUpperCase()
+  const businessAddress = clean(project?.businessAddress).toUpperCase()
+  const submittedBy = clean(project?.submittedBy).toUpperCase()
+  const designation = clean(project?.designation)
+  const date = formatLongDate(project?.date)
 
-  const black =
-    rgb(0, 0, 0)
+  function text(value, x, y, size = 10, font = regular) {
+    if (!clean(value)) return
+    page.drawText(clean(value), {
+      x,
+      y,
+      size,
+      font,
+      color: black,
+    })
+  }
 
-  // ==========================================================
-  // DOCUMENT SETUP VALUES
-  // ==========================================================
-
-  const procuringEntity =
-    clean(
-      project?.procuringEntity,
-    ).toUpperCase()
-
-  const projectTitle =
-    clean(
-      project?.projectTitle,
-    ).toUpperCase()
-
-  const referenceNumber =
-    clean(
-      project?.referenceNumber,
-    )
-
-  const bidderName =
-    clean(
-      project?.bidderName,
-    ).toUpperCase()
-
-  const businessAddress =
-    clean(
-      project?.businessAddress,
-    ).toUpperCase()
-
-  const submittedBy =
-    clean(
-      project?.submittedBy,
-    ).toUpperCase()
-
-  const designation =
-    clean(
-      project?.designation,
-    )
-
-  const date =
-    formatLongDate(
-      project?.date,
-    )
-
-  // ==========================================================
-  // REPLACE ONLY OLD VALUE TEXT
-  // ==========================================================
-
-  function replaceValue({
+  function wrapped(
     value,
     x,
     y,
     width,
-    height,
-    size = 9,
+    size = 10,
     font = bold,
-    lineHeight = 10,
-  }) {
-    page.drawRectangle({
-      x,
-      y,
-      width,
-      height,
-      color: white,
-    })
+    lineHeight = 12,
+  ) {
+    const lines = wrapText(value, font, size, width)
 
-    const lines =
-      wrapText(
-        value,
-        font,
+    lines.forEach((line, index) => {
+      page.drawText(line, {
+        x,
+        y: y - index * lineHeight,
         size,
-        width - 6,
-      )
-
-    lines.forEach(
-      (line, index) => {
-        page.drawText(
-          line,
-          {
-            x: x + 3,
-
-            y:
-              y +
-              height -
-              size -
-              2 -
-              index *
-                lineHeight,
-
-            size,
-
-            font,
-
-            color: black,
-          },
-        )
-      },
-    )
+        font,
+        color: black,
+      })
+    })
   }
 
   // ==========================================================
-  // TOP INFORMATION
-  //
-  // These coordinates are aligned to the ORIGINAL template.
+  // CLEAR ONLY THE PARTS TO EDIT
+  // DO NOT TOUCH THE TABLE
   // ==========================================================
 
-  // NAME OF THE PROCURING ENTITY
-  replaceValue({
-    value:
-      procuringEntity,
+  // top info
+  page.drawRectangle({
+    x: 28,
+    y: 482,
+    width: 785,
+    height: 92,
+    color: white,
+  })
 
-    x: 290,
+  // bidder info
+  page.drawRectangle({
+    x: 55,
+    y: 348,
+    width: 745,
+    height: 76,
+    color: white,
+  })
 
-    y: 542,
-
+  // footer info
+  page.drawRectangle({
+    x: 28,
+    y: 48,
     width: 485,
-
-    height: 18,
-
-    size: 9,
-
-    font: bold,
-  })
-
-  // PROJECT TITLE
-  replaceValue({
-    value:
-      projectTitle,
-
-    x: 290,
-
-    y: 511,
-
-    width: 485,
-
-    height: 31,
-
-    size: 9,
-
-    font: bold,
-
-    lineHeight: 10,
-  })
-
-  // REFERENCE NUMBER
-  replaceValue({
-    value:
-      referenceNumber,
-
-    x: 290,
-
-    y: 500,
-
-    width: 250,
-
-    height: 17,
-
-    size: 9,
-
-    font: bold,
+    height: 134,
+    color: white,
   })
 
   // ==========================================================
-  // IMPORTANT:
-  // DO NOT TOUCH DOCUMENT TITLE
-  //
-  // STATEMENT OF ALL ITS ONGOING...
-  //
-  // stays 100% original.
+  // TOP PROJECT INFO - BIGGER
   // ==========================================================
 
+  const topLabelX = 42
+  const topColonX = 275
+  const topValueX = 300
+
+  text('NAME OF THE PROCURING ENTITY', topLabelX, 550, 11.5, regular)
+  text(':', topColonX, 550, 11.5, regular)
+  wrapped(procuringEntity, topValueX, 550, 455, 11.5, bold, 13)
+
+  text('PROJECT TITLE', topLabelX, 527, 11.5, regular)
+  text(':', topColonX, 527, 11.5, regular)
+  wrapped(projectTitle, topValueX, 527, 455, 11.5, bold, 13)
+
+  text('REFERENCE NUMBER', topLabelX, 492, 11.5, regular)
+  text(':', topColonX, 492, 11.5, regular)
+  text(referenceNumber, topValueX, 492, 11.5, bold)
+
   // ==========================================================
-  // BIDDER INFORMATION
+  // BIDDER INFO - BIGGER
   // ==========================================================
 
-  // REGISTERED BUSINESS NAME OF BIDDER
-  replaceValue({
-    value:
-      bidderName,
+  const bidderLabelX = 68
+  const bidderColonX = 365
+  const bidderValueX = 392
 
-    x: 390,
+  text('REGISTERED BUSINESS NAME OF BIDDER', bidderLabelX, 400, 11, regular)
+  text(':', bidderColonX, 400, 11, regular)
+  wrapped(bidderName, bidderValueX, 400, 380, 11, bold, 13)
 
-    y: 391,
+  text('BUSINESS ADDRESS', bidderLabelX, 373, 11, regular)
+  text(':', bidderColonX, 373, 11, regular)
+  wrapped(businessAddress, bidderValueX, 373, 380, 11, bold, 13)
 
-    width: 375,
+  // ==========================================================
+  // FOOTER INFO - BIGGER
+  // ==========================================================
 
-    height: 18,
+  const footerLabelX = 36
+  const footerColonX = 126
+  const footerValueX = 154
 
-    size: 9,
+  text('Submitted by', footerLabelX, 157, 10.5, regular)
+  text(':', footerColonX, 157, 10.5, regular)
+  text(submittedBy, footerValueX, 157, 10.5, bold)
 
-    font: bold,
+  const submittedWidth = bold.widthOfTextAtSize(submittedBy, 10.5)
+  page.drawLine({
+    start: { x: footerValueX, y: 155 },
+    end: { x: footerValueX + submittedWidth, y: 155 },
+    thickness: 0.6,
+    color: black,
   })
 
-  // BUSINESS ADDRESS
-  replaceValue({
-    value:
-      businessAddress,
+  text('(Printed Name & Signature)', footerValueX, 142, 8, regular)
 
-    x: 390,
+  text('Designation', footerLabelX, 119, 10.5, regular)
+  text(':', footerColonX, 119, 10.5, regular)
+  text(designation, footerValueX, 119, 10.5, regular)
 
-    y: 359,
+  text('Name of Firm', footerLabelX, 99, 10.5, regular)
+  text(':', footerColonX, 99, 10.5, regular)
+  text(bidderName, footerValueX, 99, 10.5, bold)
 
-    width: 375,
+  text('Date', footerLabelX, 79, 10.5, regular)
+  text(':', footerColonX, 79, 10.5, regular)
+  text(date, footerValueX, 79, 10.5, regular)
 
-    height: 32,
-
-    size: 9,
-
-    font: bold,
-
-    lineHeight: 10,
+  const bytes = await pdfDoc.save()
+  const blob = new Blob([bytes], {
+    type: 'application/pdf',
   })
 
-  // ==========================================================
-  // TABLE AREA
-  // ==========================================================
-  //
-  // NOTHING IS DRAWN HERE.
-  //
-  // The following stay exactly from the original PDF:
-  //
-  // Name of Contract
-  // Owner's Name
-  // Address
-  // Telephone
-  // Number
-  // Nature of Work
-  // Bidder's Role
-  // Description
-  // %
-  // Amount of Award
-  // Completion Duration
-  // Date Awarded
-  // Contract Effectivity
-  // Date Completed
-  // GOVERNMENT
-  // PRIVATE
-  // NONE
-  //
-  // ==========================================================
+  return URL.createObjectURL(blob)
+}
 
-  // ==========================================================
-  // FOOTER / SIGNATORY
-  // ==========================================================
+export async function generateNfccPreview(project) {
+  const response = await fetch('/pdf/templates/NFCC_Template.pdf')
 
-  // Submitted by
-  replaceValue({
-    value:
-      submittedBy,
+  if (!response.ok) {
+    throw new Error('Unable to load NFCC_Template.pdf')
+  }
 
-    x: 147,
+  const sourceBytes = await response.arrayBuffer()
+  const pdfDoc = await PDFDocument.load(sourceBytes)
 
-    y: 157,
+  if (pdfDoc.getPageCount() === 0) {
+    throw new Error('NFCC_Template.pdf has no pages.')
+  }
 
-    width: 285,
+  const page = pdfDoc.getPage(0)
 
-    height: 18,
+  const regular = await pdfDoc.embedFont(
+    StandardFonts.Helvetica,
+  )
 
-    size: 9,
+  const bold = await pdfDoc.embedFont(
+    StandardFonts.HelveticaBold,
+  )
 
-    font: bold,
-  })
+  const italic = await pdfDoc.embedFont(
+    StandardFonts.HelveticaOblique,
+  )
 
-  // ==========================================================
-  // IMPORTANT:
-  // "(Printed Name & Signature)" from original PDF is untouched.
-  // ==========================================================
+  const white = rgb(1, 1, 1)
+  const black = rgb(0, 0, 0)
+  const red = rgb(0.85, 0, 0)
 
-  // Designation
-  replaceValue({
-    value:
-      designation,
+  // =========================================================
+  // VALUES FROM DOCUMENT SETUP
+  // =========================================================
 
-    x: 147,
+  const procuringEntity = clean(
+    project?.procuringEntity,
+  ).toUpperCase()
 
-    y: 128,
+  const referenceNumber = clean(
+    project?.referenceNumber,
+  )
 
-    width: 285,
+  const projectTitle = clean(
+    project?.projectTitle,
+  ).toUpperCase()
 
-    height: 17,
+  const bidderName = clean(
+    project?.bidderName,
+  ).toUpperCase()
 
-    size: 9,
+  const businessAddress = clean(
+    project?.businessAddress,
+  ).toUpperCase()
 
-    font: regular,
-  })
+  const submittedBy = clean(
+    project?.submittedBy,
+  ).toUpperCase()
 
-  // Name of Firm
-  // Automatically same as Bidder Name
-  replaceValue({
-    value:
-      bidderName,
+  const designation = clean(
+    project?.designation,
+  )
 
-    x: 147,
+  const date = formatLongDate(
+    project?.date,
+  )
 
-    y: 110,
+  // =========================================================
+  // LOCAL DRAW TEXT
+  // =========================================================
 
-    width: 320,
+  function drawText(
+    text,
+    x,
+    y,
+    size = 10,
+    font = regular,
+    color = black,
+  ) {
+    const value = clean(text)
 
-    height: 17,
+    if (!value) {
+      return
+    }
 
-    size: 9,
+    page.drawText(value, {
+      x,
+      y,
+      size,
+      font,
+      color,
+    })
+  }
 
-    font: bold,
-  })
+  // =========================================================
+  // LOCAL WRAPPED TEXT
+  // =========================================================
 
-  // Date
-  replaceValue({
-    value:
-      date,
+  function drawWrappedText(
+    text,
+    x,
+    y,
+    maxWidth,
+    size = 10,
+    font = regular,
+    color = black,
+    lineHeight = 12,
+  ) {
+    const lines = wrapText(
+      text,
+      font,
+      size,
+      maxWidth,
+    )
 
-    x: 147,
-
-    y: 92,
-
-    width: 230,
-
-    height: 17,
-
-    size: 9,
-
-    font: regular,
-  })
-
-  // ==========================================================
-  // SAVE
-  // ==========================================================
-
-  const bytes =
-    await pdfDoc.save()
-
-  const blob =
-    new Blob(
-      [bytes],
-      {
-        type:
-          'application/pdf',
+    lines.forEach(
+      (line, index) => {
+        page.drawText(line, {
+          x,
+          y: y - index * lineHeight,
+          size,
+          font,
+          color,
+        })
       },
     )
 
-  return URL.createObjectURL(
-    blob,
+    return lines.length
+  }
+
+  // =========================================================
+  // CLEAN OLD HEADER VALUES
+  // =========================================================
+  //
+  // Tatakpan lang ang old editable information.
+  //
+  // HINDI gagalawin:
+  // - NFCC title
+  // - body paragraph
+  // - computation formula
+  // - computation table
+  // =========================================================
+
+  page.drawRectangle({
+    x: 18,
+    y: 655,
+    width: 560,
+    height: 118,
+    color: white,
+  })
+
+  // =========================================================
+  // NEW HEADER
+  // =========================================================
+
+  const labelX = 28
+  const colonX = 165
+  const valueX = 178
+  const valueWidth = 385
+
+  // ---------------------------------------------------------
+  // PROCURING ENTITY
+  // ---------------------------------------------------------
+
+  drawText(
+    'PROCURING ENTITY',
+    labelX,
+    742,
+    10.5,
+    regular,
+    black,
   )
+
+  drawText(
+    ':',
+    colonX,
+    742,
+    10.5,
+    regular,
+    black,
+  )
+
+  drawWrappedText(
+    procuringEntity,
+    valueX,
+    742,
+    valueWidth,
+    10.5,
+    bold,
+    red,
+    12,
+  )
+
+  // ---------------------------------------------------------
+  // PROJECT NUMBER
+  // ---------------------------------------------------------
+
+  drawText(
+    'Project Number',
+    labelX,
+    722,
+    10,
+    regular,
+    black,
+  )
+
+  drawText(
+    ':',
+    colonX,
+    722,
+    10,
+    regular,
+    black,
+  )
+
+  drawText(
+    referenceNumber,
+    valueX,
+    722,
+    10.5,
+    bold,
+    red,
+  )
+
+  // ---------------------------------------------------------
+  // CONTRACT / PROJECT TITLE
+  // ---------------------------------------------------------
+
+  drawText(
+    'CONTRACT',
+    labelX,
+    702,
+    10.5,
+    regular,
+    black,
+  )
+
+  drawText(
+    ':',
+    colonX,
+    702,
+    10.5,
+    regular,
+    black,
+  )
+
+  drawWrappedText(
+    projectTitle,
+    valueX,
+    702,
+    valueWidth,
+    10,
+    bold,
+    red,
+    11.5,
+  )
+
+  // ---------------------------------------------------------
+  // CONTRACTOR
+  // ---------------------------------------------------------
+
+  drawText(
+    'Supplier/Contractor',
+    labelX,
+    680,
+    10,
+    regular,
+    black,
+  )
+
+  drawText(
+    ':',
+    colonX,
+    680,
+    10,
+    regular,
+    black,
+  )
+
+  drawText(
+    bidderName,
+    valueX,
+    680,
+    10,
+    regular,
+    black,
+  )
+
+  // ---------------------------------------------------------
+  // ADDRESS
+  // ---------------------------------------------------------
+
+  drawText(
+    'Address',
+    labelX,
+    662,
+    10,
+    regular,
+    black,
+  )
+
+  drawText(
+    ':',
+    colonX,
+    662,
+    10,
+    regular,
+    black,
+  )
+
+  drawWrappedText(
+    businessAddress,
+    valueX,
+    662,
+    valueWidth,
+    9,
+    regular,
+    black,
+    10.5,
+  )
+
+  // =========================================================
+  // REMOVE OLD NFCC FOOTER
+  // =========================================================
+  //
+  // Tatanggalin nito:
+  //
+  // Submitted:
+  // MARLJONE BLAIRE B. TINGTING
+  //
+  // Designation:
+  // Authorized Representative
+  //
+  // Date:
+  // August 5, 2026
+  //
+  // Malapad ang white box para siguradong walang matitirang
+  // old text sa kanan.
+  //
+  // HINDI nito gagalawin ang NFCC table sa taas.
+  // =========================================================
+
+  page.drawRectangle({
+    x: 18,
+    y: 105,
+    width: 560,
+    height: 145,
+    color: white,
+  })
+
+  // =========================================================
+  // NEW FOOTER
+  // =========================================================
+  //
+  // Inakyat para pumalit mismo sa OLD footer.
+  // Bigger font.
+  // =========================================================
+
+  const footerLabelX = 30
+  const footerColonX = 120
+  const footerValueX = 145
+
+  // ---------------------------------------------------------
+  // SUBMITTED
+  // ---------------------------------------------------------
+
+  const submittedY = 215
+
+  drawText(
+    'Submitted',
+    footerLabelX,
+    submittedY,
+    12,
+    regular,
+    black,
+  )
+
+  drawText(
+    ':',
+    footerColonX,
+    submittedY,
+    12,
+    regular,
+    black,
+  )
+
+  drawText(
+    submittedBy,
+    footerValueX,
+    submittedY,
+    12,
+    bold,
+    black,
+  )
+
+  const submittedWidth =
+    bold.widthOfTextAtSize(
+      submittedBy,
+      12,
+    )
+
+  if (submittedBy) {
+    page.drawLine({
+      start: {
+        x: footerValueX,
+        y: submittedY - 2,
+      },
+      end: {
+        x:
+          footerValueX +
+          submittedWidth,
+        y:
+          submittedY -
+          2,
+      },
+      thickness: 0.8,
+      color: black,
+    })
+  }
+
+  drawText(
+    '(Printed Name & Signature)',
+    footerValueX,
+    201,
+    8,
+    regular,
+    black,
+  )
+
+  // ---------------------------------------------------------
+  // DESIGNATION
+  // ---------------------------------------------------------
+
+  drawText(
+    'Designation',
+    footerLabelX,
+    178,
+    12,
+    regular,
+    black,
+  )
+
+  drawText(
+    ':',
+    footerColonX,
+    178,
+    12,
+    regular,
+    black,
+  )
+
+  drawText(
+    designation,
+    footerValueX,
+    178,
+    12,
+    italic,
+    black,
+  )
+
+  // ---------------------------------------------------------
+  // NAME OF FIRM
+  // ---------------------------------------------------------
+
+  drawText(
+    'Name of Firm',
+    footerLabelX,
+    153,
+    12,
+    regular,
+    black,
+  )
+
+  drawText(
+    ':',
+    footerColonX,
+    153,
+    12,
+    regular,
+    black,
+  )
+
+  drawText(
+    bidderName,
+    footerValueX,
+    153,
+    12,
+    bold,
+    black,
+  )
+
+  // ---------------------------------------------------------
+  // DATE
+  // ---------------------------------------------------------
+
+  drawText(
+    'Date',
+    footerLabelX,
+    128,
+    12,
+    regular,
+    black,
+  )
+
+  drawText(
+    ':',
+    footerColonX,
+    128,
+    12,
+    regular,
+    black,
+  )
+
+  drawText(
+    date,
+    footerValueX,
+    128,
+    12,
+    regular,
+    black,
+  )
+
+  // =========================================================
+  // SAVE
+  // =========================================================
+
+  const bytes = await pdfDoc.save()
+
+  const blob = new Blob(
+    [bytes],
+    {
+      type: 'application/pdf',
+    },
+  )
+
+  return URL.createObjectURL(blob)
 }

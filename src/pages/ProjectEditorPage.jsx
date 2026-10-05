@@ -14,6 +14,7 @@ import {
 } from '../services/projectService'
 
 import {
+  generateNfccPreview,
   generateOngoingContractsPreview,
   generateTableOfContentsPreview,
 } from '../services/pdfService'
@@ -57,6 +58,10 @@ import ScheduleEditor from '../editors/ScheduleEditor'
 import BidSecurityEditor from '../editors/BidSecurityEditor'
 import OmnibusEditor from '../editors/OmnibusEditor'
 
+// ============================================================
+// PAGE
+// ============================================================
+
 export default function ProjectEditorPage() {
   const { id } = useParams()
 
@@ -68,11 +73,19 @@ export default function ProjectEditorPage() {
   )
 }
 
+// ============================================================
+// EDITOR CONTENT
+// ============================================================
+
 function ProjectEditorContent({
   id,
 }) {
   const navigate =
     useNavigate()
+
+  // ==========================================================
+  // MAIN STATE
+  // ==========================================================
 
   const [
     project,
@@ -89,9 +102,9 @@ function ProjectEditorContent({
     setActiveDocument,
   ] = useState(null)
 
-  // ============================================================
-  // PDF PREVIEWS
-  // ============================================================
+  // ==========================================================
+  // LIVE PDF PREVIEWS
+  // ==========================================================
 
   const [
     contentsPreview,
@@ -103,15 +116,23 @@ function ProjectEditorContent({
     setOngoingPreview,
   ] = useState(null)
 
+  const [
+    nfccPreview,
+    setNfccPreview,
+  ] = useState(null)
+
   const contentsPreviewRef =
     useRef(null)
 
   const ongoingPreviewRef =
     useRef(null)
 
-  // ============================================================
+  const nfccPreviewRef =
+    useRef(null)
+
+  // ==========================================================
   // EDITOR STATES
-  // ============================================================
+  // ==========================================================
 
   const [
     technical,
@@ -140,9 +161,9 @@ function ProjectEditorContent({
     setDocumentSetup,
   ] = useState(null)
 
-  // ============================================================
+  // ==========================================================
   // PERSISTENCE
-  // ============================================================
+  // ==========================================================
 
   const persistence =
     useEditorPersistence(
@@ -186,9 +207,9 @@ function ProjectEditorContent({
       },
     )
 
-  // ============================================================
+  // ==========================================================
   // LOAD PROJECT
-  // ============================================================
+  // ==========================================================
 
   useEffect(() => {
     let cancelled =
@@ -198,10 +219,11 @@ function ProjectEditorContent({
       .then(
         ({
           data,
-          error,
+          error:
+            projectError,
         }) => {
-          if (error) {
-            throw error
+          if (projectError) {
+            throw projectError
           }
 
           if (!cancelled) {
@@ -211,23 +233,29 @@ function ProjectEditorContent({
           }
         },
       )
-      .catch((err) => {
-        if (!cancelled) {
-          setError(
-            err.message ||
-              'Unable to load project.',
-          )
-        }
-      })
+      .catch(
+        (loadError) => {
+          if (!cancelled) {
+            setError(
+              loadError.message ||
+                'Unable to load project.',
+            )
+          }
+        },
+      )
 
     return () => {
       cancelled = true
     }
   }, [id])
 
-  // ============================================================
-  // SAFE SHARED SETUP
-  // ============================================================
+  // ==========================================================
+  // SAFE DOCUMENT SETUP
+  //
+  // IMPORTANT:
+  // These values are declared BEFORE all useEffect hooks.
+  // That prevents conditional Hook errors.
+  // ==========================================================
 
   const setup =
     project
@@ -241,75 +269,70 @@ function ProjectEditorContent({
 
   const sharedProject =
     setup
-      ? setupProject(setup)
+      ? setupProject(
+          setup,
+        )
       : null
 
-  // ============================================================
-  // SAFE PRIMITIVE VALUES FOR EFFECT DEPENDENCIES
-  // ============================================================
+  // ==========================================================
+  // PRIMITIVE PREVIEW VALUES
+  // ==========================================================
 
   const previewProvince =
-    sharedProject?.province ??
+    setup?.province ??
     ''
 
   const previewMunicipality =
-    sharedProject
-      ?.municipality ??
+    setup?.municipality ??
     ''
 
   const previewProjectTitle =
-    sharedProject
-      ?.projectTitle ??
+    setup?.projectTitle ??
     ''
 
   const previewReferenceNumber =
-    sharedProject
-      ?.referenceNumber ??
+    setup?.referenceNumber ??
     ''
 
   const previewProcuringEntity =
-    sharedProject
-      ?.procuringEntity ??
+    setup?.procuringEntity ??
     ''
 
   const previewDate =
-    sharedProject?.date ??
+    setup?.date ??
     ''
 
   const previewBidderName =
-    sharedProject
-      ?.bidderName ??
+    setup?.bidderName ??
     ''
 
   const previewBusinessAddress =
-    sharedProject
-      ?.businessAddress ??
+    setup?.businessAddress ??
     ''
 
   const previewSubmittedBy =
-    sharedProject
-      ?.submittedBy ??
+    setup?.submittedBy ??
     ''
 
   const previewDesignation =
-    sharedProject
-      ?.designation ??
+    setup?.designation ??
     ''
 
-  // ============================================================
+  // ==========================================================
   // TABLE OF CONTENTS LIVE PREVIEW
-  // ============================================================
+  // ==========================================================
 
   useEffect(() => {
     if (
       activeDocument !==
         'contents' ||
-      !sharedProject
+      !setup
     ) {
       return undefined
     }
 
-    let cancelled = false
+    let cancelled =
+      false
 
     const previewData = {
       province:
@@ -346,33 +369,35 @@ function ProjectEditorContent({
     generateTableOfContentsPreview(
       previewData,
     )
-      .then((url) => {
-        if (cancelled) {
-          URL.revokeObjectURL(
+      .then(
+        (url) => {
+          if (cancelled) {
+            URL.revokeObjectURL(
+              url,
+            )
+
+            return
+          }
+
+          if (
+            contentsPreviewRef.current &&
+            contentsPreviewRef.current.startsWith(
+              'blob:',
+            )
+          ) {
+            URL.revokeObjectURL(
+              contentsPreviewRef.current,
+            )
+          }
+
+          contentsPreviewRef.current =
+            url
+
+          setContentsPreview(
             url,
           )
-
-          return
-        }
-
-        if (
-          contentsPreviewRef.current &&
-          contentsPreviewRef.current.startsWith(
-            'blob:',
-          )
-        ) {
-          URL.revokeObjectURL(
-            contentsPreviewRef.current,
-          )
-        }
-
-        contentsPreviewRef.current =
-          url
-
-        setContentsPreview(
-          url,
-        )
-      })
+        },
+      )
       .catch(
         (previewError) => {
           if (cancelled) {
@@ -391,6 +416,7 @@ function ProjectEditorContent({
     }
   }, [
     activeDocument,
+    setup,
     previewProvince,
     previewMunicipality,
     previewProjectTitle,
@@ -403,20 +429,21 @@ function ProjectEditorContent({
     previewDesignation,
   ])
 
-  // ============================================================
+  // ==========================================================
   // ONGOING CONTRACTS LIVE PREVIEW
-  // ============================================================
+  // ==========================================================
 
   useEffect(() => {
     if (
       activeDocument !==
         'ongoing' ||
-      !sharedProject
+      !setup
     ) {
       return undefined
     }
 
-    let cancelled = false
+    let cancelled =
+      false
 
     const previewData = {
       province:
@@ -453,33 +480,35 @@ function ProjectEditorContent({
     generateOngoingContractsPreview(
       previewData,
     )
-      .then((url) => {
-        if (cancelled) {
-          URL.revokeObjectURL(
+      .then(
+        (url) => {
+          if (cancelled) {
+            URL.revokeObjectURL(
+              url,
+            )
+
+            return
+          }
+
+          if (
+            ongoingPreviewRef.current &&
+            ongoingPreviewRef.current.startsWith(
+              'blob:',
+            )
+          ) {
+            URL.revokeObjectURL(
+              ongoingPreviewRef.current,
+            )
+          }
+
+          ongoingPreviewRef.current =
+            url
+
+          setOngoingPreview(
             url,
           )
-
-          return
-        }
-
-        if (
-          ongoingPreviewRef.current &&
-          ongoingPreviewRef.current.startsWith(
-            'blob:',
-          )
-        ) {
-          URL.revokeObjectURL(
-            ongoingPreviewRef.current,
-          )
-        }
-
-        ongoingPreviewRef.current =
-          url
-
-        setOngoingPreview(
-          url,
-        )
-      })
+        },
+      )
       .catch(
         (previewError) => {
           if (cancelled) {
@@ -498,6 +527,7 @@ function ProjectEditorContent({
     }
   }, [
     activeDocument,
+    setup,
     previewProvince,
     previewMunicipality,
     previewProjectTitle,
@@ -510,9 +540,120 @@ function ProjectEditorContent({
     previewDesignation,
   ])
 
-  // ============================================================
-  // CLEAN GENERATED BLOB URLS
-  // ============================================================
+  // ==========================================================
+  // NFCC LIVE PREVIEW
+  // ==========================================================
+
+  useEffect(() => {
+    if (
+      activeDocument !==
+        'nfcc' ||
+      !setup
+    ) {
+      return undefined
+    }
+
+    let cancelled =
+      false
+
+    const previewData = {
+      province:
+        previewProvince,
+
+      municipality:
+        previewMunicipality,
+
+      projectTitle:
+        previewProjectTitle,
+
+      referenceNumber:
+        previewReferenceNumber,
+
+      procuringEntity:
+        previewProcuringEntity,
+
+      date:
+        previewDate,
+
+      bidderName:
+        previewBidderName,
+
+      businessAddress:
+        previewBusinessAddress,
+
+      submittedBy:
+        previewSubmittedBy,
+
+      designation:
+        previewDesignation,
+    }
+
+    generateNfccPreview(
+      previewData,
+    )
+      .then(
+        (url) => {
+          if (cancelled) {
+            URL.revokeObjectURL(
+              url,
+            )
+
+            return
+          }
+
+          if (
+            nfccPreviewRef.current &&
+            nfccPreviewRef.current.startsWith(
+              'blob:',
+            )
+          ) {
+            URL.revokeObjectURL(
+              nfccPreviewRef.current,
+            )
+          }
+
+          nfccPreviewRef.current =
+            url
+
+          setNfccPreview(
+            url,
+          )
+        },
+      )
+      .catch(
+        (previewError) => {
+          if (cancelled) {
+            return
+          }
+
+          console.error(
+            'NFCC preview failed',
+            previewError,
+          )
+        },
+      )
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    activeDocument,
+    setup,
+    previewProvince,
+    previewMunicipality,
+    previewProjectTitle,
+    previewReferenceNumber,
+    previewProcuringEntity,
+    previewDate,
+    previewBidderName,
+    previewBusinessAddress,
+    previewSubmittedBy,
+    previewDesignation,
+  ])
+
+  // ==========================================================
+  // CLEANUP GENERATED PDF URLS
+  // ==========================================================
 
   useEffect(() => {
     return () => {
@@ -543,12 +684,26 @@ function ProjectEditorContent({
         ongoingPreviewRef.current =
           null
       }
+
+      if (
+        nfccPreviewRef.current &&
+        nfccPreviewRef.current.startsWith(
+          'blob:',
+        )
+      ) {
+        URL.revokeObjectURL(
+          nfccPreviewRef.current,
+        )
+
+        nfccPreviewRef.current =
+          null
+      }
     }
   }, [])
 
-  // ============================================================
+  // ==========================================================
   // ERROR
-  // ============================================================
+  // ==========================================================
 
   if (
     error ||
@@ -583,9 +738,9 @@ function ProjectEditorContent({
     )
   }
 
-  // ============================================================
+  // ==========================================================
   // LOADING
-  // ============================================================
+  // ==========================================================
 
   if (
     !project ||
@@ -603,9 +758,9 @@ function ProjectEditorContent({
     )
   }
 
-  // ============================================================
-  // COMMON VALUES
-  // ============================================================
+  // ==========================================================
+  // COMMON DOCUMENT VALUES
+  // ==========================================================
 
   const common = {
     projectTitle:
@@ -636,9 +791,9 @@ function ProjectEditorContent({
       setup.submittedBy,
   }
 
-  // ============================================================
+  // ==========================================================
   // BID SECURITY
-  // ============================================================
+  // ==========================================================
 
   const bidValue = {
     ...(bidSecurity ??
@@ -652,9 +807,9 @@ function ProjectEditorContent({
       setup.designation,
   }
 
-  // ============================================================
+  // ==========================================================
   // OMNIBUS
-  // ============================================================
+  // ==========================================================
 
   const omnibusValue = {
     ...(omnibus ??
@@ -668,9 +823,9 @@ function ProjectEditorContent({
       setup.designation,
   }
 
-  // ============================================================
+  // ==========================================================
   // SCHEDULE
-  // ============================================================
+  // ==========================================================
 
   const scheduleItems =
     sharedScheduleItems(
@@ -678,9 +833,9 @@ function ProjectEditorContent({
       schedule,
     )
 
-  // ============================================================
+  // ==========================================================
   // SELECTED DOCUMENT
-  // ============================================================
+  // ==========================================================
 
   const selected =
     projectDocuments.find(
@@ -689,36 +844,44 @@ function ProjectEditorContent({
         activeDocument,
     )
 
-  // ============================================================
+  // ==========================================================
   // PDF PREVIEW SOURCE
-  // ============================================================
+  // ==========================================================
 
   const preview =
     activeDocument ===
     'contents'
       ? contentsPreview
+
       : activeDocument ===
           'ongoing'
         ? ongoingPreview
+
         : activeDocument ===
-            'bidSecurity'
-          ? bidValue.templateVariant ===
-            'initao_lgu'
-            ? pdfTemplates.initao
-            : pdfTemplates.bidSecurity
+            'nfcc'
+          ? nfccPreview
+
           : activeDocument ===
-              'omnibus'
-            ? omnibusValue.templateVariant ===
+              'bidSecurity'
+            ? bidValue.templateVariant ===
               'initao_lgu'
               ? pdfTemplates.initao
-              : pdfTemplates.omnibus
-            : selected?.template
-              ? `/pdf/templates/${selected.template}`
-              : null
+              : pdfTemplates.bidSecurity
 
-  // ============================================================
-  // DOCUMENT SETUP
-  // ============================================================
+            : activeDocument ===
+                'omnibus'
+              ? omnibusValue.templateVariant ===
+                'initao_lgu'
+                ? pdfTemplates.initao
+                : pdfTemplates.omnibus
+
+              : selected?.template
+                ? `/pdf/templates/${selected.template}`
+                : null
+
+  // ==========================================================
+  // DOCUMENT SETUP CHANGE
+  // ==========================================================
 
   function changeSetup(
     value,
@@ -743,9 +906,9 @@ function ProjectEditorContent({
     )
   }
 
-  // ============================================================
+  // ==========================================================
   // TECHNICAL SPECS
-  // ============================================================
+  // ==========================================================
 
   function changeTechnical(
     value,
@@ -760,9 +923,9 @@ function ProjectEditorContent({
     )
   }
 
-  // ============================================================
+  // ==========================================================
   // SCHEDULE
-  // ============================================================
+  // ==========================================================
 
   function schedulePayload(
     value,
@@ -799,15 +962,16 @@ function ProjectEditorContent({
     )
   }
 
-  // ============================================================
+  // ==========================================================
   // BID SECURITY
-  // ============================================================
+  // ==========================================================
 
   function changeBid(
     value,
   ) {
     const next = {
       ...value,
+
       documentSetup:
         setup,
     }
@@ -822,9 +986,9 @@ function ProjectEditorContent({
     )
   }
 
-  // ============================================================
+  // ==========================================================
   // OMNIBUS
-  // ============================================================
+  // ==========================================================
 
   function changeOmnibus(
     value,
@@ -839,16 +1003,16 @@ function ProjectEditorContent({
     )
   }
 
-  // ============================================================
+  // ==========================================================
   // EDITOR RENDERER
-  // ============================================================
+  // ==========================================================
 
   function renderEditor(
     document,
   ) {
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
     // TABLE OF CONTENTS
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
 
     if (
       document.id ===
@@ -857,15 +1021,15 @@ function ProjectEditorContent({
       return (
         <TableOfContentsEditor
           project={
-            sharedProject
+            setup
           }
         />
       )
     }
 
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
     // ONGOING CONTRACTS
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
 
     if (
       document.id ===
@@ -882,7 +1046,7 @@ function ProjectEditorContent({
               Procuring Entity:
             </strong>{' '}
             {
-              sharedProject.procuringEntity
+              setup.procuringEntity
             }
           </p>
 
@@ -891,7 +1055,7 @@ function ProjectEditorContent({
               Project Title:
             </strong>{' '}
             {
-              sharedProject.projectTitle
+              setup.projectTitle
             }
           </p>
 
@@ -900,7 +1064,7 @@ function ProjectEditorContent({
               Reference Number:
             </strong>{' '}
             {
-              sharedProject.referenceNumber
+              setup.referenceNumber
             }
           </p>
 
@@ -909,7 +1073,7 @@ function ProjectEditorContent({
               Registered Business Name:
             </strong>{' '}
             {
-              sharedProject.bidderName
+              setup.bidderName
             }
           </p>
 
@@ -918,7 +1082,7 @@ function ProjectEditorContent({
               Business Address:
             </strong>{' '}
             {
-              sharedProject.businessAddress
+              setup.businessAddress
             }
           </p>
 
@@ -927,7 +1091,7 @@ function ProjectEditorContent({
               Submitted By:
             </strong>{' '}
             {
-              sharedProject.submittedBy
+              setup.submittedBy
             }
           </p>
 
@@ -936,16 +1100,96 @@ function ProjectEditorContent({
               Designation:
             </strong>{' '}
             {
-              sharedProject.designation
+              setup.designation
             }
           </p>
         </div>
       )
     }
 
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
+    // NFCC
+    // --------------------------------------------------------
+
+    if (
+      document.id ===
+      'nfcc'
+    ) {
+      return (
+        <div className="pending-component">
+          <p>
+            NFCC project information is filled automatically from Document Setup.
+          </p>
+
+          <p>
+            <strong>
+              Procuring Entity:
+            </strong>{' '}
+            {
+              setup.procuringEntity
+            }
+          </p>
+
+          <p>
+            <strong>
+              Project Title:
+            </strong>{' '}
+            {
+              setup.projectTitle
+            }
+          </p>
+
+          <p>
+            <strong>
+              Reference Number:
+            </strong>{' '}
+            {
+              setup.referenceNumber
+            }
+          </p>
+
+          <p>
+            <strong>
+              Contractor:
+            </strong>{' '}
+            {
+              setup.bidderName
+            }
+          </p>
+
+          <p>
+            <strong>
+              Address:
+            </strong>{' '}
+            {
+              setup.businessAddress
+            }
+          </p>
+
+          <p>
+            <strong>
+              Submitted By:
+            </strong>{' '}
+            {
+              setup.submittedBy
+            }
+          </p>
+
+          <p>
+            <strong>
+              Designation:
+            </strong>{' '}
+            {
+              setup.designation
+            }
+          </p>
+        </div>
+      )
+    }
+
+    // --------------------------------------------------------
     // TECHNICAL SPECIFICATIONS
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
 
     if (
       document.id ===
@@ -973,9 +1217,9 @@ function ProjectEditorContent({
       )
     }
 
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
     // SCHEDULE
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
 
     if (
       document.id ===
@@ -1004,9 +1248,9 @@ function ProjectEditorContent({
       )
     }
 
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
     // BID SECURITY
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
 
     if (
       document.id ===
@@ -1029,6 +1273,7 @@ function ProjectEditorContent({
               'bid_security',
               {
                 ...value,
+
                 documentSetup:
                   setup,
               },
@@ -1043,9 +1288,9 @@ function ProjectEditorContent({
       )
     }
 
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
     // OMNIBUS
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
 
     if (
       document.id ===
@@ -1078,15 +1323,15 @@ function ProjectEditorContent({
       )
     }
 
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
     // OTHER DOCUMENTS
-    // ----------------------------------------------------------
+    // --------------------------------------------------------
 
     return (
       <div className="pending-component">
         <p>
-          Editor pending.
-          {' '}
+          Editor pending.{' '}
+
           {document.template
             ? 'The template is available in the preview.'
             : 'No template is available yet.'}
@@ -1114,16 +1359,15 @@ function ProjectEditorContent({
                   {
                     item.itemNo
                   }
-                  :
-                  {' '}
+                  :{' '}
                   {
                     item.qty
-                  }
-                  {' '}
+                  }{' '}
                   {
                     item.unit
                   }
                   {' — '}
+
                   {item.specificationLines
                     .map(
                       (line) =>
@@ -1141,9 +1385,9 @@ function ProjectEditorContent({
     )
   }
 
-  // ============================================================
+  // ==========================================================
   // PAGE
-  // ============================================================
+  // ==========================================================
 
   return (
     <div className="pdf-editor-shell">
@@ -1272,6 +1516,7 @@ function ProjectEditorContent({
                     {[
                       'contents',
                       'ongoing',
+                      'nfcc',
                     ].includes(
                       activeDocument,
                     )
@@ -1291,6 +1536,7 @@ function ProjectEditorContent({
               ) : [
                   'contents',
                   'ongoing',
+                  'nfcc',
                 ].includes(
                   activeDocument,
                 ) ? (
@@ -1312,4 +1558,4 @@ function ProjectEditorContent({
       </div>
     </div>
   )
-} 
+}
