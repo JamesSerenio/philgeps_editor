@@ -27,7 +27,6 @@ import {
 } from '../lib/documentSetup'
 
 import { projectDocuments } from '../lib/projectDocuments'
-import { pdfTemplates } from '../lib/pdfTemplates'
 
 import ProjectSidebar from '../components/ProjectSidebar'
 import DocumentSetup from '../components/DocumentSetup'
@@ -313,22 +312,22 @@ const generators = {
     return () => {
       cancelled = true
     }
-  }, [
-    activeDocument,
-    province,
-    municipality,
-    projectTitle,
-    referenceNumber,
-    procuringEntity,
-    date,
-    bidderName,
-    businessAddress,
-    submittedBy,
-    designation,
-    templateVariant,
-    !!setup,
-  ])
-
+    }, [
+      activeDocument,
+      province,
+      municipality,
+      projectTitle,
+      referenceNumber,
+      procuringEntity,
+      date,
+      bidderName,
+      businessAddress,
+      submittedBy,
+      designation,
+      templateVariant,
+      omnibus?.templateVariant,
+      !!setup,
+    ])
   // ==========================================================
   // CLEAN UP PDF URLS
   // ==========================================================
@@ -453,18 +452,13 @@ const generators = {
   // PDF PREVIEW SOURCE
   // ==========================================================
 
-  let preview = null
+let preview = null
 
-  if (LIVE_PREVIEW.has(activeDocument)) {
-    preview = previews[activeDocument] ?? null
-  } else if (activeDocument === 'omnibus') {
-    preview =
-      omnibusValue.templateVariant === 'initao_lgu'
-        ? pdfTemplates.initao
-        : pdfTemplates.omnibus
-  } else if (selected?.template) {
-    preview = `/pdf/templates/${selected.template}`
-  }
+if (LIVE_PREVIEW.has(activeDocument)) {
+  preview = previews[activeDocument] ?? null
+} else if (selected?.template) {
+  preview = `/pdf/templates/${selected.template}`
+}
 
   // ==========================================================
   // DOCUMENT SETUP CHANGE
