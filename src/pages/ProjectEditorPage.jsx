@@ -46,6 +46,7 @@ const PREVIEW_ONLY = new Set([
   'ongoing',
   'slcc',
   'nfcc',
+  'manpower',
 ])
 
 const LIVE_PREVIEW = new Set([
@@ -663,9 +664,7 @@ const generators = {
     return (
       <div className="pending-component">
         <p>
-          {document.template
-            ? 'The template is available in the preview.'
-            : 'No template is available yet.'}
+          {document.template}
         </p>
 
         {['priceSchedule', 'summary'].includes(
