@@ -6,26 +6,16 @@ export default function BidSecurityEditor({
   saveStatus,
 }) {
   const templateVariant =
-    value?.templateVariant === 'initao_lgu'
-      ? 'initao_lgu'
-      : 'old_default'
-
-  // =============================================
-  // TEMPLATE CHANGE
-  // =============================================
+    value?.templateVariant === 'with_table'
+      ? 'with_table'
+      : 'without_table'
 
   function handleTemplateChange(event) {
-    const next = {
+    onChange?.({
       ...value,
       templateVariant: event.target.value,
-    }
-
-    onChange?.(next)
+    })
   }
-
-  // =============================================
-  // SAVE
-  // =============================================
 
   function handleSave() {
     onSave?.({
@@ -34,38 +24,14 @@ export default function BidSecurityEditor({
     })
   }
 
-  // =============================================
-  // SAVE STATUS
-  // =============================================
-
-  function getStatusText() {
-    if (
-      saveStatus === 'Saved' ||
-      saveStatus === 'saved'
-    ) {
-      return 'Saved automatically'
-    }
-
-    if (
-      saveStatus === 'Saving...' ||
-      saveStatus === 'saving'
-    ) {
-      return 'Saving...'
-    }
-
-    if (
-      saveStatus === 'Error saving' ||
-      saveStatus === 'error'
-    ) {
-      return 'Error saving'
-    }
-
-    return 'Changes save automatically'
-  }
-
-  // =============================================
-  // UI
-  // =============================================
+  const statusText =
+    saveStatus === 'Saved' || saveStatus === 'saved'
+      ? 'Saved automatically'
+      : saveStatus === 'Saving...' || saveStatus === 'saving'
+        ? 'Saving...'
+        : saveStatus === 'Error saving' || saveStatus === 'error'
+          ? 'Error saving'
+          : 'Changes save automatically'
 
   return (
     <div className="bid-security-editor">
@@ -78,22 +44,19 @@ export default function BidSecurityEditor({
             value={templateVariant}
             onChange={handleTemplateChange}
           >
-            <option value="old_default">
-              OLD / Default
+            <option value="with_table">
+              With Table
             </option>
 
-            <option value="initao_lgu">
-              INITAO LGU
+            <option value="without_table">
+              Without Table
             </option>
           </select>
         </label>
       </section>
 
       <div className="editor-save-row">
-        <button
-          type="button"
-          onClick={handleSave}
-        >
+        <button type="button" onClick={handleSave}>
           Save
         </button>
 
@@ -106,7 +69,7 @@ export default function BidSecurityEditor({
           }
           role="status"
         >
-          {getStatusText()}
+          {statusText}
         </span>
       </div>
     </div>

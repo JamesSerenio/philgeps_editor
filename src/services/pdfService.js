@@ -1695,14 +1695,14 @@ export async function generateNfccPreview(project) {
 
 export async function generateBidSecurityPreview(project) {
   const variant =
-    project?.templateVariant === 'initao_lgu'
-      ? 'initao_lgu'
-      : 'old_default'
+    project?.templateVariant === 'with_table'
+      ? 'with_table'
+      : 'without_table'
 
-  const path =
-    variant === 'initao_lgu'
-      ? '/pdf/templates/New_tab_and_pages_Initao_LGU_template.pdf'
-      : '/pdf/templates/Bid Security without table.pdf'
+const path =
+  variant === 'with_table'
+    ? '/pdf/templates/Bid Security with table.pdf'
+    : '/pdf/templates/Bid Security without table.pdf'
 
   const response = await fetch(path)
 
@@ -1718,14 +1718,16 @@ export async function generateBidSecurityPreview(project) {
     throw new Error('Expected a 2-page Bid Security PDF')
   }
 
-  // INITAO uses a different layout.
-  if (variant === 'initao_lgu') {
-    const bytes = await doc.save()
+// WITH TABLE: display its original PDF template.
+if (variant === 'with_table') {
+  const bytes = await doc.save()
 
-    return URL.createObjectURL(
-      new Blob([bytes], { type: 'application/pdf' })
-    )
-  }
+  return URL.createObjectURL(
+    new Blob([bytes], {
+      type: 'application/pdf',
+    })
+  )
+}
 
   // =====================================================
   // FONTS

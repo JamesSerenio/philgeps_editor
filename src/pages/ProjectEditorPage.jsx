@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { getProjectById } from '../services/projectService'
+
 import {
   generateNfccPreview,
   generateOngoingContractsPreview,
@@ -11,6 +12,7 @@ import {
 } from '../services/pdfService'
 
 import useEditorPersistence from '../hooks/useEditorPersistence'
+
 import { createTechnicalItem } from '../lib/technicalSpecs'
 import { createInitialBidSecurityState } from '../lib/bidSecurity'
 import { createInitialOmnibusState } from '../lib/omnibus'
@@ -34,7 +36,10 @@ import ScheduleEditor from '../editors/ScheduleEditor'
 import BidSecurityEditor from '../editors/BidSecurityEditor'
 import OmnibusEditor from '../editors/OmnibusEditor'
 
-// Sections that only need a PDF preview.
+// ============================================================
+// CONFIGURATION
+// ============================================================
+
 const PREVIEW_ONLY = new Set([
   'contents',
   'ongoing',
@@ -48,6 +53,22 @@ const LIVE_PREVIEW = new Set([
   'nfcc',
   'bidSecurity',
 ])
+
+// ============================================================
+// BID SECURITY TEMPLATE VARIANT
+// ============================================================
+
+function normalizeBidSecurityVariant(value) {
+  if (value === 'with_table') {
+    return 'with_table'
+  }
+
+  return 'without_table'
+}
+
+// ============================================================
+// MAIN PAGE
+// ============================================================
 
 export default function ProjectEditorPage() {
   const { id } = useParams()
@@ -76,10 +97,12 @@ function ProjectEditorContent({ id }) {
   const [documentSetup, setDocumentSetup] = useState(null)
 
   // ==========================================================
-  // LIVE PDF PREVIEWS
+  // LIVE PDF PREVIEW
   // ==========================================================
 
   const [previews, setPreviews] = useState({})
+  const [previewErrors, setPreviewErrors] = useState({})
+
   const previewUrlsRef = useRef({})
 
   // ==========================================================
@@ -117,7 +140,9 @@ function ProjectEditorContent({ id }) {
 
     getProjectById(id)
       .then(({ data, error: projectError }) => {
-        if (projectError) throw projectError
+        if (projectError) {
+          throw projectError
+        }
 
         if (!cancelled) {
           setProject(data)
@@ -149,7 +174,9 @@ function ProjectEditorContent({ id }) {
       )
     : null
 
-  const sharedProject = setup ? setupProject(setup) : null
+  const sharedProject = setup
+    ? setupProject(setup)
+    : null
 
   const province = setup?.province ?? ''
   const municipality = setup?.municipality ?? ''
@@ -162,21 +189,29 @@ function ProjectEditorContent({ id }) {
   const submittedBy = setup?.submittedBy ?? ''
   const designation = setup?.designation ?? ''
 
-  const templateVariant =
-    bidSecurity?.templateVariant === 'initao_lgu'
-      ? 'initao_lgu'
-      : 'old_default'
+  // ==========================================================
+  // BID SECURITY VARIANT
+  // ==========================================================
+
+  const templateVariant = normalizeBidSecurityVariant(
+    bidSecurity?.templateVariant
+  )
 
   // ==========================================================
-  // PDF PREVIEW GENERATION
+  // GENERATE LIVE PDF PREVIEW
   // ==========================================================
 
   useEffect(() => {
-    if (!setup || !LIVE_PREVIEW.has(activeDocument)) {
+    if (
+      !setup ||
+      !LIVE_PREVIEW.has(activeDocument)
+    ) {
       return undefined
     }
 
     let cancelled = false
+
+    const documentId = activeDocument
 
     const previewData = {
       province,
@@ -201,19 +236,30 @@ function ProjectEditorContent({ id }) {
       bidSecurity: generateBidSecurityPreview,
     }
 
-    const generator = generators[activeDocument]
-    const documentId = activeDocument
+    const generator = generators[documentId]
 
-    // Remove stale preview while generating an updated one.
-    // Previous blob remains valid until replaced.
-    generator(previewData)
+    if (!generator) {
+      return undefined
+    }
+
+
+    Promise.resolve()
+      .then(() => generator(previewData))
       .then((url) => {
         if (cancelled) {
-          URL.revokeObjectURL(url)
+          if (url?.startsWith('blob:')) {
+            URL.revokeObjectURL(url)
+          }
           return
         }
 
-        const previousUrl = previewUrlsRef.current[documentId]
+        setPreviewErrors((current) => ({
+          ...current,
+          [documentId]: '',
+        }))
+
+        const previousUrl =
+          previewUrlsRef.current[documentId]
 
         previewUrlsRef.current[documentId] = url
 
@@ -222,22 +268,29 @@ function ProjectEditorContent({ id }) {
           [documentId]: url,
         }))
 
-        if (previousUrl?.startsWith('blob:')) {
+        if (
+          previousUrl &&
+          previousUrl !== url &&
+          previousUrl.startsWith('blob:')
+        ) {
           URL.revokeObjectURL(previousUrl)
         }
       })
       .catch((previewError) => {
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
 
         console.error(
           `${documentId} PDF preview failed:`,
           previewError
         )
 
-        setError('')
-        setPreviews((current) => ({
+        setPreviewErrors((current) => ({
           ...current,
-          [documentId]: null,
+          [documentId]:
+            previewError.message ||
+            'Unable to generate PDF preview.',
         }))
       })
 
@@ -261,16 +314,18 @@ function ProjectEditorContent({ id }) {
   ])
 
   // ==========================================================
-  // CLEANUP PDF OBJECT URLS
+  // CLEAN UP PDF URLS
   // ==========================================================
 
   useEffect(() => {
     return () => {
-      Object.values(previewUrlsRef.current).forEach((url) => {
-        if (url?.startsWith('blob:')) {
-          URL.revokeObjectURL(url)
+      Object.values(previewUrlsRef.current).forEach(
+        (url) => {
+          if (url?.startsWith('blob:')) {
+            URL.revokeObjectURL(url)
+          }
         }
-      })
+      )
 
       previewUrlsRef.current = {}
     }
@@ -285,11 +340,17 @@ function ProjectEditorContent({ id }) {
       <div className="message" role="alert">
         <p>{error || persistence.loadError}</p>
 
-        <button onClick={() => navigate('/')}>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+        >
           Back
         </button>
 
-        <button onClick={() => window.location.reload()}>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+        >
           Retry Load
         </button>
       </div>
@@ -314,7 +375,7 @@ function ProjectEditorContent({ id }) {
   }
 
   // ==========================================================
-  // SHARED DOCUMENT SETUP VALUES
+  // COMMON DOCUMENT SETUP VALUES
   // ==========================================================
 
   const common = {
@@ -332,11 +393,12 @@ function ProjectEditorContent({ id }) {
   }
 
   // ==========================================================
-  // BID SECURITY
+  // BID SECURITY VALUE
   // ==========================================================
 
   const bidValue = {
     ...createInitialBidSecurityState(sharedProject),
+    ...bidSecurity,
     ...common,
     templateVariant,
     representativeDesignation: setup.designation,
@@ -344,7 +406,7 @@ function ProjectEditorContent({ id }) {
   }
 
   // ==========================================================
-  // OMNIBUS
+  // OMNIBUS VALUE
   // ==========================================================
 
   const omnibusValue = {
@@ -364,7 +426,7 @@ function ProjectEditorContent({ id }) {
   )
 
   // ==========================================================
-  // ACTIVE DOCUMENT
+  // SELECTED DOCUMENT
   // ==========================================================
 
   const selected = projectDocuments.find(
@@ -403,7 +465,10 @@ function ProjectEditorContent({ id }) {
 
     setBidSecurity(nextBidSecurity)
 
-    persistence.change('bid_security', nextBidSecurity)
+    persistence.change(
+      'bid_security',
+      nextBidSecurity
+    )
   }
 
   // ==========================================================
@@ -413,18 +478,24 @@ function ProjectEditorContent({ id }) {
   function changeTechnical(value) {
     setTechnical(value)
 
-    persistence.change('technical_specs', value)
+    persistence.change(
+      'technical_specs',
+      value
+    )
   }
 
   // ==========================================================
-  // SCHEDULE
+  // SCHEDULE REQUIREMENTS
   // ==========================================================
 
   function schedulePayload(value) {
     return [
       ...value,
       ...schedule.filter(
-        (item) => !value.some((row) => row.id === item.id)
+        (item) =>
+          !value.some(
+            (row) => row.id === item.id
+          )
       ),
     ]
   }
@@ -434,65 +505,84 @@ function ProjectEditorContent({ id }) {
 
     setSchedule(next)
 
-    persistence.change('schedule_requirements', next)
+    persistence.change(
+      'schedule_requirements',
+      next
+    )
   }
 
   // ==========================================================
-  // BID SECURITY TEMPLATE
+  // BID SECURITY TEMPLATE CHANGE
   // ==========================================================
 
   function changeBid(value) {
+    const nextVariant = normalizeBidSecurityVariant(
+      value?.templateVariant
+    )
+
     const next = {
-      templateVariant:
-        value?.templateVariant === 'initao_lgu'
-          ? 'initao_lgu'
-          : 'old_default',
+      ...bidSecurity,
+      templateVariant: nextVariant,
       documentSetup: setup,
     }
 
     setBidSecurity(next)
 
-    persistence.change('bid_security', next)
-  }
-
-  function saveBid(value) {
-    const next = {
-      templateVariant:
-        value?.templateVariant === 'initao_lgu'
-          ? 'initao_lgu'
-          : 'old_default',
-      documentSetup: setup,
-    }
-
-    setBidSecurity(next)
-
-    return persistence.save('bid_security', next)
+    persistence.change(
+      'bid_security',
+      next
+    )
   }
 
   // ==========================================================
-  // OMNIBUS
+  // SAVE BID SECURITY
+  // ==========================================================
+
+  function saveBid(value) {
+    const nextVariant = normalizeBidSecurityVariant(
+      value?.templateVariant
+    )
+
+    const next = {
+      ...bidSecurity,
+      templateVariant: nextVariant,
+      documentSetup: setup,
+    }
+
+    setBidSecurity(next)
+
+    return persistence.save(
+      'bid_security',
+      next
+    )
+  }
+
+  // ==========================================================
+  // OMNIBUS CHANGE
   // ==========================================================
 
   function changeOmnibus(value) {
     setOmnibus(value)
 
-    persistence.change('omnibus', value)
+    persistence.change(
+      'omnibus',
+      value
+    )
   }
 
   // ==========================================================
-  // SIDEBAR EDITOR RENDERER
+  // SIDEBAR EDITOR
   // ==========================================================
 
   function renderEditor(document) {
-    // IMPORTANT:
-    // These four sections are PDF preview only.
-    // No more project information, header summary,
-    // editor pending message, or duplicated fill-up.
+    // PREVIEW ONLY SECTIONS
+
     if (PREVIEW_ONLY.has(document.id)) {
       return null
     }
 
     // TECHNICAL SPECIFICATIONS
+
     if (document.id === 'technical') {
       return (
         <TechnicalSpecsEditor
@@ -501,13 +591,17 @@ function ProjectEditorContent({ id }) {
           value={technical}
           onChange={changeTechnical}
           onSave={(value) =>
-            persistence.save('technical_specs', value)
+            persistence.save(
+              'technical_specs',
+              value
+            )
           }
         />
       )
     }
 
-    // SCHEDULE
+    // SCHEDULE REQUIREMENTS
+
     if (document.id === 'schedule') {
       return (
         <ScheduleEditor
@@ -525,6 +619,7 @@ function ProjectEditorContent({ id }) {
     }
 
     // BID SECURITY
+
     if (document.id === 'bidSecurity') {
       return (
         <BidSecurityEditor
@@ -539,6 +634,7 @@ function ProjectEditorContent({ id }) {
     }
 
     // OMNIBUS
+
     if (document.id === 'omnibus') {
       return (
         <OmnibusEditor
@@ -547,7 +643,10 @@ function ProjectEditorContent({ id }) {
           value={omnibusValue}
           onChange={changeOmnibus}
           onSave={(value) =>
-            persistence.save('omnibus', value)
+            persistence.save(
+              'omnibus',
+              value
+            )
           }
           saveStatus={
             persistence.sectionStatuses.omnibus
@@ -556,7 +655,8 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    // OTHER DOCUMENTS
+    // OTHER SECTIONS
+
     return (
       <div className="pending-component">
         <p>
@@ -575,9 +675,10 @@ function ProjectEditorContent({ id }) {
 
             {technical.map((item) => (
               <p key={item.id}>
-                Item {item.itemNo}: {item.qty} {item.unit}
+                Item {item.itemNo}: {item.qty}{' '}
+                {item.unit}
                 {' — '}
-                {item.specificationLines
+                {(item.specificationLines ?? [])
                   .map((line) => line.text)
                   .join('; ')}
               </p>
@@ -589,7 +690,7 @@ function ProjectEditorContent({ id }) {
   }
 
   // ==========================================================
-  // PAGE
+  // PAGE UI
   // ==========================================================
 
   return (
@@ -651,7 +752,9 @@ function ProjectEditorContent({ id }) {
         <ProjectSidebar
           activeDocument={activeDocument}
           onSelectDocument={setActiveDocument}
-          sectionStatuses={persistence.sectionStatuses}
+          sectionStatuses={
+            persistence.sectionStatuses
+          }
           renderEditor={renderEditor}
         >
           <DocumentSetup
@@ -679,6 +782,12 @@ function ProjectEditorContent({ id }) {
                 </p>
               </header>
 
+              {previewErrors[activeDocument] && (
+                <p role="alert" className="message">
+                  {previewErrors[activeDocument]}
+                </p>
+              )}
+
               {preview ? (
                 <>
                   {!PREVIEW_ONLY.has(activeDocument) && (
@@ -700,8 +809,8 @@ function ProjectEditorContent({ id }) {
                 </p>
               ) : (
                 <p className="neutral-preview">
-                  A template for {selected.title} is not
-                  available yet.
+                  A template for {selected.title} is
+                  not available yet.
                 </p>
               )}
             </>
