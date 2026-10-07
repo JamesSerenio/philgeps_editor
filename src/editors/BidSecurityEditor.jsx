@@ -1,8 +1,3 @@
-import { formatLongDate } from '../lib/documentSetup'
-
-function clean(value) {
-  return String(value ?? '').trim()
-}
 
 export default function BidSecurityEditor({
   value = {},
@@ -15,20 +10,9 @@ export default function BidSecurityEditor({
       ? 'initao_lgu'
       : 'old_default'
 
-  const procuringEntity = clean(value?.procuringEntity)
-  const projectTitle = clean(value?.projectTitle)
-  const referenceNumber = clean(value?.referenceNumber)
-  const bidderName = clean(value?.bidderName)
-
-  const authorizedRepresentative = clean(
-    value?.authorizedRepresentative,
-  )
-
-  const representativeDesignation = clean(
-    value?.representativeDesignation,
-  )
-
-  const dateText = formatLongDate(value?.date)
+  // =============================================
+  // TEMPLATE CHANGE
+  // =============================================
 
   function handleTemplateChange(event) {
     const next = {
@@ -39,6 +23,10 @@ export default function BidSecurityEditor({
     onChange?.(next)
   }
 
+  // =============================================
+  // SAVE
+  // =============================================
+
   function handleSave() {
     onSave?.({
       ...value,
@@ -46,28 +34,41 @@ export default function BidSecurityEditor({
     })
   }
 
+  // =============================================
+  // SAVE STATUS
+  // =============================================
+
   function getStatusText() {
-    if (saveStatus === 'Saved') {
+    if (
+      saveStatus === 'Saved' ||
+      saveStatus === 'saved'
+    ) {
       return 'Saved automatically'
     }
 
-    if (saveStatus === 'Saving...') {
+    if (
+      saveStatus === 'Saving...' ||
+      saveStatus === 'saving'
+    ) {
       return 'Saving...'
     }
 
-    if (saveStatus === 'Error saving') {
+    if (
+      saveStatus === 'Error saving' ||
+      saveStatus === 'error'
+    ) {
       return 'Error saving'
     }
 
     return 'Changes save automatically'
   }
 
+  // =============================================
+  // UI
+  // =============================================
+
   return (
     <div className="bid-security-editor">
-      {/* ============================================= */}
-      {/* TEMPLATE SELECTOR */}
-      {/* ============================================= */}
-
       <section className="editor-section">
         <label>
           <strong>Template Variant</strong>
@@ -88,85 +89,6 @@ export default function BidSecurityEditor({
         </label>
       </section>
 
-      {/* ============================================= */}
-      {/* AUTO-FILLED INFORMATION */}
-      {/* No manual inputs here */}
-      {/* ============================================= */}
-
-      <section className="editor-section">
-        <h3>
-          Auto-filled from Document Setup
-        </h3>
-
-        <p>
-          All Bid Sec information below is taken
-          automatically from the Document Setup above.
-        </p>
-
-        <div className="auto-filled-summary">
-          <p>
-            <strong>
-              Name of Procuring Entity:
-            </strong>{' '}
-            {procuringEntity || '—'}
-          </p>
-
-          <p>
-            <strong>
-              Project Title:
-            </strong>{' '}
-            {projectTitle || '—'}
-          </p>
-
-          <p>
-            <strong>
-              Project Identification No.:
-            </strong>{' '}
-            {referenceNumber || '—'}
-          </p>
-
-          <p>
-            <strong>
-              To:
-            </strong>{' '}
-            {procuringEntity || '—'}
-          </p>
-
-          <p>
-            <strong>
-              Duly authorized to sign the Bid for and
-              behalf of:
-            </strong>{' '}
-            {bidderName || '—'}
-          </p>
-
-          <p>
-            <strong>
-              Authorized Representative:
-            </strong>{' '}
-            {authorizedRepresentative || '—'}
-          </p>
-
-          <p>
-            <strong>
-              Designation:
-            </strong>{' '}
-            {representativeDesignation || '—'}
-          </p>
-
-          <p>
-            <strong>
-              Date:
-            </strong>{' '}
-            {dateText || '—'}
-          </p>
-        </div>
-      </section>
-
-      {/* ============================================= */}
-      {/* SAVE */}
-      {/* ============================================= */}
-
       <div className="editor-save-row">
         <button
           type="button"
@@ -177,10 +99,12 @@ export default function BidSecurityEditor({
 
         <span
           className={
-            saveStatus === 'Error saving'
+            saveStatus === 'Error saving' ||
+            saveStatus === 'error'
               ? 'save-error'
               : ''
           }
+          role="status"
         >
           {getStatusText()}
         </span>
