@@ -9,6 +9,7 @@ import {
   generateOngoingContractsPreview,
   generateTableOfContentsPreview,
   generateBidSecurityPreview,
+  generateManpowerPreview,
 } from '../services/pdfService'
 
 import useEditorPersistence from '../hooks/useEditorPersistence'
@@ -52,6 +53,7 @@ const LIVE_PREVIEW = new Set([
   'ongoing',
   'nfcc',
   'bidSecurity',
+  'manpower',
 ])
 
 // ============================================================
@@ -229,12 +231,13 @@ function ProjectEditorContent({ id }) {
       templateVariant,
     }
 
-    const generators = {
-      contents: generateTableOfContentsPreview,
-      ongoing: generateOngoingContractsPreview,
-      nfcc: generateNfccPreview,
-      bidSecurity: generateBidSecurityPreview,
-    }
+const generators = {
+  contents: generateTableOfContentsPreview,
+  ongoing: generateOngoingContractsPreview,
+  nfcc: generateNfccPreview,
+  bidSecurity: generateBidSecurityPreview,
+  manpower: generateManpowerPreview,
+}
 
     const generator = generators[documentId]
 
