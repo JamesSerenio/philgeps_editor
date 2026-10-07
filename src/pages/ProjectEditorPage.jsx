@@ -10,6 +10,7 @@ import {
   generateTableOfContentsPreview,
   generateBidSecurityPreview,
   generateManpowerPreview,
+  generateOmnibusPreview,
 } from '../services/pdfService'
 
 import useEditorPersistence from '../hooks/useEditorPersistence'
@@ -55,6 +56,7 @@ const LIVE_PREVIEW = new Set([
   'nfcc',
   'bidSecurity',
   'manpower',
+  'omnibus',
 ])
 
 // ============================================================
@@ -216,21 +218,30 @@ function ProjectEditorContent({ id }) {
 
     const documentId = activeDocument
 
-    const previewData = {
-      province,
-      municipality,
-      projectTitle,
-      referenceNumber,
-      procuringEntity,
-      date,
-      bidderName,
-      businessAddress,
-      submittedBy,
-      authorizedRepresentative: submittedBy,
-      designation,
-      representativeDesignation: designation,
-      templateVariant,
-    }
+const omnibusTemplateVariant =
+  omnibus?.templateVariant === 'initao_lgu'
+    ? 'initao_lgu'
+    : 'old_default'
+
+const previewData = {
+  province,
+  municipality,
+  projectTitle,
+  referenceNumber,
+  procuringEntity,
+  date,
+  bidderName,
+  businessAddress,
+  submittedBy,
+  authorizedRepresentative: submittedBy,
+  designation,
+  representativeDesignation: designation,
+
+  templateVariant:
+    documentId === 'omnibus'
+      ? omnibusTemplateVariant
+      : templateVariant,
+}
 
 const generators = {
   contents: generateTableOfContentsPreview,
@@ -238,6 +249,7 @@ const generators = {
   nfcc: generateNfccPreview,
   bidSecurity: generateBidSecurityPreview,
   manpower: generateManpowerPreview,
+  omnibus: generateOmnibusPreview,
 }
 
     const generator = generators[documentId]

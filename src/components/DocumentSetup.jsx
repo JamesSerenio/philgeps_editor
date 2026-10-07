@@ -245,40 +245,24 @@ export default function DocumentSetup({
 
         <select
           aria-label="Submitted By"
-          value={
-            value.submittedBy || ''
-          }
-          onChange={
-            handleRepresentativeChange
-          }
+          value={value.submittedBy ?? ''}
+          onChange={handleRepresentativeChange}
         >
           <option value="">
-            Select representative
+            Select Submitted By
           </option>
 
-          {value.submittedBy &&
-            !representatives.some(
-              (person) =>
-                person.name ===
-                value.submittedBy,
-            ) && (
-              <option
-                value={value.submittedBy}
-              >
-                {value.submittedBy}
-              </option>
-            )}
+          <option value="JHO ANN Q. CLEOPAS">
+            JHO ANN Q. CLEOPAS
+          </option>
 
-          {representatives.map(
-            (person) => (
-              <option
-                key={person.name}
-                value={person.name}
-              >
-                {person.name}
-              </option>
-            ),
-          )}
+          <option value="CARLOS RAFAEL A. JAMILO">
+            CARLOS RAFAEL A. JAMILO
+          </option>
+
+          <option value="MARLJONE BLAIRE B. TINGTING">
+            MARLJONE BLAIRE B. TINGTING
+          </option>
         </select>
       </label>
 

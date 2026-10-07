@@ -2394,3 +2394,858 @@ export async function generateManpowerPreview(project) {
     })
   )
 }
+
+export async function generateOmnibusPreview(project) {
+  const clean = (value) => String(value ?? '').trim()
+
+  const variant =
+    project?.templateVariant === 'initao_lgu'
+      ? 'initao_lgu'
+      : 'old_default'
+
+  const path =
+    variant === 'initao_lgu'
+      ? '/pdf/templates/Omnibus Sworn Statement Initao.pdf'
+      : '/pdf/templates/Omnibus Sworn Statement.pdf'
+
+  const response = await fetch(path)
+
+  if (!response.ok) {
+    throw new Error(`Cannot load Omnibus PDF: ${path}`)
+  }
+
+  const pdfDoc = await PDFDocument.load(
+    await response.arrayBuffer()
+  )
+
+  // =========================================================
+  // OLD / DEFAULT
+  // HUWAG GALAWIN
+  // =========================================================
+
+  if (variant === 'old_default') {
+    const bytes = await pdfDoc.save()
+
+    return URL.createObjectURL(
+      new Blob([bytes], {
+        type: 'application/pdf',
+      })
+    )
+  }
+
+  if (pdfDoc.getPageCount() < 3) {
+    throw new Error(
+      'Expected a 3-page Omnibus Sworn Statement Initao PDF.'
+    )
+  }
+
+  // =========================================================
+  // FONTS
+  // =========================================================
+
+  const regular = await pdfDoc.embedFont(
+    StandardFonts.TimesRoman
+  )
+
+  const bold = await pdfDoc.embedFont(
+    StandardFonts.TimesRomanBold
+  )
+
+  const italic = await pdfDoc.embedFont(
+    StandardFonts.TimesRomanItalic
+  )
+
+  const boldItalic = await pdfDoc.embedFont(
+    StandardFonts.TimesRomanBoldItalic
+  )
+
+  const black = rgb(0, 0, 0)
+  const white = rgb(1, 1, 1)
+
+  // =========================================================
+  // HELPERS
+  // =========================================================
+
+  function titleCase(value) {
+    return clean(value)
+      .toLowerCase()
+      .replace(/\b\w/g, (letter) =>
+        letter.toUpperCase()
+      )
+  }
+
+  function normalizeName(value) {
+    return clean(value)
+      .replace(/\s+/g, ' ')
+      .toUpperCase()
+  }
+
+  function eraseTop(
+    page,
+    x,
+    top,
+    width,
+    height
+  ) {
+    page.drawRectangle({
+      x,
+      y: page.getHeight() - top - height,
+      width,
+      height,
+      color: white,
+      borderWidth: 0,
+    })
+  }
+
+  function splitLines(
+    text,
+    font,
+    size,
+    maxWidth
+  ) {
+    const words = clean(text).split(/\s+/)
+    const lines = []
+
+    let current = ''
+
+    for (const word of words) {
+      const candidate =
+        current.length > 0
+          ? `${current} ${word}`
+          : word
+
+      if (
+        font.widthOfTextAtSize(
+          candidate,
+          size
+        ) <= maxWidth
+      ) {
+        current = candidate
+      } else {
+        if (current) {
+          lines.push(current)
+        }
+
+        current = word
+      }
+    }
+
+    if (current) {
+      lines.push(current)
+    }
+
+    return lines
+  }
+
+  function drawTop({
+    page,
+    text,
+    x,
+    top,
+    font = regular,
+    size = 11,
+    maxWidth,
+  }) {
+    const value = clean(text)
+
+    if (!value) return
+
+    let finalSize = size
+
+    if (maxWidth) {
+      while (
+        finalSize > 7 &&
+        font.widthOfTextAtSize(
+          value,
+          finalSize
+        ) > maxWidth
+      ) {
+        finalSize -= 0.1
+      }
+    }
+
+    page.drawText(value, {
+      x,
+      y:
+        page.getHeight() -
+        top -
+        finalSize,
+      size: finalSize,
+      font,
+      color: black,
+    })
+  }
+
+  function drawWrappedTop({
+    page,
+    text,
+    x,
+    top,
+    width,
+    font = regular,
+    size = 11,
+    lineHeight = 13.7,
+  }) {
+    const lines = splitLines(
+      text,
+      font,
+      size,
+      width
+    )
+
+    lines.forEach((line, index) => {
+      page.drawText(line, {
+        x,
+        y:
+          page.getHeight() -
+          top -
+          size -
+          index * lineHeight,
+        size,
+        font,
+        color: black,
+      })
+    })
+
+    return lines.length * lineHeight
+  }
+
+  // =========================================================
+  // DOCUMENT SETUP VALUES
+  // =========================================================
+
+  const municipality =
+    titleCase(project?.municipality)
+
+  const province =
+    titleCase(project?.province)
+
+  const projectTitle =
+    clean(project?.projectTitle)
+
+  const bidderRaw =
+    clean(project?.bidderName)
+
+  const bidderName =
+    titleCase(bidderRaw)
+
+  const businessAddress =
+    clean(
+      project?.businessAddress ||
+      project?.companyAddress
+    )
+
+  const submittedRaw =
+    clean(
+      project?.submittedBy ||
+      project?.authorizedRepresentative
+    )
+
+  const submittedName =
+    titleCase(submittedRaw)
+
+  const designation =
+    clean(
+      project?.designation ||
+      project?.representativeDesignation
+    ) || 'Authorized Representative'
+
+  // =========================================================
+  // SUBMITTED BY PROFILE
+  // =========================================================
+
+  const representativeProfiles = {
+    'JHO ANN Q. CLEOPAS': {
+      civilStatus: 'married',
+      residence:
+        'Tankulan, Manolo Fortich, Bukidnon',
+    },
+
+    'CARLOS RAFAEL A. JAMILO': {
+      civilStatus: 'single',
+      residence:
+        'Camaman-an, Cagayan de Oro City, Misamis Oriental',
+    },
+
+    'MARLJONE BLAIRE B. TINGTING': {
+      civilStatus: 'single',
+      residence:
+        'Tankulan, Manolo Fortich, Bukidnon',
+    },
+  }
+
+  const representative =
+    representativeProfiles[
+      normalizeName(submittedRaw)
+    ] ?? {
+      civilStatus: '',
+      residence: '',
+    }
+
+  // =========================================================
+  // DATE
+  // =========================================================
+
+  function parseDate(value) {
+    const text = clean(value)
+
+    const iso = text.match(
+      /^(\d{4})-(\d{2})-(\d{2})$/
+    )
+
+    if (iso) {
+      return new Date(
+        Number(iso[1]),
+        Number(iso[2]) - 1,
+        Number(iso[3])
+      )
+    }
+
+    const parsed = new Date(text)
+
+    if (Number.isNaN(parsed.getTime())) {
+      return null
+    }
+
+    return parsed
+  }
+
+  const parsedDate =
+    parseDate(project?.date)
+
+  const day = parsedDate
+    ? String(parsedDate.getDate())
+        .padStart(2, '0')
+    : ''
+
+  const month = parsedDate
+    ? parsedDate.toLocaleDateString(
+        'en-US',
+        {
+          month: 'long',
+        }
+      )
+    : ''
+
+  const year = parsedDate
+    ? String(parsedDate.getFullYear())
+    : ''
+
+  const fullDate = parsedDate
+    ? `${month} ${day}, ${year}`
+    : clean(project?.date)
+
+  const monthYear =
+    month && year
+      ? `${month} ${year}`
+      : ''
+
+  // =========================================================
+  // LOCATION TEXT
+  // =========================================================
+
+  const municipalityProvince =
+    municipality && province
+      ? `${municipality}, ${province}`
+      : municipality || province
+
+  const municipalityLocation =
+    municipalityProvince
+      ? `Municipality of ${municipalityProvince}`
+      : ''
+
+  // =========================================================
+  // PAGE 1
+  // =========================================================
+
+  const page1 = pdfDoc.getPage(0)
+
+  // ---------------------------------------------------------
+  // REPRESENTATIVE INTRODUCTION
+  // ---------------------------------------------------------
+
+  eraseTop(
+    page1,
+    69,
+    134,
+    477,
+    53
+  )
+
+  drawWrappedTop({
+    page: page1,
+    text:
+      `I, ${submittedName}, of legal age, ` +
+      `${representative.civilStatus}, Filipino, and with residence at ` +
+      `${representative.residence}, after having been duly sworn in ` +
+      `accordance with law, do hereby depose and state that:`,
+    x: 72,
+    top: 141,
+    width: 470,
+    font: regular,
+    size: 11,
+    lineHeight: 13.8,
+  })
+
+  // ---------------------------------------------------------
+  // COMPANY + ADDRESS
+  // ---------------------------------------------------------
+
+  eraseTop(
+    page1,
+    69,
+    191,
+    477,
+    42
+  )
+
+  drawWrappedTop({
+    page: page1,
+    text:
+      `I am the duly authorized and designated representative of ` +
+      `${bidderName} with office address at ${businessAddress};`,
+    x: 72,
+    top: 197,
+    width: 470,
+    font: regular,
+    size: 11,
+    lineHeight: 13.8,
+  })
+
+  // ---------------------------------------------------------
+  // PROJECT TITLE + MUNICIPALITY
+  // ---------------------------------------------------------
+
+  eraseTop(
+    page1,
+    69,
+    232,
+    477,
+    89
+  )
+
+  drawWrappedTop({
+    page: page1,
+    text:
+      `I am granted full power and authority to do, execute and perform ` +
+      `any and all acts necessary to participate, submit the bid, and to ` +
+      `sign and execute the ensuing contract for ${projectTitle} of the ` +
+      `${municipalityLocation} as supported by the attached duly notarized ` +
+      `Special Power of Attorney, Board/Partnership Resolution, or ` +
+      `Secretary's Certificate, whichever is applicable;`,
+    x: 72,
+    top: 239,
+    width: 470,
+    font: regular,
+    size: 11,
+    lineHeight: 13.8,
+  })
+
+  // ---------------------------------------------------------
+  // COMPANY NAME - CLAUSE 1
+  // ---------------------------------------------------------
+
+  eraseTop(
+    page1,
+    88,
+    332,
+    458,
+    20
+  )
+
+  drawTop({
+    page: page1,
+    text:
+      `1) ${bidderName} is not "blacklisted" or barred from bidding by the Government`,
+    x: 90,
+    top: 337,
+    font: regular,
+    size: 11,
+    maxWidth: 453,
+  })
+
+  // ---------------------------------------------------------
+  // COMPANY NAME - CLAUSE 3
+  // ---------------------------------------------------------
+
+  eraseTop(
+    page1,
+    88,
+    484,
+    458,
+    20
+  )
+
+  drawTop({
+    page: page1,
+    text:
+      `3) ${bidderName} is authorizing the Head of the Procuring Entity or its duly`,
+    x: 90,
+    top: 489,
+    font: regular,
+    size: 11,
+    maxWidth: 453,
+  })
+
+  // ---------------------------------------------------------
+  // COMPANY NAME - CLAUSE 4
+  // ---------------------------------------------------------
+
+  eraseTop(
+    page1,
+    105,
+    539,
+    440,
+    20
+  )
+
+  drawTop({
+    page: page1,
+    text:
+      `of ${bidderName} are not related by consanguinity or affinity up to the third`,
+    x: 108,
+    top: 544,
+    font: regular,
+    size: 11,
+    maxWidth: 435,
+  })
+
+  // =========================================================
+  // PAGE 2
+  // =========================================================
+
+  const page2 = pdfDoc.getPage(1)
+
+  // BENEFICIAL OWNERSHIP
+
+  eraseTop(
+    page2,
+    105,
+    109,
+    440,
+    21
+  )
+
+  drawTop({
+    page: page2,
+    text:
+      `• ${bidderName} declares its beneficial ownership information consistent`,
+    x: 108,
+    top: 114,
+    font: regular,
+    size: 11,
+    maxWidth: 435,
+  })
+
+  // CLAUSE 6
+
+  eraseTop(
+    page2,
+    88,
+    193,
+    460,
+    20
+  )
+
+  drawTop({
+    page: page2,
+    text:
+      `6) ${bidderName} complies with existing labor laws and standards; and`,
+    x: 90,
+    top: 198,
+    font: regular,
+    size: 11,
+    maxWidth: 450,
+  })
+
+  // CLAUSE 7
+
+  eraseTop(
+    page2,
+    88,
+    221,
+    460,
+    20
+  )
+
+  drawTop({
+    page: page2,
+    text:
+      `7) ${bidderName} is aware of and has undertaken the following responsibilities`,
+    x: 90,
+    top: 226,
+    font: regular,
+    size: 11,
+    maxWidth: 450,
+  })
+
+  // SUPPLEMENTAL BID BULLETIN PROJECT TITLE
+
+  eraseTop(
+    page2,
+    145,
+    316,
+    400,
+    38
+  )
+
+  drawWrappedTop({
+    page: page2,
+    text:
+      `Inquire or secure Supplemental Bid Bulletin(s) issued for the ${projectTitle}.`,
+    x: 148,
+    top: 322,
+    width: 395,
+    font: regular,
+    size: 11,
+    lineHeight: 13.8,
+  })
+
+  // CLAUSE 8
+
+  eraseTop(
+    page2,
+    88,
+    359,
+    460,
+    20
+  )
+
+  drawTop({
+    page: page2,
+    text:
+      `8) ${bidderName} did not give or pay directly or indirectly, any commission,`,
+    x: 90,
+    top: 364,
+    font: regular,
+    size: 11,
+    maxWidth: 450,
+  })
+
+  // CLAUSE 9
+
+  eraseTop(
+    page2,
+    88,
+    428,
+    460,
+    20
+  )
+
+  drawTop({
+    page: page2,
+    text:
+      `9) In case advance payment was made or given to ${bidderName}, failure to`,
+    x: 90,
+    top: 433,
+    font: regular,
+    size: 11,
+    maxWidth: 450,
+  })
+
+  // =========================================================
+  // PAGE 2 - WITNESS + SIGNATORY
+  // =========================================================
+
+  eraseTop(
+    page2,
+    68,
+    493,
+    480,
+    178
+  )
+
+  drawWrappedTop({
+    page: page2,
+    text:
+      `IN WITNESS WHEREOF, I have hereunto set my hand this ` +
+      `${day} day of ${month}, ${year} at ${municipalityLocation}, Philippines.`,
+    x: 72,
+    top: 501,
+    width: 470,
+    font: bold,
+    size: 11,
+    lineHeight: 14,
+  })
+
+  drawTop({
+    page: page2,
+    text:
+      'Duly authorized to sign the Bid for and behalf of:',
+    x: 252,
+    top: 543,
+    font: italic,
+    size: 11,
+    maxWidth: 290,
+  })
+
+  drawTop({
+    page: page2,
+    text: bidderName,
+    x: 252,
+    top: 570,
+    font: boldItalic,
+    size: 11,
+    maxWidth: 285,
+  })
+
+  drawTop({
+    page: page2,
+    text: submittedName,
+    x: 252,
+    top: 609,
+    font: boldItalic,
+    size: 11,
+    maxWidth: 285,
+  })
+
+  drawTop({
+    page: page2,
+    text: designation,
+    x: 252,
+    top: 625,
+    font: italic,
+    size: 11,
+    maxWidth: 285,
+  })
+
+  drawTop({
+    page: page2,
+    text: fullDate,
+    x: 252,
+    top: 641,
+    font: boldItalic,
+    size: 11,
+    maxWidth: 285,
+  })
+
+  // =========================================================
+  // PAGE 3 - JURAT
+  // =========================================================
+
+  const page3 = pdfDoc.getPage(2)
+
+  eraseTop(
+    page3,
+    68,
+    132,
+    480,
+    245
+  )
+
+  drawTop({
+    page: page3,
+    text: 'JURAT',
+    x: 282,
+    top: 99,
+    font: bold,
+    size: 12,
+    maxWidth: 80,
+  })
+
+  drawWrappedTop({
+    page: page3,
+    text:
+      `SUBSCRIBED AND SWORN to before me this ${day} day of ` +
+      `${monthYear} at ${municipalityLocation}, Philippines. ` +
+      `Affiant/s is/are personally known to me and was/were identified ` +
+      `by me through competent evidence of identity as defined in the ` +
+      `2004 Rules on Notarial Practice (A.M. No. 02-8-13-SC). ` +
+      `Affiant/s exhibited to me his/her National ID, with his/her ` +
+      `photograph and signature appearing thereon, with no. ____________________.`,
+    x: 72,
+    top: 141,
+    width: 470,
+    font: regular,
+    size: 11,
+    lineHeight: 13.8,
+  })
+
+  drawTop({
+    page: page3,
+    text:
+      `WITNESS MY HAND AND SEAL this ${day} day of ${monthYear}.`,
+    x: 72,
+    top: 224,
+    font: bold,
+    size: 11,
+    maxWidth: 470,
+  })
+
+  drawTop({
+    page: page3,
+    text: 'NAME OF NOTARY PUBLIC',
+    x: 288,
+    top: 279,
+    font: bold,
+    size: 11,
+    maxWidth: 250,
+  })
+
+  drawTop({
+    page: page3,
+    text:
+      'Notarial Commission No.  ___________',
+    x: 288,
+    top: 298,
+    font: regular,
+    size: 11,
+    maxWidth: 250,
+  })
+
+  drawTop({
+    page: page3,
+    text:
+      'Notary Public for ______ until _______',
+    x: 288,
+    top: 316,
+    font: regular,
+    size: 11,
+    maxWidth: 250,
+  })
+
+  drawTop({
+    page: page3,
+    text:
+      'Roll of Attorneys No. _____',
+    x: 288,
+    top: 333,
+    font: regular,
+    size: 11,
+    maxWidth: 250,
+  })
+
+  drawTop({
+    page: page3,
+    text:
+      `PTR No. __, ${fullDate}`,
+    x: 288,
+    top: 350,
+    font: regular,
+    size: 11,
+    maxWidth: 250,
+  })
+
+  drawTop({
+    page: page3,
+    text:
+      `IBP No. __, ${fullDate}`,
+    x: 288,
+    top: 367,
+    font: regular,
+    size: 11,
+    maxWidth: 250,
+  })
+
+  // =========================================================
+  // SAVE
+  // =========================================================
+
+  const bytes = await pdfDoc.save()
+
+  return URL.createObjectURL(
+    new Blob([bytes], {
+      type: 'application/pdf',
+    })
+  )
+}
