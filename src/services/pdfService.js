@@ -2258,28 +2258,24 @@ export async function generateManpowerPreview(project) {
   const date = formatLongDate(project?.date)
 
   // =========================================================
-  // IMPORTANT:
-  // ERASE VALUES ONLY.
-  //
+  // ERASE OLD VALUES ONLY
+  // =========================================================
   // HINDI gagalawin:
   // - Submitted by:
-  // - Designation:
-  // - Name of Firm:
-  // - Date:
+  // - Designation
+  // - Name of Firm
+  // - Date
   // - table
   // - manpower names
   // - positions
   // - logo/header
   // =========================================================
 
-  // PDF is 612 x 792.
-  // Original value column starts around x = 306.
-
   page.drawRectangle({
     x: 301,
     y: 224,
-    width: 230,
-    height: 82,
+    width: 235,
+    height: 84,
     color: white,
     borderWidth: 0,
   })
@@ -2288,7 +2284,7 @@ export async function generateManpowerPreview(project) {
   // SUBMITTED BY
   // =========================================================
 
-  const submittedY = 294
+  const submittedY = 295
 
   const submittedWidth = drawFitText({
     text: submittedBy,
@@ -2300,7 +2296,6 @@ export async function generateManpowerPreview(project) {
     minimumSize: 8,
   })
 
-  // Underline name — same style as template.
   if (submittedBy && submittedWidth > 0) {
     page.drawLine({
       start: {
@@ -2321,7 +2316,7 @@ export async function generateManpowerPreview(project) {
     '(Printed Name & Signature)',
     {
       x: 306,
-      y: 278,
+      y: 279,
       size: 7.5,
       font: regular,
       color: black,
@@ -2335,7 +2330,7 @@ export async function generateManpowerPreview(project) {
   drawFitText({
     text: designation,
     x: 306,
-    y: 261,
+    y: 262,
     font: bold,
     size: 10,
     maxWidth: 210,
@@ -2346,7 +2341,7 @@ export async function generateManpowerPreview(project) {
   // NAME OF FIRM
   // =========================================================
 
-  const firmY = 244
+  const firmY = 245
 
   const firmWidth = drawFitText({
     text: bidderName,
@@ -2358,7 +2353,6 @@ export async function generateManpowerPreview(project) {
     minimumSize: 7.5,
   })
 
-  // Original template has underline under firm name.
   if (bidderName && firmWidth > 0) {
     page.drawLine({
       start: {
@@ -2381,7 +2375,7 @@ export async function generateManpowerPreview(project) {
   drawFitText({
     text: date,
     x: 306,
-    y: 230,
+    y: 231,
     font: bold,
     size: 10,
     maxWidth: 180,
