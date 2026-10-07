@@ -1692,6 +1692,7 @@ export async function generateNfccPreview(project) {
   )
 }
 
+
 export async function generateBidSecurityPreview(project) {
   const variant =
     project?.templateVariant === 'initao_lgu'
@@ -1717,7 +1718,7 @@ export async function generateBidSecurityPreview(project) {
     throw new Error('Expected a 2-page Bid Security PDF')
   }
 
-  // Different template: requires separate layout calibration.
+  // INITAO uses a different layout.
   if (variant === 'initao_lgu') {
     const bytes = await doc.save()
 
@@ -1726,10 +1727,18 @@ export async function generateBidSecurityPreview(project) {
     )
   }
 
-  // Closest built-in equivalent of the original
-  // Times New Roman PDF fonts.
-  const bold = await doc.embedFont(StandardFonts.TimesRomanBold)
-  const italic = await doc.embedFont(StandardFonts.TimesRomanItalic)
+  // =====================================================
+  // FONTS
+  // =====================================================
+
+  const bold = await doc.embedFont(
+    StandardFonts.TimesRomanBold
+  )
+
+  const italic = await doc.embedFont(
+    StandardFonts.TimesRomanItalic
+  )
+
   const boldItalic = await doc.embedFont(
     StandardFonts.TimesRomanBoldItalic
   )
@@ -1740,12 +1749,16 @@ export async function generateBidSecurityPreview(project) {
   const BODY_SIZE = 11.04
   const SIGN_SIZE = 12
 
-  const clean = (value) => String(value ?? '').trim()
+  const clean = (value) =>
+    String(value ?? '').trim()
 
   function titleCase(value) {
     return clean(value)
       .toLowerCase()
-      .replace(/\b\w/g, (letter) => letter.toUpperCase())
+      .replace(
+        /\b\w/g,
+        (letter) => letter.toUpperCase()
+      )
   }
 
   function erase(page, x, y, width, height) {
@@ -1759,17 +1772,28 @@ export async function generateBidSecurityPreview(project) {
     })
   }
 
-  function draw(page, text, x, y, font, size, maxWidth) {
+  function draw(
+    page,
+    text,
+    x,
+    y,
+    font,
+    size,
+    maxWidth
+  ) {
     const value = clean(text)
 
-    if (!value) return
+    if (!value) return 0
 
     let finalSize = size
 
     if (maxWidth) {
       while (
         finalSize > 7 &&
-        font.widthOfTextAtSize(value, finalSize) > maxWidth
+        font.widthOfTextAtSize(
+          value,
+          finalSize
+        ) > maxWidth
       ) {
         finalSize -= 0.1
       }
@@ -1782,22 +1806,30 @@ export async function generateBidSecurityPreview(project) {
       size: finalSize,
       color: black,
     })
+
+    return finalSize
   }
 
   // =====================================================
-  // DOCUMENT SETUP VALUES
+  // DOCUMENT SETUP
   // =====================================================
 
-  const municipality = titleCase(project?.municipality)
+  const municipality = titleCase(
+    project?.municipality
+  )
 
-  const referenceNumber = clean(project?.referenceNumber)
+  const referenceNumber = clean(
+    project?.referenceNumber
+  )
 
-  const bidderName = clean(project?.bidderName).toUpperCase()
+  const bidderName = titleCase(
+    project?.bidderName
+  )
 
-  const submittedBy = clean(
+  const submittedBy = titleCase(
     project?.submittedBy ||
     project?.authorizedRepresentative
-  ).toUpperCase()
+  )
 
   const designation =
     clean(
@@ -1805,19 +1837,29 @@ export async function generateBidSecurityPreview(project) {
       project?.representativeDesignation
     ) || 'Authorized Representative'
 
+  // =====================================================
+  // DATE
+  // =====================================================
+
   function parseDate(value) {
     const text = clean(value)
+
+    if (!text) return null
 
     const match = text.match(
       /^(\d{4})-(\d{2})-(\d{2})$/
     )
 
     if (match) {
-      return new Date(
+      const parsed = new Date(
         Number(match[1]),
         Number(match[2]) - 1,
         Number(match[3])
       )
+
+      return Number.isNaN(parsed.getTime())
+        ? null
+        : parsed
     }
 
     const parsed = new Date(text)
@@ -1857,13 +1899,20 @@ export async function generateBidSecurityPreview(project) {
     Math.abs(page1.getWidth() - 612) > 2 ||
     Math.abs(page1.getHeight() - 792) > 2
   ) {
-    throw new Error('Unexpected Bid Security page size')
+    throw new Error(
+      'Unexpected Bid Security page size'
+    )
   }
 
-  // MUNICIPALITY ONLY
-  // Keep original Republic header and S.S. notation.
+  // MUNICIPALITY
 
-  erase(page1, 70, 687, 202, 18)
+  erase(
+    page1,
+    70,
+    687,
+    202,
+    18
+  )
 
   draw(
     page1,
@@ -1875,10 +1924,15 @@ export async function generateBidSecurityPreview(project) {
     205
   )
 
-  // PROJECT IDENTIFICATION NUMBER ONLY
-  // Preserve original label.
+  // PROJECT IDENTIFICATION NUMBER
 
-  erase(page1, 341, 632, 65, 17)
+  erase(
+    page1,
+    341,
+    632,
+    65,
+    17
+  )
 
   draw(
     page1,
@@ -1891,9 +1945,14 @@ export async function generateBidSecurityPreview(project) {
   )
 
   // TO: MUNICIPALITY
-  // Preserve the original "To:" label and position.
 
-  erase(page1, 90, 596, 145, 19)
+  erase(
+    page1,
+    90,
+    596,
+    145,
+    19
+  )
 
   draw(
     page1,
@@ -1905,7 +1964,7 @@ export async function generateBidSecurityPreview(project) {
     170
   )
 
-  // Declaration paragraphs remain 100% unchanged.
+  // Declaration paragraphs remain unchanged.
 
   // =====================================================
   // PAGE 2
@@ -1917,15 +1976,22 @@ export async function generateBidSecurityPreview(project) {
     Math.abs(page2.getWidth() - 612) > 2 ||
     Math.abs(page2.getHeight() - 792) > 2
   ) {
-    throw new Error('Unexpected Bid Security page 2 size')
+    throw new Error(
+      'Unexpected Bid Security page 2 size'
+    )
   }
 
-  // -----------------------------------------------------
+  // =====================================================
   // WITNESS STATEMENT
-  // Same 11.04 pt as original.
-  // -----------------------------------------------------
+  // =====================================================
 
-  erase(page2, 70, 690, 475, 35)
+  erase(
+    page2,
+    70,
+    690,
+    475,
+    35
+  )
 
   const witness =
     `IN WITNESS WHEREOF, I/We have hereunto set ` +
@@ -1951,12 +2017,37 @@ export async function generateBidSecurityPreview(project) {
     300
   )
 
-  // -----------------------------------------------------
-  // COMPANY NAME
-  // Keep original italic introduction.
-  // -----------------------------------------------------
+  // =====================================================
+  // DULY AUTHORIZED + COMPANY
+  //
+  // IMPORTANT FIX:
+  // Erase BOTH original lines together.
+  // Then redraw BOTH lines.
+  //
+  // This prevents incomplete/half-erased text.
+  // =====================================================
 
-  erase(page2, 70, 631, 295, 19)
+  erase(
+    page2,
+    69,
+    622,
+    390,
+    43
+  )
+
+  // Restore full original introduction.
+
+  draw(
+    page2,
+    'Duly authorized to sign the Bid for and behalf of:',
+    72,
+    651,
+    italic,
+    SIGN_SIZE,
+    350
+  )
+
+  // Company name immediately below.
 
   draw(
     page2,
@@ -1965,70 +2056,95 @@ export async function generateBidSecurityPreview(project) {
     633,
     boldItalic,
     SIGN_SIZE,
-    300
+    330
   )
 
-  // -----------------------------------------------------
+  // =====================================================
   // SIGNATORY
-  // Preserve original 12 pt size and line spacing.
-  // -----------------------------------------------------
+  // =====================================================
 
-  erase(page2, 70, 560, 300, 48)
+  erase(
+    page2,
+    69,
+    548,
+    320,
+    57
+  )
 
-  draw(
+  // Representative name
+
+  const actualSignerSize = draw(
     page2,
     submittedBy,
     72,
     593,
     boldItalic,
     SIGN_SIZE,
-    300
+    280
   )
 
+  // Underline
+
   if (submittedBy) {
-    const actualWidth = Math.min(
-      boldItalic.widthOfTextAtSize(submittedBy, SIGN_SIZE),
-      300
+    const nameWidth = Math.min(
+      boldItalic.widthOfTextAtSize(
+        submittedBy,
+        actualSignerSize
+      ),
+      280
     )
 
     page2.drawLine({
-      start: { x: 72, y: 591 },
-      end: { x: 72 + actualWidth, y: 591 },
+      start: {
+        x: 72,
+        y: 591,
+      },
+      end: {
+        x: 72 + nameWidth,
+        y: 591,
+      },
       color: black,
-      thickness: 0.6,
+      thickness: 0.7,
     })
   }
+
+  // Designation
 
   draw(
     page2,
     designation,
     72,
-    579,
+    575,
     italic,
     SIGN_SIZE,
-    300
+    280
   )
+
+  // Date
 
   draw(
     page2,
     longDate,
     72,
-    565,
+    559,
     boldItalic,
     SIGN_SIZE,
     250
   )
 
   // =====================================================
-  // JURAT — MUNICIPALITY ONLY
+  // JURAT MUNICIPALITY
   //
-  // Preserve original:
-  // SUBSCRIBED AND SWORN...
-  // Philippines...
-  // All notarial wording and blanks.
+  // Do not erase the whole Jurat paragraph.
   // =====================================================
 
-  erase(page2, 407, 482, 139, 17)
+  erase(
+    page2,
+    407,
+    482,
+    139,
+    17
+  )
 
   draw(
     page2,
@@ -2041,7 +2157,7 @@ export async function generateBidSecurityPreview(project) {
   )
 
   // =====================================================
-  // SAVE
+  // SAVE PDF
   // =====================================================
 
   const bytes = await doc.save()
