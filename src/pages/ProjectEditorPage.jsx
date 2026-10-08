@@ -13,8 +13,11 @@ import {
   generateOmnibusPreview,
 } from '../services/pdfService'
 
-import useEditorPersistence from '../hooks/useEditorPersistence'
+import {
+  generateAfterSalesPreview,
+} from '../services/pdf/afterSalesPdf'
 
+import useEditorPersistence from '../hooks/useEditorPersistence'
 import { createTechnicalItem } from '../lib/technicalSpecs'
 import { createInitialBidSecurityState } from '../lib/bidSecurity'
 import { createInitialOmnibusState } from '../lib/omnibus'
@@ -36,10 +39,14 @@ import TechnicalSpecsEditor from '../editors/TechnicalSpecsEditor'
 import ScheduleEditor from '../editors/ScheduleEditor'
 import BidSecurityEditor from '../editors/BidSecurityEditor'
 import OmnibusEditor from '../editors/OmnibusEditor'
+import AfterSalesEditor from '../editors/AfterSalesEditor'
 
-// ============================================================
-// CONFIGURATION
-// ============================================================
+const AFTER_SALES_ID = projectDocuments.find(
+  (doc) =>
+    /after[\s-]*sales/i.test(
+      `${doc.title || ''} ${doc.id || ''}`
+    )
+)?.id ?? 'afterSales'
 
 const PREVIEW_ONLY = new Set([
   'contents',
@@ -56,106 +63,138 @@ const LIVE_PREVIEW = new Set([
   'bidSecurity',
   'manpower',
   'omnibus',
+  AFTER_SALES_ID,
 ])
 
-// ============================================================
-// BID SECURITY TEMPLATE VARIANT
-// ============================================================
-
-function normalizeBidSecurityVariant(value) {
-  if (value === 'with_table') {
-    return 'with_table'
-  }
-
-  return 'without_table'
+function normalizeVariant(value) {
+  return value === 'with_table'
+    ? 'with_table'
+    : 'without_table'
 }
 
-// ============================================================
-// MAIN PAGE
-// ============================================================
+function yearsFromSetup(setup) {
+  const old = String(
+    setup?.servicePeriod ?? ''
+  ).match(/\((\d+)\)/)
+
+  return (
+    setup?.servicePeriodYears ??
+    (old ? Number(old[1]) : 1)
+  )
+}
 
 export default function ProjectEditorPage() {
   const { id } = useParams()
 
-  return <ProjectEditorContent key={id} id={id} />
+  return (
+    <ProjectEditorContent
+      key={id}
+      id={id}
+    />
+  )
 }
 
 function ProjectEditorContent({ id }) {
   const navigate = useNavigate()
 
-  // ==========================================================
-  // MAIN STATE
-  // ==========================================================
+  const [project, setProject] =
+    useState(null)
 
-  const [project, setProject] = useState(null)
-  const [error, setError] = useState('')
-  const [activeDocument, setActiveDocument] = useState(null)
+  const [error, setError] =
+    useState('')
 
-  const [technical, setTechnical] = useState(() => [
-    createTechnicalItem(1),
-  ])
+  const [
+    activeDocument,
+    setActiveDocument,
+  ] = useState(null)
 
-  const [schedule, setSchedule] = useState([])
-  const [bidSecurity, setBidSecurity] = useState(null)
-  const [omnibus, setOmnibus] = useState(null)
-  const [documentSetup, setDocumentSetup] = useState(null)
+  const [technical, setTechnical] =
+    useState(
+      () => [createTechnicalItem(1)]
+    )
 
-  // ==========================================================
-  // LIVE PDF PREVIEW
-  // ==========================================================
+  const [schedule, setSchedule] =
+    useState([])
 
-  const [previews, setPreviews] = useState({})
-  const [previewErrors, setPreviewErrors] = useState({})
+  const [bidSecurity, setBidSecurity] =
+    useState(null)
+
+  const [omnibus, setOmnibus] =
+    useState(null)
+
+  const [documentSetup, setDocumentSetup] =
+    useState(null)
+
+  const [previews, setPreviews] =
+    useState({})
+
+  const [previewErrors, setPreviewErrors] =
+    useState({})
 
   const previewUrlsRef = useRef({})
 
-  // ==========================================================
-  // PERSISTENCE
-  // ==========================================================
+  // ==================================================
+  // LOAD SAVED EDITOR DATA
+  // ==================================================
 
-  const persistence = useEditorPersistence(id, (saved) => {
-    const items = saved?.technical_specs ?? [
-      createTechnicalItem(1),
-    ]
+  const persistence = useEditorPersistence(
+    id,
+    (saved) => {
+      const items =
+        saved?.technical_specs ??
+        [createTechnicalItem(1)]
 
-    setTechnical(items)
+      setTechnical(items)
 
-    setSchedule(
-      alignScheduleItems(
-        items,
-        saved?.schedule_requirements ?? []
+      setSchedule(
+        alignScheduleItems(
+          items,
+          saved?.schedule_requirements ?? []
+        )
       )
-    )
 
-    setBidSecurity(saved?.bid_security ?? null)
-    setOmnibus(saved?.omnibus ?? null)
+      setBidSecurity(
+        saved?.bid_security ?? null
+      )
 
-    setDocumentSetup(
-      saved?.bid_security?.documentSetup ?? null
-    )
-  })
+      setOmnibus(
+        saved?.omnibus ?? null
+      )
 
-  // ==========================================================
+      setDocumentSetup(
+        saved?.bid_security?.documentSetup ??
+        null
+      )
+    }
+  )
+
+  // ==================================================
   // LOAD PROJECT
-  // ==========================================================
+  // ==================================================
 
   useEffect(() => {
     let cancelled = false
 
     getProjectById(id)
-      .then(({ data, error: projectError }) => {
-        if (projectError) {
-          throw projectError
-        }
+      .then(
+        ({
+          data,
+          error: projectError,
+        }) => {
+          if (projectError) {
+            throw projectError
+          }
 
-        if (!cancelled) {
-          setProject(data)
+          if (!cancelled) {
+            setProject(data)
+          }
         }
-      })
+      )
       .catch((loadError) => {
         if (!cancelled) {
           setError(
-            loadError.message || 'Unable to load project.'
+            loadError.message ||
+            'Unable to load project.'
           )
         }
       })
@@ -165,9 +204,9 @@ function ProjectEditorContent({ id }) {
     }
   }, [id])
 
-  // ==========================================================
-  // DOCUMENT SETUP
-  // ==========================================================
+  // ==================================================
+  // SHARED DOCUMENT SETUP
+  // ==================================================
 
   const setup = project
     ? documentSetup ??
@@ -182,74 +221,108 @@ function ProjectEditorContent({ id }) {
     ? setupProject(setup)
     : null
 
-  const province = setup?.province ?? ''
-  const municipality = setup?.municipality ?? ''
-  const projectTitle = setup?.projectTitle ?? ''
-  const referenceNumber = setup?.referenceNumber ?? ''
-  const procuringEntity = setup?.procuringEntity ?? ''
-  const date = setup?.date ?? ''
-  const bidderName = setup?.bidderName ?? ''
-  const businessAddress = setup?.businessAddress ?? ''
-  const submittedBy = setup?.submittedBy ?? ''
-  const designation = setup?.designation ?? ''
-
-  // ==========================================================
-  // BID SECURITY VARIANT
-  // ==========================================================
-
-  const templateVariant = normalizeBidSecurityVariant(
+  const templateVariant = normalizeVariant(
     bidSecurity?.templateVariant
   )
 
-  // ==========================================================
-  // GENERATE LIVE PDF PREVIEW
-  // ==========================================================
+  // Other fields come from Document Setup.
+  // Only servicePeriodYears is unique to After-Sales.
+
+  const previewData = setup
+    ? {
+        province: setup.province ?? '',
+
+        municipality:
+          setup.municipality ?? '',
+
+        projectTitle:
+          setup.projectTitle ?? '',
+
+        referenceNumber:
+          setup.referenceNumber ?? '',
+
+        procuringEntity:
+          setup.procuringEntity ?? '',
+
+        date: setup.date ?? '',
+
+        bidderName:
+          setup.bidderName ?? '',
+
+        businessAddress:
+          setup.businessAddress ?? '',
+
+        submittedBy:
+          setup.submittedBy ?? '',
+
+        authorizedRepresentative:
+          setup.submittedBy ?? '',
+
+        designation:
+          setup.designation ?? '',
+
+        representativeDesignation:
+          setup.designation ?? '',
+
+        servicePeriodYears:
+          yearsFromSetup(setup),
+
+        templateVariant:
+          activeDocument === 'omnibus'
+            ? (
+                omnibus?.templateVariant ===
+                'initao_lgu'
+                  ? 'initao_lgu'
+                  : 'old_default'
+              )
+            : templateVariant,
+      }
+    : null
+
+  const previewKey = JSON.stringify({
+    document: activeDocument,
+    data: previewData,
+  })
+
+  // ==================================================
+  // LIVE PDF GENERATION
+  // ==================================================
 
   useEffect(() => {
+    const {
+      document: documentId,
+      data,
+    } = JSON.parse(previewKey)
+
     if (
-      !setup ||
-      !LIVE_PREVIEW.has(activeDocument)
+      !data ||
+      !LIVE_PREVIEW.has(documentId)
     ) {
       return undefined
     }
 
-    let cancelled = false
+    const generators = {
+      contents:
+        generateTableOfContentsPreview,
 
-    const documentId = activeDocument
+      ongoing:
+        generateOngoingContractsPreview,
 
-const omnibusTemplateVariant =
-  omnibus?.templateVariant === 'initao_lgu'
-    ? 'initao_lgu'
-    : 'old_default'
+      nfcc:
+        generateNfccPreview,
 
-const previewData = {
-  province,
-  municipality,
-  projectTitle,
-  referenceNumber,
-  procuringEntity,
-  date,
-  bidderName,
-  businessAddress,
-  submittedBy,
-  authorizedRepresentative: submittedBy,
-  designation,
-  representativeDesignation: designation,
+      bidSecurity:
+        generateBidSecurityPreview,
 
-  templateVariant:
-    documentId === 'omnibus'
-      ? omnibusTemplateVariant
-      : templateVariant,
-}
+      manpower:
+        generateManpowerPreview,
 
-const generators = {
-  contents: generateTableOfContentsPreview,
-  ongoing: generateOngoingContractsPreview,
-  nfcc: generateNfccPreview,
-  bidSecurity: generateBidSecurityPreview,
-  manpower: generateManpowerPreview,
-  omnibus: generateOmnibusPreview,
-}
+      omnibus:
+        generateOmnibusPreview,
+
+      [AFTER_SALES_ID]:
+        generateAfterSalesPreview,
+    }
 
     const generator = generators[documentId]
 
@@ -257,38 +330,51 @@ const generators = {
       return undefined
     }
 
+    let cancelled = false
 
     Promise.resolve()
-      .then(() => generator(previewData))
+      .then(() => generator(data))
       .then((url) => {
+        if (!url) {
+          throw new Error(
+            'PDF generator returned no URL.'
+          )
+        }
+
         if (cancelled) {
-          if (url?.startsWith('blob:')) {
+          if (url.startsWith('blob:')) {
             URL.revokeObjectURL(url)
           }
+
           return
         }
 
-        setPreviewErrors((current) => ({
-          ...current,
-          [documentId]: '',
-        }))
-
-        const previousUrl =
+        const oldUrl =
           previewUrlsRef.current[documentId]
 
-        previewUrlsRef.current[documentId] = url
+        previewUrlsRef.current[documentId] =
+          url
 
         setPreviews((current) => ({
           ...current,
-          [documentId]: url,
+
+          [documentId]: {
+            url,
+            key: previewKey,
+          },
+        }))
+
+        setPreviewErrors((current) => ({
+          ...current,
+          [documentId]: null,
         }))
 
         if (
-          previousUrl &&
-          previousUrl !== url &&
-          previousUrl.startsWith('blob:')
+          oldUrl &&
+          oldUrl !== url &&
+          oldUrl.startsWith('blob:')
         ) {
-          URL.revokeObjectURL(previousUrl)
+          URL.revokeObjectURL(oldUrl)
         }
       })
       .catch((previewError) => {
@@ -297,63 +383,56 @@ const generators = {
         }
 
         console.error(
-          `${documentId} PDF preview failed:`,
+          `${documentId} PDF generation error:`,
           previewError
         )
 
         setPreviewErrors((current) => ({
           ...current,
-          [documentId]:
-            previewError.message ||
-            'Unable to generate PDF preview.',
+
+          [documentId]: {
+            key: previewKey,
+            message:
+              previewError.message ||
+              'Unable to generate PDF.',
+          },
         }))
       })
 
     return () => {
       cancelled = true
     }
-    }, [
-      activeDocument,
-      province,
-      municipality,
-      projectTitle,
-      referenceNumber,
-      procuringEntity,
-      date,
-      bidderName,
-      businessAddress,
-      submittedBy,
-      designation,
-      templateVariant,
-      omnibus?.templateVariant,
-      !!setup,
-    ])
-  // ==========================================================
-  // CLEAN UP PDF URLS
-  // ==========================================================
+  }, [previewKey])
+
+  // ==================================================
+  // CLEANUP PDF URLS
+  // ==================================================
 
   useEffect(() => {
-    return () => {
-      Object.values(previewUrlsRef.current).forEach(
-        (url) => {
-          if (url?.startsWith('blob:')) {
-            URL.revokeObjectURL(url)
-          }
-        }
-      )
+    const urls = previewUrlsRef.current
 
-      previewUrlsRef.current = {}
+    return () => {
+      Object.values(urls).forEach((url) => {
+        if (url?.startsWith('blob:')) {
+          URL.revokeObjectURL(url)
+        }
+      })
     }
   }, [])
 
-  // ==========================================================
-  // ERROR
-  // ==========================================================
+  // ==================================================
+  // LOADING AND ERRORS
+  // ==================================================
 
   if (error || persistence.loadError) {
     return (
-      <div className="message" role="alert">
-        <p>{error || persistence.loadError}</p>
+      <div
+        className="message"
+        role="alert"
+      >
+        <p>
+          {error || persistence.loadError}
+        </p>
 
         <button
           type="button"
@@ -364,17 +443,15 @@ const generators = {
 
         <button
           type="button"
-          onClick={() => window.location.reload()}
+          onClick={() =>
+            window.location.reload()
+          }
         >
           Retry Load
         </button>
       </div>
     )
   }
-
-  // ==========================================================
-  // LOADING
-  // ==========================================================
 
   if (
     !project ||
@@ -383,107 +460,144 @@ const generators = {
     !sharedProject
   ) {
     return (
-      <div className="message" role="status">
+      <div
+        className="message"
+        role="status"
+      >
         Loading document setup...
       </div>
     )
   }
 
-  // ==========================================================
-  // COMMON DOCUMENT SETUP VALUES
-  // ==========================================================
+  // ==================================================
+  // EXISTING DOCUMENT VALUES
+  // ==================================================
 
   const common = {
-    projectTitle: setup.projectTitle,
-    referenceNumber: setup.referenceNumber,
-    procuringEntity: setup.procuringEntity,
-    municipality: setup.municipality,
-    province: setup.province,
-    date: setup.date,
-    bidderName: setup.bidderName,
-    companyAddress: setup.businessAddress,
-    businessAddress: setup.businessAddress,
-    authorizedRepresentative: setup.submittedBy,
-    submittedBy: setup.submittedBy,
-  }
+    projectTitle:
+      setup.projectTitle,
 
-  // ==========================================================
-  // BID SECURITY VALUE
-  // ==========================================================
+    referenceNumber:
+      setup.referenceNumber,
+
+    procuringEntity:
+      setup.procuringEntity,
+
+    municipality:
+      setup.municipality,
+
+    province:
+      setup.province,
+
+    date:
+      setup.date,
+
+    bidderName:
+      setup.bidderName,
+
+    companyAddress:
+      setup.businessAddress,
+
+    businessAddress:
+      setup.businessAddress,
+
+    authorizedRepresentative:
+      setup.submittedBy,
+
+    submittedBy:
+      setup.submittedBy,
+  }
 
   const bidValue = {
-    ...createInitialBidSecurityState(sharedProject),
-    ...bidSecurity,
-    ...common,
-    templateVariant,
-    representativeDesignation: setup.designation,
-    designation: setup.designation,
-  }
+    ...createInitialBidSecurityState(
+      sharedProject
+    ),
 
-  // ==========================================================
-  // OMNIBUS VALUE
-  // ==========================================================
+    ...bidSecurity,
+
+    ...common,
+
+    templateVariant,
+
+    representativeDesignation:
+      setup.designation,
+
+    designation:
+      setup.designation,
+  }
 
   const omnibusValue = {
-    ...(omnibus ??
-      createInitialOmnibusState(sharedProject)),
-    ...common,
-    designation: setup.designation,
-  }
+    ...(
+      omnibus ??
+      createInitialOmnibusState(
+        sharedProject
+      )
+    ),
 
-  // ==========================================================
-  // SHARED SCHEDULE
-  // ==========================================================
+    ...common,
+
+    designation:
+      setup.designation,
+  }
 
   const scheduleItems = sharedScheduleItems(
     technical,
     schedule
   )
 
-  // ==========================================================
-  // SELECTED DOCUMENT
-  // ==========================================================
-
   const selected = projectDocuments.find(
-    (item) => item.id === activeDocument
+    (item) =>
+      item.id === activeDocument
   )
 
-  // ==========================================================
-  // PDF PREVIEW SOURCE
-  // ==========================================================
+  const generated = previews[activeDocument]
 
-let preview = null
+  const preview = LIVE_PREVIEW.has(
+    activeDocument
+  )
+    ? (
+        generated?.key === previewKey
+          ? generated.url
+          : null
+      )
+    : (
+        selected?.template
+          ? `/pdf/templates/${selected.template}`
+          : null
+      )
 
-if (LIVE_PREVIEW.has(activeDocument)) {
-  preview = previews[activeDocument] ?? null
-} else if (selected?.template) {
-  preview = `/pdf/templates/${selected.template}`
-}
+  const previewError =
+    previewErrors[activeDocument]?.key ===
+    previewKey
+      ? previewErrors[activeDocument].message
+      : ''
 
-  // ==========================================================
-  // DOCUMENT SETUP CHANGE
-  // ==========================================================
+  // ==================================================
+  // SAVE DOCUMENT SETUP
+  // ==================================================
 
   function changeSetup(value) {
     setDocumentSetup(value)
 
-    const nextBidSecurity = {
+    const next = {
       ...bidSecurity,
+
       templateVariant,
+
       documentSetup: value,
     }
 
-    setBidSecurity(nextBidSecurity)
+    setBidSecurity(next)
 
     persistence.change(
       'bid_security',
-      nextBidSecurity
+      next
     )
   }
 
-  // ==========================================================
+  // ==================================================
   // TECHNICAL SPECIFICATIONS
-  // ==========================================================
+  // ==================================================
 
   function changeTechnical(value) {
     setTechnical(value)
@@ -494,24 +608,27 @@ if (LIVE_PREVIEW.has(activeDocument)) {
     )
   }
 
-  // ==========================================================
-  // SCHEDULE REQUIREMENTS
-  // ==========================================================
+  // ==================================================
+  // SCHEDULE
+  // ==================================================
 
   function schedulePayload(value) {
     return [
       ...value,
+
       ...schedule.filter(
         (item) =>
           !value.some(
-            (row) => row.id === item.id
+            (row) =>
+              row.id === item.id
           )
       ),
     ]
   }
 
   function changeSchedule(value) {
-    const next = schedulePayload(value)
+    const next =
+      schedulePayload(value)
 
     setSchedule(next)
 
@@ -521,18 +638,19 @@ if (LIVE_PREVIEW.has(activeDocument)) {
     )
   }
 
-  // ==========================================================
-  // BID SECURITY TEMPLATE CHANGE
-  // ==========================================================
+  // ==================================================
+  // BID SECURITY
+  // ==================================================
 
   function changeBid(value) {
-    const nextVariant = normalizeBidSecurityVariant(
-      value?.templateVariant
-    )
-
     const next = {
       ...bidSecurity,
-      templateVariant: nextVariant,
+
+      templateVariant:
+        normalizeVariant(
+          value?.templateVariant
+        ),
+
       documentSetup: setup,
     }
 
@@ -544,18 +662,15 @@ if (LIVE_PREVIEW.has(activeDocument)) {
     )
   }
 
-  // ==========================================================
-  // SAVE BID SECURITY
-  // ==========================================================
-
   function saveBid(value) {
-    const nextVariant = normalizeBidSecurityVariant(
-      value?.templateVariant
-    )
-
     const next = {
       ...bidSecurity,
-      templateVariant: nextVariant,
+
+      templateVariant:
+        normalizeVariant(
+          value?.templateVariant
+        ),
+
       documentSetup: setup,
     }
 
@@ -567,9 +682,9 @@ if (LIVE_PREVIEW.has(activeDocument)) {
     )
   }
 
-  // ==========================================================
-  // OMNIBUS CHANGE
-  // ==========================================================
+  // ==================================================
+  // OMNIBUS
+  // ==================================================
 
   function changeOmnibus(value) {
     setOmnibus(value)
@@ -580,20 +695,34 @@ if (LIVE_PREVIEW.has(activeDocument)) {
     )
   }
 
-  // ==========================================================
-  // SIDEBAR EDITOR
-  // ==========================================================
+  // ==================================================
+  // SIDEBAR EDITORS
+  // ==================================================
 
   function renderEditor(document) {
-    // PREVIEW ONLY SECTIONS
+    // After-Sales: years only.
+    if (
+      document.id === AFTER_SALES_ID
+    ) {
+      return (
+        <AfterSalesEditor
+          value={setup}
+          onChange={changeSetup}
+        />
+      )
+    }
 
-    if (PREVIEW_ONLY.has(document.id)) {
+    if (
+      PREVIEW_ONLY.has(
+        document.id
+      )
+    ) {
       return null
     }
 
-    // TECHNICAL SPECIFICATIONS
-
-    if (document.id === 'technical') {
+    if (
+      document.id === 'technical'
+    ) {
       return (
         <TechnicalSpecsEditor
           compact
@@ -610,9 +739,9 @@ if (LIVE_PREVIEW.has(activeDocument)) {
       )
     }
 
-    // SCHEDULE REQUIREMENTS
-
-    if (document.id === 'schedule') {
+    if (
+      document.id === 'schedule'
+    ) {
       return (
         <ScheduleEditor
           project={sharedProject}
@@ -628,9 +757,9 @@ if (LIVE_PREVIEW.has(activeDocument)) {
       )
     }
 
-    // BID SECURITY
-
-    if (document.id === 'bidSecurity') {
+    if (
+      document.id === 'bidSecurity'
+    ) {
       return (
         <BidSecurityEditor
           value={bidValue}
@@ -643,9 +772,9 @@ if (LIVE_PREVIEW.has(activeDocument)) {
       )
     }
 
-    // OMNIBUS
-
-    if (document.id === 'omnibus') {
+    if (
+      document.id === 'omnibus'
+    ) {
       return (
         <OmnibusEditor
           compact
@@ -665,17 +794,14 @@ if (LIVE_PREVIEW.has(activeDocument)) {
       )
     }
 
-    // OTHER SECTIONS
-
     return (
       <div className="pending-component">
-        <p>
-          {document.template}
-        </p>
+        <p>{document.template}</p>
 
-        {['priceSchedule', 'summary'].includes(
-          document.id
-        ) && (
+        {[
+          'priceSchedule',
+          'summary',
+        ].includes(document.id) && (
           <>
             <p>
               Shared items from Technical Specifications:
@@ -685,7 +811,7 @@ if (LIVE_PREVIEW.has(activeDocument)) {
               <p key={item.id}>
                 Item {item.itemNo}: {item.qty}{' '}
                 {item.unit}
-                {' — '}
+                {' - '}
                 {(item.specificationLines ?? [])
                   .map((line) => line.text)
                   .join('; ')}
@@ -697,28 +823,31 @@ if (LIVE_PREVIEW.has(activeDocument)) {
     )
   }
 
-  // ==========================================================
-  // PAGE UI
-  // ==========================================================
+  // ==================================================
+  // MAIN PAGE
+  // ==================================================
 
   return (
     <div className="pdf-editor-shell">
       <header className="pdf-editor-topbar">
         <button
           className="button-secondary"
+          type="button"
           onClick={async () => {
             try {
               await persistence.retry()
               navigate('/')
             } catch {
-              // Keep the unsaved draft available.
+              // Keep unsaved draft.
             }
           }}
         >
           Back
         </button>
 
-        <h1>Bid Docs PDF Editor</h1>
+        <h1>
+          Bid Docs PDF Editor
+        </h1>
 
         <span
           className={
@@ -733,11 +862,14 @@ if (LIVE_PREVIEW.has(activeDocument)) {
           {persistence.status}
         </span>
 
-        {persistence.status === 'Error saving' && (
+        {persistence.status ===
+          'Error saving' && (
           <button
             className="button-secondary"
             onClick={() =>
-              persistence.retry().catch(() => {})
+              persistence
+                .retry()
+                .catch(() => {})
             }
           >
             Retry Save
@@ -755,23 +887,25 @@ if (LIVE_PREVIEW.has(activeDocument)) {
       </header>
 
       <div className="pdf-editor-body">
-        {/* SIDEBAR */}
-
         <ProjectSidebar
-          activeDocument={activeDocument}
-          onSelectDocument={setActiveDocument}
+          activeDocument={
+            activeDocument
+          }
+          onSelectDocument={
+            setActiveDocument
+          }
           sectionStatuses={
             persistence.sectionStatuses
           }
-          renderEditor={renderEditor}
+          renderEditor={
+            renderEditor
+          }
         >
           <DocumentSetup
             value={setup}
             onChange={changeSetup}
           />
         </ProjectSidebar>
-
-        {/* PDF PREVIEW */}
 
         <main className="pdf-preview-workspace">
           {!selected ? (
@@ -781,28 +915,56 @@ if (LIVE_PREVIEW.has(activeDocument)) {
           ) : (
             <>
               <header className="preview-heading">
-                <h2>{selected.title}</h2>
-
-                <p>{setup.projectTitle}</p>
+                <h2>
+                  {selected.title}
+                </h2>
 
                 <p>
-                  Reference No. {setup.referenceNumber}
+                  {setup.projectTitle}
+                </p>
+
+                <p>
+                  Reference No.{' '}
+                  {setup.referenceNumber}
                 </p>
               </header>
 
-              {previewErrors[activeDocument] && (
-                <p role="alert" className="message">
-                  {previewErrors[activeDocument]}
+              {previewError && (
+                <p
+                  role="alert"
+                  className="message"
+                >
+                  {previewError}
                 </p>
               )}
 
               {preview ? (
                 <>
-                  {!PREVIEW_ONLY.has(activeDocument) && (
+                  {!PREVIEW_ONLY.has(
+                    activeDocument
+                  ) && (
                     <p className="pdf-preview-notice">
-                      {LIVE_PREVIEW.has(activeDocument)
-                        ? 'Live PDF preview'
+                      {LIVE_PREVIEW.has(
+                        activeDocument
+                      )
+                        ? (
+                            activeDocument === AFTER_SALES_ID
+                              ? 'Live PDF preview - original template with updated text overlay'
+                              : 'Live PDF preview'
+                          )
                         : 'Static template preview. Editing fields does not modify this PDF yet.'}
+                    </p>
+                  )}
+
+                  {activeDocument ===
+                    AFTER_SALES_ID && (
+                    <p>
+                      <a
+                        href={preview}
+                        download="After-Sales-Service-Certificate.pdf"
+                      >
+                        Download Updated After-Sales PDF
+                      </a>
                     </p>
                   )}
 
@@ -811,14 +973,18 @@ if (LIVE_PREVIEW.has(activeDocument)) {
                     title={selected.title}
                   />
                 </>
-              ) : LIVE_PREVIEW.has(activeDocument) ? (
+              ) : LIVE_PREVIEW.has(
+                  activeDocument
+                ) ? (
                 <p className="neutral-preview">
-                  Generating PDF preview...
+                  {previewError
+                    ? 'PDF generation failed.'
+                    : 'Generating PDF preview...'}
                 </p>
               ) : (
                 <p className="neutral-preview">
-                  A template for {selected.title} is
-                  not available yet.
+                  A template for{' '}
+                  {selected.title} is not available yet.
                 </p>
               )}
             </>
