@@ -17,6 +17,10 @@ import {
   generateAfterSalesPreview,
 } from '../services/pdf/afterSalesPdf'
 
+import {
+  generateProductWarrantyPreview,
+} from '../services/pdf/warrantyPdf'
+
 import useEditorPersistence from '../hooks/useEditorPersistence'
 import { createTechnicalItem } from '../lib/technicalSpecs'
 import { createInitialBidSecurityState } from '../lib/bidSecurity'
@@ -40,6 +44,11 @@ import ScheduleEditor from '../editors/ScheduleEditor'
 import BidSecurityEditor from '../editors/BidSecurityEditor'
 import OmnibusEditor from '../editors/OmnibusEditor'
 import AfterSalesEditor from '../editors/AfterSalesEditor'
+import WarrantyEditor from '../editors/WarrantyEditor'
+
+// ==================================================
+// DOCUMENT IDS
+// ==================================================
 
 const AFTER_SALES_ID = projectDocuments.find(
   (doc) =>
@@ -47,6 +56,13 @@ const AFTER_SALES_ID = projectDocuments.find(
       `${doc.title || ''} ${doc.id || ''}`
     )
 )?.id ?? 'afterSales'
+
+const WARRANTY_ID = projectDocuments.find(
+  (doc) =>
+    /certificate of product warranty/i.test(
+      `${doc.title || ''} ${doc.id || ''}`
+    )
+)?.id ?? 'warranty'
 
 const PREVIEW_ONLY = new Set([
   'contents',
@@ -64,6 +80,7 @@ const LIVE_PREVIEW = new Set([
   'manpower',
   'omnibus',
   AFTER_SALES_ID,
+  WARRANTY_ID,
 ])
 
 function normalizeVariant(value) {
@@ -83,6 +100,10 @@ function yearsFromSetup(setup) {
   )
 }
 
+// ==================================================
+// MAIN COMPONENT
+// ==================================================
+
 export default function ProjectEditorPage() {
   const { id } = useParams()
 
@@ -97,25 +118,17 @@ export default function ProjectEditorPage() {
 function ProjectEditorContent({ id }) {
   const navigate = useNavigate()
 
-  const [project, setProject] =
+  const [project, setProject] = useState(null)
+  const [error, setError] = useState('')
+
+  const [activeDocument, setActiveDocument] =
     useState(null)
 
-  const [error, setError] =
-    useState('')
+  const [technical, setTechnical] = useState(
+    () => [createTechnicalItem(1)]
+  )
 
-  const [
-    activeDocument,
-    setActiveDocument,
-  ] = useState(null)
-
-  const [technical, setTechnical] =
-    useState(
-      () => [createTechnicalItem(1)]
-    )
-
-  const [schedule, setSchedule] =
-    useState([])
-
+  const [schedule, setSchedule] = useState([])
   const [bidSecurity, setBidSecurity] =
     useState(null)
 
@@ -125,16 +138,14 @@ function ProjectEditorContent({ id }) {
   const [documentSetup, setDocumentSetup] =
     useState(null)
 
-  const [previews, setPreviews] =
-    useState({})
-
+  const [previews, setPreviews] = useState({})
   const [previewErrors, setPreviewErrors] =
     useState({})
 
   const previewUrlsRef = useRef({})
 
   // ==================================================
-  // LOAD SAVED EDITOR DATA
+  // SAVED DATA
   // ==================================================
 
   const persistence = useEditorPersistence(
@@ -176,25 +187,20 @@ function ProjectEditorContent({ id }) {
     let cancelled = false
 
     getProjectById(id)
-      .then(
-        ({
-          data,
-          error: projectError,
-        }) => {
-          if (projectError) {
-            throw projectError
-          }
-
-          if (!cancelled) {
-            setProject(data)
-          }
+      .then(({ data, error: projectError }) => {
+        if (projectError) {
+          throw projectError
         }
-      )
+
+        if (!cancelled) {
+          setProject(data)
+        }
+      })
       .catch((loadError) => {
         if (!cancelled) {
           setError(
             loadError.message ||
-            'Unable to load project.'
+              'Unable to load project.'
           )
         }
       })
@@ -205,7 +211,7 @@ function ProjectEditorContent({ id }) {
   }, [id])
 
   // ==================================================
-  // SHARED DOCUMENT SETUP
+  // DOCUMENT SETUP
   // ==================================================
 
   const setup = project
@@ -225,12 +231,14 @@ function ProjectEditorContent({ id }) {
     bidSecurity?.templateVariant
   )
 
-  // Other fields come from Document Setup.
-  // Only servicePeriodYears is unique to After-Sales.
+  // ==================================================
+  // LIVE PREVIEW VALUES
+  // ==================================================
 
   const previewData = setup
     ? {
-        province: setup.province ?? '',
+        province:
+          setup.province ?? '',
 
         municipality:
           setup.municipality ?? '',
@@ -244,7 +252,8 @@ function ProjectEditorContent({ id }) {
         procuringEntity:
           setup.procuringEntity ?? '',
 
-        date: setup.date ?? '',
+        date:
+          setup.date ?? '',
 
         bidderName:
           setup.bidderName ?? '',
@@ -264,8 +273,13 @@ function ProjectEditorContent({ id }) {
         representativeDesignation:
           setup.designation ?? '',
 
+        // After-Sales: its own years.
         servicePeriodYears:
           yearsFromSetup(setup),
+
+        // Product Warranty: separate years.
+        productWarrantyYears:
+          setup.productWarrantyYears ?? 2,
 
         templateVariant:
           activeDocument === 'omnibus'
@@ -285,7 +299,7 @@ function ProjectEditorContent({ id }) {
   })
 
   // ==================================================
-  // LIVE PDF GENERATION
+  // PDF GENERATORS
   // ==================================================
 
   useEffect(() => {
@@ -322,9 +336,13 @@ function ProjectEditorContent({ id }) {
 
       [AFTER_SALES_ID]:
         generateAfterSalesPreview,
+
+      [WARRANTY_ID]:
+        generateProductWarrantyPreview,
     }
 
-    const generator = generators[documentId]
+    const generator =
+      generators[documentId]
 
     if (!generator) {
       return undefined
@@ -345,7 +363,6 @@ function ProjectEditorContent({ id }) {
           if (url.startsWith('blob:')) {
             URL.revokeObjectURL(url)
           }
-
           return
         }
 
@@ -357,7 +374,6 @@ function ProjectEditorContent({ id }) {
 
         setPreviews((current) => ({
           ...current,
-
           [documentId]: {
             url,
             key: previewKey,
@@ -378,9 +394,7 @@ function ProjectEditorContent({ id }) {
         }
       })
       .catch((previewError) => {
-        if (cancelled) {
-          return
-        }
+        if (cancelled) return
 
         console.error(
           `${documentId} PDF generation error:`,
@@ -389,7 +403,6 @@ function ProjectEditorContent({ id }) {
 
         setPreviewErrors((current) => ({
           ...current,
-
           [documentId]: {
             key: previewKey,
             message:
@@ -426,10 +439,7 @@ function ProjectEditorContent({ id }) {
 
   if (error || persistence.loadError) {
     return (
-      <div
-        className="message"
-        role="alert"
-      >
+      <div className="message" role="alert">
         <p>
           {error || persistence.loadError}
         </p>
@@ -460,68 +470,40 @@ function ProjectEditorContent({ id }) {
     !sharedProject
   ) {
     return (
-      <div
-        className="message"
-        role="status"
-      >
+      <div className="message" role="status">
         Loading document setup...
       </div>
     )
   }
 
   // ==================================================
-  // EXISTING DOCUMENT VALUES
+  // SHARED VALUES
   // ==================================================
 
   const common = {
-    projectTitle:
-      setup.projectTitle,
-
-    referenceNumber:
-      setup.referenceNumber,
-
-    procuringEntity:
-      setup.procuringEntity,
-
-    municipality:
-      setup.municipality,
-
-    province:
-      setup.province,
-
-    date:
-      setup.date,
-
-    bidderName:
-      setup.bidderName,
-
-    companyAddress:
-      setup.businessAddress,
-
-    businessAddress:
-      setup.businessAddress,
-
+    projectTitle: setup.projectTitle,
+    referenceNumber: setup.referenceNumber,
+    procuringEntity: setup.procuringEntity,
+    municipality: setup.municipality,
+    province: setup.province,
+    date: setup.date,
+    bidderName: setup.bidderName,
+    companyAddress: setup.businessAddress,
+    businessAddress: setup.businessAddress,
     authorizedRepresentative:
       setup.submittedBy,
-
-    submittedBy:
-      setup.submittedBy,
+    submittedBy: setup.submittedBy,
   }
 
   const bidValue = {
     ...createInitialBidSecurityState(
       sharedProject
     ),
-
     ...bidSecurity,
-
     ...common,
-
     templateVariant,
-
     representativeDesignation:
       setup.designation,
-
     designation:
       setup.designation,
   }
@@ -533,11 +515,8 @@ function ProjectEditorContent({ id }) {
         sharedProject
       )
     ),
-
     ...common,
-
-    designation:
-      setup.designation,
+    designation: setup.designation,
   }
 
   const scheduleItems = sharedScheduleItems(
@@ -550,7 +529,8 @@ function ProjectEditorContent({ id }) {
       item.id === activeDocument
   )
 
-  const generated = previews[activeDocument]
+  const generated =
+    previews[activeDocument]
 
   const preview = LIVE_PREVIEW.has(
     activeDocument
@@ -581,9 +561,7 @@ function ProjectEditorContent({ id }) {
 
     const next = {
       ...bidSecurity,
-
       templateVariant,
-
       documentSetup: value,
     }
 
@@ -596,7 +574,7 @@ function ProjectEditorContent({ id }) {
   }
 
   // ==================================================
-  // TECHNICAL SPECIFICATIONS
+  // TECHNICAL
   // ==================================================
 
   function changeTechnical(value) {
@@ -615,20 +593,17 @@ function ProjectEditorContent({ id }) {
   function schedulePayload(value) {
     return [
       ...value,
-
       ...schedule.filter(
         (item) =>
           !value.some(
-            (row) =>
-              row.id === item.id
+            (row) => row.id === item.id
           )
       ),
     ]
   }
 
   function changeSchedule(value) {
-    const next =
-      schedulePayload(value)
+    const next = schedulePayload(value)
 
     setSchedule(next)
 
@@ -645,12 +620,9 @@ function ProjectEditorContent({ id }) {
   function changeBid(value) {
     const next = {
       ...bidSecurity,
-
-      templateVariant:
-        normalizeVariant(
-          value?.templateVariant
-        ),
-
+      templateVariant: normalizeVariant(
+        value?.templateVariant
+      ),
       documentSetup: setup,
     }
 
@@ -665,12 +637,9 @@ function ProjectEditorContent({ id }) {
   function saveBid(value) {
     const next = {
       ...bidSecurity,
-
-      templateVariant:
-        normalizeVariant(
-          value?.templateVariant
-        ),
-
+      templateVariant: normalizeVariant(
+        value?.templateVariant
+      ),
       documentSetup: setup,
     }
 
@@ -700,10 +669,7 @@ function ProjectEditorContent({ id }) {
   // ==================================================
 
   function renderEditor(document) {
-    // After-Sales: years only.
-    if (
-      document.id === AFTER_SALES_ID
-    ) {
+    if (document.id === AFTER_SALES_ID) {
       return (
         <AfterSalesEditor
           value={setup}
@@ -712,17 +678,20 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    if (
-      PREVIEW_ONLY.has(
-        document.id
+    if (document.id === WARRANTY_ID) {
+      return (
+        <WarrantyEditor
+          value={setup}
+          onChange={changeSetup}
+        />
       )
-    ) {
+    }
+
+    if (PREVIEW_ONLY.has(document.id)) {
       return null
     }
 
-    if (
-      document.id === 'technical'
-    ) {
+    if (document.id === 'technical') {
       return (
         <TechnicalSpecsEditor
           compact
@@ -739,9 +708,7 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    if (
-      document.id === 'schedule'
-    ) {
+    if (document.id === 'schedule') {
       return (
         <ScheduleEditor
           project={sharedProject}
@@ -757,9 +724,7 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    if (
-      document.id === 'bidSecurity'
-    ) {
+    if (document.id === 'bidSecurity') {
       return (
         <BidSecurityEditor
           value={bidValue}
@@ -772,9 +737,7 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    if (
-      document.id === 'omnibus'
-    ) {
+    if (document.id === 'omnibus') {
       return (
         <OmnibusEditor
           compact
@@ -810,8 +773,7 @@ function ProjectEditorContent({ id }) {
             {technical.map((item) => (
               <p key={item.id}>
                 Item {item.itemNo}: {item.qty}{' '}
-                {item.unit}
-                {' - '}
+                {item.unit} -{' '}
                 {(item.specificationLines ?? [])
                   .map((line) => line.text)
                   .join('; ')}
@@ -824,7 +786,7 @@ function ProjectEditorContent({ id }) {
   }
 
   // ==================================================
-  // MAIN PAGE
+  // MAIN UI
   // ==================================================
 
   return (
@@ -845,9 +807,7 @@ function ProjectEditorContent({ id }) {
           Back
         </button>
 
-        <h1>
-          Bid Docs PDF Editor
-        </h1>
+        <h1>Bid Docs PDF Editor</h1>
 
         <span
           className={
@@ -867,9 +827,7 @@ function ProjectEditorContent({ id }) {
           <button
             className="button-secondary"
             onClick={() =>
-              persistence
-                .retry()
-                .catch(() => {})
+              persistence.retry().catch(() => {})
             }
           >
             Retry Save
@@ -888,18 +846,12 @@ function ProjectEditorContent({ id }) {
 
       <div className="pdf-editor-body">
         <ProjectSidebar
-          activeDocument={
-            activeDocument
-          }
-          onSelectDocument={
-            setActiveDocument
-          }
+          activeDocument={activeDocument}
+          onSelectDocument={setActiveDocument}
           sectionStatuses={
             persistence.sectionStatuses
           }
-          renderEditor={
-            renderEditor
-          }
+          renderEditor={renderEditor}
         >
           <DocumentSetup
             value={setup}
@@ -915,13 +867,9 @@ function ProjectEditorContent({ id }) {
           ) : (
             <>
               <header className="preview-heading">
-                <h2>
-                  {selected.title}
-                </h2>
+                <h2>{selected.title}</h2>
 
-                <p>
-                  {setup.projectTitle}
-                </p>
+                <p>{setup.projectTitle}</p>
 
                 <p>
                   Reference No.{' '}
@@ -948,7 +896,12 @@ function ProjectEditorContent({ id }) {
                         activeDocument
                       )
                         ? (
-                            activeDocument === AFTER_SALES_ID
+                            [
+                              AFTER_SALES_ID,
+                              WARRANTY_ID,
+                            ].includes(
+                              activeDocument
+                            )
                               ? 'Live PDF preview - original template with updated text overlay'
                               : 'Live PDF preview'
                           )
@@ -964,6 +917,18 @@ function ProjectEditorContent({ id }) {
                         download="After-Sales-Service-Certificate.pdf"
                       >
                         Download Updated After-Sales PDF
+                      </a>
+                    </p>
+                  )}
+
+                  {activeDocument ===
+                    WARRANTY_ID && (
+                    <p>
+                      <a
+                        href={preview}
+                        download="Certificate-of-Product-Warranty.pdf"
+                      >
+                        Download Updated Warranty PDF
                       </a>
                     </p>
                   )}
@@ -984,7 +949,8 @@ function ProjectEditorContent({ id }) {
               ) : (
                 <p className="neutral-preview">
                   A template for{' '}
-                  {selected.title} is not available yet.
+                  {selected.title} is not
+                  available yet.
                 </p>
               )}
             </>
