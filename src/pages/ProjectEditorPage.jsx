@@ -21,6 +21,10 @@ import {
   generateProductWarrantyPreview,
 } from '../services/pdf/warrantyPdf'
 
+import {
+  generateSlccPreview,
+} from '../services/pdf/slccPdf'
+
 import useEditorPersistence from '../hooks/useEditorPersistence'
 import { createTechnicalItem } from '../lib/technicalSpecs'
 import { createInitialBidSecurityState } from '../lib/bidSecurity'
@@ -45,10 +49,11 @@ import BidSecurityEditor from '../editors/BidSecurityEditor'
 import OmnibusEditor from '../editors/OmnibusEditor'
 import AfterSalesEditor from '../editors/AfterSalesEditor'
 import WarrantyEditor from '../editors/WarrantyEditor'
+import SLCCEditor from '../editors/SLCCEditor'
 
-// ==================================================
-// DOCUMENT IDS
-// ==================================================
+// =====================================================
+// DOCUMENT CONFIGURATION
+// =====================================================
 
 const AFTER_SALES_ID = projectDocuments.find(
   (doc) =>
@@ -67,7 +72,6 @@ const WARRANTY_ID = projectDocuments.find(
 const PREVIEW_ONLY = new Set([
   'contents',
   'ongoing',
-  'slcc',
   'nfcc',
   'manpower',
 ])
@@ -75,6 +79,7 @@ const PREVIEW_ONLY = new Set([
 const LIVE_PREVIEW = new Set([
   'contents',
   'ongoing',
+  'slcc',
   'nfcc',
   'bidSecurity',
   'manpower',
@@ -100,9 +105,24 @@ function yearsFromSetup(setup) {
   )
 }
 
-// ==================================================
+function slccVariantFromSetup(setup) {
+  if (
+    setup?.slccVariant === 'cctv' ||
+    setup?.slccVariant === 'streetlight'
+  ) {
+    return setup.slccVariant
+  }
+
+  return /cctv/i.test(
+    setup?.projectTitle ?? ''
+  )
+    ? 'cctv'
+    : 'streetlight'
+}
+
+// =====================================================
 // MAIN COMPONENT
-// ==================================================
+// =====================================================
 
 export default function ProjectEditorPage() {
   const { id } = useParams()
@@ -118,17 +138,24 @@ export default function ProjectEditorPage() {
 function ProjectEditorContent({ id }) {
   const navigate = useNavigate()
 
-  const [project, setProject] = useState(null)
-  const [error, setError] = useState('')
-
-  const [activeDocument, setActiveDocument] =
+  const [project, setProject] =
     useState(null)
+
+  const [error, setError] =
+    useState('')
+
+  const [
+    activeDocument,
+    setActiveDocument,
+  ] = useState(null)
 
   const [technical, setTechnical] = useState(
     () => [createTechnicalItem(1)]
   )
 
-  const [schedule, setSchedule] = useState([])
+  const [schedule, setSchedule] =
+    useState([])
+
   const [bidSecurity, setBidSecurity] =
     useState(null)
 
@@ -138,15 +165,17 @@ function ProjectEditorContent({ id }) {
   const [documentSetup, setDocumentSetup] =
     useState(null)
 
-  const [previews, setPreviews] = useState({})
+  const [previews, setPreviews] =
+    useState({})
+
   const [previewErrors, setPreviewErrors] =
     useState({})
 
   const previewUrlsRef = useRef({})
 
-  // ==================================================
-  // SAVED DATA
-  // ==================================================
+  // ===================================================
+  // LOAD SAVED DATA FROM SUPABASE
+  // ===================================================
 
   const persistence = useEditorPersistence(
     id,
@@ -179,9 +208,9 @@ function ProjectEditorContent({ id }) {
     }
   )
 
-  // ==================================================
+  // ===================================================
   // LOAD PROJECT
-  // ==================================================
+  // ===================================================
 
   useEffect(() => {
     let cancelled = false
@@ -200,7 +229,7 @@ function ProjectEditorContent({ id }) {
         if (!cancelled) {
           setError(
             loadError.message ||
-              'Unable to load project.'
+            'Unable to load project.'
           )
         }
       })
@@ -210,9 +239,9 @@ function ProjectEditorContent({ id }) {
     }
   }, [id])
 
-  // ==================================================
-  // DOCUMENT SETUP
-  // ==================================================
+  // ===================================================
+  // SHARED DOCUMENT SETUP
+  // ===================================================
 
   const setup = project
     ? documentSetup ??
@@ -231,9 +260,9 @@ function ProjectEditorContent({ id }) {
     bidSecurity?.templateVariant
   )
 
-  // ==================================================
-  // LIVE PREVIEW VALUES
-  // ==================================================
+  // ===================================================
+  // LIVE PREVIEW INFORMATION
+  // ===================================================
 
   const previewData = setup
     ? {
@@ -273,14 +302,29 @@ function ProjectEditorContent({ id }) {
         representativeDesignation:
           setup.designation ?? '',
 
-        // After-Sales: its own years.
+        // AFTER-SALES
         servicePeriodYears:
           yearsFromSetup(setup),
 
-        // Product Warranty: separate years.
+        // PRODUCT WARRANTY
         productWarrantyYears:
           setup.productWarrantyYears ?? 2,
 
+        // SLCC TEMPLATE
+        slccVariant:
+          slccVariantFromSetup(setup),
+
+        // Separate contract selection for
+        // CCTV and STREETLIGHT.
+        slccContractTypes:
+          setup.slccContractTypes ?? {},
+
+        // Saved owner, nature and description
+        // for each template and contract type.
+        slccEntries:
+          setup.slccEntries ?? {},
+
+        // BID SECURITY / OMNIBUS
         templateVariant:
           activeDocument === 'omnibus'
             ? (
@@ -298,9 +342,9 @@ function ProjectEditorContent({ id }) {
     data: previewData,
   })
 
-  // ==================================================
-  // PDF GENERATORS
-  // ==================================================
+  // ===================================================
+  // LIVE PDF GENERATION
+  // ===================================================
 
   useEffect(() => {
     const {
@@ -321,6 +365,9 @@ function ProjectEditorContent({ id }) {
 
       ongoing:
         generateOngoingContractsPreview,
+
+      slcc:
+        generateSlccPreview,
 
       nfcc:
         generateNfccPreview,
@@ -353,9 +400,12 @@ function ProjectEditorContent({ id }) {
     Promise.resolve()
       .then(() => generator(data))
       .then((url) => {
-        if (!url) {
+        if (
+          !url ||
+          typeof url !== 'string'
+        ) {
           throw new Error(
-            'PDF generator returned no URL.'
+            'PDF generator returned no PDF URL.'
           )
         }
 
@@ -363,6 +413,7 @@ function ProjectEditorContent({ id }) {
           if (url.startsWith('blob:')) {
             URL.revokeObjectURL(url)
           }
+
           return
         }
 
@@ -374,6 +425,7 @@ function ProjectEditorContent({ id }) {
 
         setPreviews((current) => ({
           ...current,
+
           [documentId]: {
             url,
             key: previewKey,
@@ -394,20 +446,23 @@ function ProjectEditorContent({ id }) {
         }
       })
       .catch((previewError) => {
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
 
         console.error(
-          `${documentId} PDF generation error:`,
+          `${documentId} PDF generation failed:`,
           previewError
         )
 
         setPreviewErrors((current) => ({
           ...current,
+
           [documentId]: {
             key: previewKey,
             message:
               previewError.message ||
-              'Unable to generate PDF.',
+              'Unable to generate PDF preview.',
           },
         }))
       })
@@ -417,9 +472,9 @@ function ProjectEditorContent({ id }) {
     }
   }, [previewKey])
 
-  // ==================================================
-  // CLEANUP PDF URLS
-  // ==================================================
+  // ===================================================
+  // CLEANUP GENERATED PDF URLS
+  // ===================================================
 
   useEffect(() => {
     const urls = previewUrlsRef.current
@@ -433,13 +488,16 @@ function ProjectEditorContent({ id }) {
     }
   }, [])
 
-  // ==================================================
-  // LOADING AND ERRORS
-  // ==================================================
+  // ===================================================
+  // ERRORS
+  // ===================================================
 
   if (error || persistence.loadError) {
     return (
-      <div className="message" role="alert">
+      <div
+        className="message"
+        role="alert"
+      >
         <p>
           {error || persistence.loadError}
         </p>
@@ -463,6 +521,10 @@ function ProjectEditorContent({ id }) {
     )
   }
 
+  // ===================================================
+  // LOADING
+  // ===================================================
+
   if (
     !project ||
     !persistence.ready ||
@@ -470,40 +532,68 @@ function ProjectEditorContent({ id }) {
     !sharedProject
   ) {
     return (
-      <div className="message" role="status">
+      <div
+        className="message"
+        role="status"
+      >
         Loading document setup...
       </div>
     )
   }
 
-  // ==================================================
-  // SHARED VALUES
-  // ==================================================
+  // ===================================================
+  // SHARED DOCUMENT FIELDS
+  // ===================================================
 
   const common = {
-    projectTitle: setup.projectTitle,
-    referenceNumber: setup.referenceNumber,
-    procuringEntity: setup.procuringEntity,
-    municipality: setup.municipality,
-    province: setup.province,
-    date: setup.date,
-    bidderName: setup.bidderName,
-    companyAddress: setup.businessAddress,
-    businessAddress: setup.businessAddress,
+    projectTitle:
+      setup.projectTitle,
+
+    referenceNumber:
+      setup.referenceNumber,
+
+    procuringEntity:
+      setup.procuringEntity,
+
+    municipality:
+      setup.municipality,
+
+    province:
+      setup.province,
+
+    date:
+      setup.date,
+
+    bidderName:
+      setup.bidderName,
+
+    companyAddress:
+      setup.businessAddress,
+
+    businessAddress:
+      setup.businessAddress,
+
     authorizedRepresentative:
       setup.submittedBy,
-    submittedBy: setup.submittedBy,
+
+    submittedBy:
+      setup.submittedBy,
   }
 
   const bidValue = {
     ...createInitialBidSecurityState(
       sharedProject
     ),
+
     ...bidSecurity,
+
     ...common,
+
     templateVariant,
+
     representativeDesignation:
       setup.designation,
+
     designation:
       setup.designation,
   }
@@ -515,8 +605,11 @@ function ProjectEditorContent({ id }) {
         sharedProject
       )
     ),
+
     ...common,
-    designation: setup.designation,
+
+    designation:
+      setup.designation,
   }
 
   const scheduleItems = sharedScheduleItems(
@@ -525,13 +618,14 @@ function ProjectEditorContent({ id }) {
   )
 
   const selected = projectDocuments.find(
-    (item) =>
-      item.id === activeDocument
+    (doc) => doc.id === activeDocument
   )
 
   const generated =
     previews[activeDocument]
 
+  // Only display the PDF generated from
+  // the currently selected form values.
   const preview = LIVE_PREVIEW.has(
     activeDocument
   )
@@ -542,7 +636,9 @@ function ProjectEditorContent({ id }) {
       )
     : (
         selected?.template
-          ? `/pdf/templates/${selected.template}`
+          ? `/pdf/templates/${encodeURIComponent(
+              selected.template
+            )}`
           : null
       )
 
@@ -552,9 +648,9 @@ function ProjectEditorContent({ id }) {
       ? previewErrors[activeDocument].message
       : ''
 
-  // ==================================================
+  // ===================================================
   // SAVE DOCUMENT SETUP
-  // ==================================================
+  // ===================================================
 
   function changeSetup(value) {
     setDocumentSetup(value)
@@ -573,9 +669,9 @@ function ProjectEditorContent({ id }) {
     )
   }
 
-  // ==================================================
-  // TECHNICAL
-  // ==================================================
+  // ===================================================
+  // TECHNICAL SPECIFICATIONS
+  // ===================================================
 
   function changeTechnical(value) {
     setTechnical(value)
@@ -586,13 +682,14 @@ function ProjectEditorContent({ id }) {
     )
   }
 
-  // ==================================================
-  // SCHEDULE
-  // ==================================================
+  // ===================================================
+  // SCHEDULE REQUIREMENTS
+  // ===================================================
 
   function schedulePayload(value) {
     return [
       ...value,
+
       ...schedule.filter(
         (item) =>
           !value.some(
@@ -603,7 +700,8 @@ function ProjectEditorContent({ id }) {
   }
 
   function changeSchedule(value) {
-    const next = schedulePayload(value)
+    const next =
+      schedulePayload(value)
 
     setSchedule(next)
 
@@ -613,16 +711,19 @@ function ProjectEditorContent({ id }) {
     )
   }
 
-  // ==================================================
+  // ===================================================
   // BID SECURITY
-  // ==================================================
+  // ===================================================
 
   function changeBid(value) {
     const next = {
       ...bidSecurity,
-      templateVariant: normalizeVariant(
-        value?.templateVariant
-      ),
+
+      templateVariant:
+        normalizeVariant(
+          value?.templateVariant
+        ),
+
       documentSetup: setup,
     }
 
@@ -637,9 +738,12 @@ function ProjectEditorContent({ id }) {
   function saveBid(value) {
     const next = {
       ...bidSecurity,
-      templateVariant: normalizeVariant(
-        value?.templateVariant
-      ),
+
+      templateVariant:
+        normalizeVariant(
+          value?.templateVariant
+        ),
+
       documentSetup: setup,
     }
 
@@ -651,9 +755,9 @@ function ProjectEditorContent({ id }) {
     )
   }
 
-  // ==================================================
-  // OMNIBUS
-  // ==================================================
+  // ===================================================
+  // OMNIBUS SWORN STATEMENT
+  // ===================================================
 
   function changeOmnibus(value) {
     setOmnibus(value)
@@ -664,11 +768,20 @@ function ProjectEditorContent({ id }) {
     )
   }
 
-  // ==================================================
+  // ===================================================
   // SIDEBAR EDITORS
-  // ==================================================
+  // ===================================================
 
   function renderEditor(document) {
+    if (document.id === 'slcc') {
+      return (
+        <SLCCEditor
+          value={setup}
+          onChange={changeSetup}
+        />
+      )
+    }
+
     if (document.id === AFTER_SALES_ID) {
       return (
         <AfterSalesEditor
@@ -767,13 +880,15 @@ function ProjectEditorContent({ id }) {
         ].includes(document.id) && (
           <>
             <p>
-              Shared items from Technical Specifications:
+              Shared items from
+              Technical Specifications:
             </p>
 
             {technical.map((item) => (
               <p key={item.id}>
-                Item {item.itemNo}: {item.qty}{' '}
-                {item.unit} -{' '}
+                Item {item.itemNo}:{' '}
+                {item.qty} {item.unit}
+                {' - '}
                 {(item.specificationLines ?? [])
                   .map((line) => line.text)
                   .join('; ')}
@@ -785,9 +900,9 @@ function ProjectEditorContent({ id }) {
     )
   }
 
-  // ==================================================
-  // MAIN UI
-  // ==================================================
+  // ===================================================
+  // MAIN USER INTERFACE
+  // ===================================================
 
   return (
     <div className="pdf-editor-shell">
@@ -800,14 +915,16 @@ function ProjectEditorContent({ id }) {
               await persistence.retry()
               navigate('/')
             } catch {
-              // Keep unsaved draft.
+              // Keep unsaved changes.
             }
           }}
         >
           Back
         </button>
 
-        <h1>Bid Docs PDF Editor</h1>
+        <h1>
+          Bid Docs PDF Editor
+        </h1>
 
         <span
           className={
@@ -826,8 +943,11 @@ function ProjectEditorContent({ id }) {
           'Error saving' && (
           <button
             className="button-secondary"
+            type="button"
             onClick={() =>
-              persistence.retry().catch(() => {})
+              persistence
+                .retry()
+                .catch(() => {})
             }
           >
             Retry Save
@@ -862,7 +982,8 @@ function ProjectEditorContent({ id }) {
         <main className="pdf-preview-workspace">
           {!selected ? (
             <p className="neutral-preview">
-              Select a document component to preview.
+              Select a document component
+              to preview.
             </p>
           ) : (
             <>
@@ -899,6 +1020,7 @@ function ProjectEditorContent({ id }) {
                             [
                               AFTER_SALES_ID,
                               WARRANTY_ID,
+                              'slcc',
                             ].includes(
                               activeDocument
                             )
@@ -916,7 +1038,8 @@ function ProjectEditorContent({ id }) {
                         href={preview}
                         download="After-Sales-Service-Certificate.pdf"
                       >
-                        Download Updated After-Sales PDF
+                        Download Updated
+                        After-Sales PDF
                       </a>
                     </p>
                   )}
@@ -928,7 +1051,25 @@ function ProjectEditorContent({ id }) {
                         href={preview}
                         download="Certificate-of-Product-Warranty.pdf"
                       >
-                        Download Updated Warranty PDF
+                        Download Updated
+                        Warranty PDF
+                      </a>
+                    </p>
+                  )}
+
+                  {activeDocument === 'slcc' && (
+                    <p>
+                      <a
+                        href={preview}
+                        download={
+                          previewData.slccVariant ===
+                          'cctv'
+                            ? 'SLCC_CCTV.pdf'
+                            : 'SLCC_STREETLIGHT.pdf'
+                        }
+                      >
+                        Download Updated
+                        SLCC PDF
                       </a>
                     </p>
                   )}
