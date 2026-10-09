@@ -41,6 +41,10 @@ import {
   generateSummaryPreview,
 } from '../services/pdf/summaryPdf'
 
+import {
+  generateBidFormPreview,
+} from '../services/pdf/bidFormPdf'
+
 import useEditorPersistence from '../hooks/useEditorPersistence'
 import { createTechnicalItem } from '../lib/technicalSpecs'
 
@@ -67,6 +71,7 @@ import TechnicalSpecsEditor from '../editors/TechnicalSpecsEditor'
 import ScheduleEditor from '../editors/ScheduleEditor'
 import PriceScheduleEditor from '../editors/PriceScheduleEditor'
 import SummaryEditor from '../editors/SummaryEditor'
+import BidFormEditor from '../editors/BidFormEditor'
 import BidSecurityEditor from '../editors/BidSecurityEditor'
 import OmnibusEditor from '../editors/OmnibusEditor'
 import AfterSalesEditor from '../editors/AfterSalesEditor'
@@ -91,6 +96,20 @@ const WARRANTY_ID =
     )
   )?.id ?? 'warranty'
 
+const BID_FORM_ID =
+  projectDocuments.find((doc) =>
+    /^bid\s*form$/i.test(
+      String(doc.title ?? '').trim()
+    ) ||
+    /^bid[_-]?form$/i.test(
+      String(doc.id ?? '')
+    )
+  )?.id ?? 'bidForm'
+
+// =====================================================
+// DOCUMENT PREVIEW CONFIGURATION
+// =====================================================
+
 const PREVIEW_ONLY = new Set([
   'contents',
   'ongoing',
@@ -98,7 +117,6 @@ const PREVIEW_ONLY = new Set([
   'manpower',
 ])
 
-// Summary is now a LIVE PDF document.
 const LIVE_PREVIEW = new Set([
   'contents',
   'ongoing',
@@ -107,6 +125,7 @@ const LIVE_PREVIEW = new Set([
   'schedule',
   'priceSchedule',
   'summary',
+  BID_FORM_ID,
   'nfcc',
   'bidSecurity',
   'manpower',
@@ -227,7 +246,9 @@ function mergeScheduleWithTechnical(
     }
 
     return {
-      id: String(existing?.id ?? technicalId),
+      id: String(
+        existing?.id ?? technicalId
+      ),
       sharedItemId: technicalId,
       itemNo: String(index + 1),
       qty: String(item?.qty ?? ''),
@@ -275,22 +296,36 @@ function ProjectEditorContent({ id }) {
   const [schedule, setSchedule] = useState([])
   const [bidSecurity, setBidSecurity] = useState(null)
   const [omnibus, setOmnibus] = useState(null)
-  const [documentSetup, setDocumentSetup] = useState(null)
 
-  // PRICE SCHEDULE
+  const [
+    documentSetup,
+    setDocumentSetup,
+  ] = useState(null)
+
+  // ===================================================
+  // PRICE SCHEDULE STATE
+  // ===================================================
+
   const [priceValues, setPriceValues] = useState({})
 
-  // SUMMARY OF BID PRICES
-  const [summaryRefresh, setSummaryRefresh] = useState(0)
+  // ===================================================
+  // SHARED PRICE DATA
+  // USED BY SUMMARY AND BID FORM
+  // ===================================================
 
-  const [summarySaved, setSummarySaved] = useState({
+  const [pricingRefresh, setPricingRefresh] = useState(0)
+
+  const [pricingSaved, setPricingSaved] = useState({
     key: '',
     status: 'idle',
     prices: {},
     error: '',
   })
 
-  // PDF PREVIEWS
+  // ===================================================
+  // PDF STATES
+  // ===================================================
+
   const [previews, setPreviews] = useState({})
   const [previewErrors, setPreviewErrors] = useState({})
 
@@ -315,8 +350,13 @@ function ProjectEditorContent({ id }) {
           : []
       )
 
-      setBidSecurity(saved?.bid_security ?? null)
-      setOmnibus(saved?.omnibus ?? null)
+      setBidSecurity(
+        saved?.bid_security ?? null
+      )
+
+      setOmnibus(
+        saved?.omnibus ?? null
+      )
 
       setDocumentSetup(
         saved?.bid_security?.documentSetup ?? null
@@ -333,7 +373,9 @@ function ProjectEditorContent({ id }) {
 
     getProjectById(id)
       .then(({ data, error: loadError }) => {
-        if (loadError) throw loadError
+        if (loadError) {
+          throw loadError
+        }
 
         if (!cancelled) {
           setProject(data)
@@ -387,23 +429,28 @@ function ProjectEditorContent({ id }) {
     )
 
   // ===================================================
-  // SUMMARY - SUPABASE SAVED PRICES
+  // LOAD SAVED PRICES FROM SUPABASE
+  // FOR SUMMARY OF BID PRICES AND BID FORM
   // ===================================================
 
   const referenceNumber = String(
     setup?.referenceNumber ?? ''
   )
 
-  const summaryRequestKey =
-    `${referenceNumber}:${summaryRefresh}`
+  const isPricingDocument =
+    activeDocument === 'summary' ||
+    activeDocument === BID_FORM_ID
 
-  const summaryReady =
-    summarySaved.key === summaryRequestKey &&
-    summarySaved.status === 'ready'
+  const pricingRequestKey =
+    `${referenceNumber}:${pricingRefresh}`
+
+  const pricingReady =
+    pricingSaved.key === pricingRequestKey &&
+    pricingSaved.status === 'ready'
 
   useEffect(() => {
     if (
-      activeDocument !== 'summary' ||
+      !isPricingDocument ||
       !referenceNumber
     ) {
       return undefined
@@ -411,16 +458,18 @@ function ProjectEditorContent({ id }) {
 
     let cancelled = false
 
-    async function loadSummary() {
+    async function fetchPrices() {
       try {
-        // Load the most recently saved Price Schedule.
         const {
           data,
           error: queryError,
         } = await supabase
           .from('bid_price_schedules')
           .select('total_prices_per_unit')
-          .eq('reference_number', referenceNumber)
+          .eq(
+            'reference_number',
+            referenceNumber
+          )
           .order('updated_at', {
             ascending: false,
           })
@@ -433,7 +482,6 @@ function ProjectEditorContent({ id }) {
         const remote =
           data?.[0]?.total_prices_per_unit ?? {}
 
-        // Read an unsaved local backup if available.
         let cache = null
 
         try {
@@ -443,7 +491,7 @@ function ProjectEditorContent({ id }) {
             ) || 'null'
           )
         } catch {
-          // Invalid local cache is ignored.
+          // Ignore invalid local backup.
         }
 
         const prices =
@@ -457,8 +505,8 @@ function ProjectEditorContent({ id }) {
             : remote
 
         if (!cancelled) {
-          setSummarySaved({
-            key: summaryRequestKey,
+          setPricingSaved({
+            key: pricingRequestKey,
             status: 'ready',
             prices,
             error: '',
@@ -466,55 +514,72 @@ function ProjectEditorContent({ id }) {
         }
       } catch (loadError) {
         if (!cancelled) {
-          setSummarySaved({
-            key: summaryRequestKey,
+          setPricingSaved({
+            key: pricingRequestKey,
             status: 'error',
             prices: {},
             error:
               loadError?.message ||
-              'Could not load saved prices.',
+              'Unable to load saved prices.',
           })
         }
       }
     }
 
-    void loadSummary()
+    void fetchPrices()
 
     return () => {
       cancelled = true
     }
   }, [
-    activeDocument,
+    isPricingDocument,
     referenceNumber,
-    summaryRequestKey,
+    pricingRequestKey,
   ])
 
   // ===================================================
-  // PDF PREVIEW DATA
+  // LIVE PDF PREVIEW DATA
   // ===================================================
 
   const previewData =
     setup &&
     (
-      activeDocument !== 'summary' ||
-      summaryReady
+      !isPricingDocument ||
+      pricingReady
     )
       ? {
-          province: setup.province ?? '',
-          municipality: setup.municipality ?? '',
-          projectTitle: setup.projectTitle ?? '',
-          referenceNumber: setup.referenceNumber ?? '',
-          procuringEntity: setup.procuringEntity ?? '',
-          date: setup.date ?? '',
-          bidderName: setup.bidderName ?? '',
-          businessAddress: setup.businessAddress ?? '',
+          province:
+            setup.province ?? '',
 
-          submittedBy: setup.submittedBy ?? '',
+          municipality:
+            setup.municipality ?? '',
+
+          projectTitle:
+            setup.projectTitle ?? '',
+
+          referenceNumber:
+            setup.referenceNumber ?? '',
+
+          procuringEntity:
+            setup.procuringEntity ?? '',
+
+          date:
+            setup.date ?? '',
+
+          bidderName:
+            setup.bidderName ?? '',
+
+          businessAddress:
+            setup.businessAddress ?? '',
+
+          submittedBy:
+            setup.submittedBy ?? '',
 
           authorizedRepresentative:
             setup.submittedBy ?? '',
 
-          designation: setup.designation ?? '',
+          designation:
+            setup.designation ?? '',
 
           representativeDesignation:
             setup.designation ?? '',
@@ -534,22 +599,29 @@ function ProjectEditorContent({ id }) {
           slccEntries:
             setup.slccEntries ?? {},
 
-          // Shared technical items.
+          // ============================================
+          // TECHNICAL ITEMS
+          // ============================================
+
           items:
             activeDocument === 'technical' ||
             activeDocument === 'priceSchedule' ||
-            activeDocument === 'summary'
+            activeDocument === 'summary' ||
+            activeDocument === BID_FORM_ID
               ? technical
               : activeDocument === 'schedule'
                 ? scheduleItems
                 : undefined,
 
-          // Shared Price Schedule prices.
+          // ============================================
+          // PRICE SCHEDULE / SUMMARY / BID FORM VALUES
+          // ============================================
+
           priceValues:
             activeDocument === 'priceSchedule'
               ? priceValues
-              : activeDocument === 'summary'
-                ? summarySaved.prices
+              : isPricingDocument
+                ? pricingSaved.prices
                 : undefined,
 
           templateVariant:
@@ -593,8 +665,17 @@ function ProjectEditorContent({ id }) {
       schedule: generateScheduleRequirementsPreview,
       priceSchedule: generatePriceSchedulePreview,
 
-      // SUMMARY PDF
+      // ================================================
+      // SUMMARY OF BID PRICES
+      // ================================================
+
       summary: generateSummaryPreview,
+
+      // ================================================
+      // BID FORM
+      // ================================================
+
+      [BID_FORM_ID]: generateBidFormPreview,
 
       nfcc: generateNfccPreview,
       bidSecurity: generateBidSecurityPreview,
@@ -629,6 +710,7 @@ function ProjectEditorContent({ id }) {
           if (url.startsWith('blob:')) {
             URL.revokeObjectURL(url)
           }
+
           return
         }
 
@@ -659,7 +741,9 @@ function ProjectEditorContent({ id }) {
         }
       })
       .catch((generationError) => {
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
 
         console.error(
           `${documentId} PDF generation failed:`,
@@ -702,9 +786,15 @@ function ProjectEditorContent({ id }) {
   // ERROR SCREEN
   // ===================================================
 
-  if (error || persistence.loadError) {
+  if (
+    error ||
+    persistence.loadError
+  ) {
     return (
-      <div className="message" role="alert">
+      <div
+        className="message"
+        role="alert"
+      >
         <p>
           {error || persistence.loadError}
         </p>
@@ -737,14 +827,17 @@ function ProjectEditorContent({ id }) {
     !sharedProject
   ) {
     return (
-      <div className="message" role="status">
+      <div
+        className="message"
+        role="status"
+      >
         Loading document setup...
       </div>
     )
   }
 
   // ===================================================
-  // SHARED FIELDS
+  // COMMON DOCUMENT FIELDS
   // ===================================================
 
   const common = {
@@ -762,25 +855,31 @@ function ProjectEditorContent({ id }) {
   }
 
   const bidValue = {
-    ...createInitialBidSecurityState(sharedProject),
+    ...createInitialBidSecurityState(
+      sharedProject
+    ),
     ...bidSecurity,
     ...common,
     templateVariant,
-    representativeDesignation: setup.designation,
-    designation: setup.designation,
+    representativeDesignation:
+      setup.designation,
+    designation:
+      setup.designation,
   }
 
   const omnibusValue = {
     ...(
       omnibus ??
-      createInitialOmnibusState(sharedProject)
+      createInitialOmnibusState(
+        sharedProject
+      )
     ),
     ...common,
     designation: setup.designation,
   }
 
   // ===================================================
-  // SELECTED DOCUMENT AND PDF PREVIEW
+  // SELECTED DOCUMENT
   // ===================================================
 
   const selected = projectDocuments.find(
@@ -955,7 +1054,7 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    // AFTER-SALES
+    // AFTER SALES
     if (document.id === AFTER_SALES_ID) {
       return (
         <AfterSalesEditor
@@ -975,7 +1074,10 @@ function ProjectEditorContent({ id }) {
       )
     }
 
+    // ================================================
     // PRICE SCHEDULE FOR GOODS
+    // ================================================
+
     if (document.id === 'priceSchedule') {
       return (
         <PriceScheduleEditor
@@ -987,39 +1089,71 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    // =================================================
+    // ================================================
     // SUMMARY OF BID PRICES - VIEW ONLY
-    // =================================================
+    // ================================================
 
     if (document.id === 'summary') {
       return (
         <SummaryEditor
           items={technical}
           priceValues={
-            summaryReady
-              ? summarySaved.prices
+            pricingReady
+              ? pricingSaved.prices
               : {}
           }
           loading={
-            !summaryReady &&
-            summarySaved.status !== 'error'
+            !pricingReady &&
+            pricingSaved.status !== 'error'
           }
           error={
-            !referenceNumber
-              ? 'Missing project reference number.'
-              : summarySaved.key === summaryRequestKey
-                ? summarySaved.error
-                : ''
+            pricingSaved.key === pricingRequestKey
+              ? pricingSaved.error
+              : ''
           }
         />
       )
     }
 
+    // ================================================
+    // BID FORM - VIEW ONLY
+    // ================================================
+
+    if (document.id === BID_FORM_ID) {
+      return (
+        <BidFormEditor
+          items={technical}
+          priceValues={
+            pricingReady
+              ? pricingSaved.prices
+              : {}
+          }
+          setup={setup}
+          loading={
+            !pricingReady &&
+            pricingSaved.status !== 'error'
+          }
+          error={
+            pricingSaved.key === pricingRequestKey
+              ? pricingSaved.error
+              : ''
+          }
+        />
+      )
+    }
+
+    // ================================================
+    // PREVIEW ONLY DOCUMENTS
+    // ================================================
+
     if (PREVIEW_ONLY.has(document.id)) {
       return null
     }
 
+    // ================================================
     // TECHNICAL SPECIFICATIONS
+    // ================================================
+
     if (document.id === 'technical') {
       return (
         <TechnicalSpecsEditor
@@ -1032,7 +1166,10 @@ function ProjectEditorContent({ id }) {
       )
     }
 
+    // ================================================
     // SCHEDULE REQUIREMENTS
+    // ================================================
+
     if (document.id === 'schedule') {
       return (
         <ScheduleEditor
@@ -1044,7 +1181,10 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    // BID SECURITY
+    // ================================================
+    // BID SECURITY DECLARATION
+    // ================================================
+
     if (document.id === 'bidSecurity') {
       return (
         <BidSecurityEditor
@@ -1058,7 +1198,10 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    // OMNIBUS
+    // ================================================
+    // OMNIBUS SWORN STATEMENT
+    // ================================================
+
     if (document.id === 'omnibus') {
       return (
         <OmnibusEditor
@@ -1067,7 +1210,10 @@ function ProjectEditorContent({ id }) {
           value={omnibusValue}
           onChange={changeOmnibus}
           onSave={(value) =>
-            persistence.save('omnibus', value)
+            persistence.save(
+              'omnibus',
+              value
+            )
           }
           saveStatus={
             persistence.sectionStatuses.omnibus
@@ -1076,6 +1222,7 @@ function ProjectEditorContent({ id }) {
       )
     }
 
+    // OTHER DOCUMENTS
     return (
       <div className="pending-component">
         <p>{document.template}</p>
@@ -1098,7 +1245,7 @@ function ProjectEditorContent({ id }) {
               await persistence.retry()
               navigate('/')
             } catch {
-              // Keep editor open when saving fails.
+              // Keep editor open if saving fails.
             }
           }}
         >
@@ -1146,8 +1293,15 @@ function ProjectEditorContent({ id }) {
         <ProjectSidebar
           activeDocument={activeDocument}
           onSelectDocument={(nextId) => {
-            if (nextId === 'summary') {
-              setSummaryRefresh((value) => value + 1)
+            // Reload saved prices when opening
+            // Summary or Bid Form.
+            if (
+              nextId === 'summary' ||
+              nextId === BID_FORM_ID
+            ) {
+              setPricingRefresh(
+                (previous) => previous + 1
+              )
             }
 
             setActiveDocument(nextId)
@@ -1180,21 +1334,27 @@ function ProjectEditorContent({ id }) {
                 </p>
               </header>
 
+              {isPricingDocument &&
+                pricingSaved.key === pricingRequestKey &&
+                pricingSaved.error && (
+                  <p
+                    role="alert"
+                    className="message"
+                  >
+                    Unable to load price schedule:
+                    {' '}
+                    {pricingSaved.error}
+                  </p>
+                )}
+
               {previewError && (
-                <p role="alert" className="message">
+                <p
+                  role="alert"
+                  className="message"
+                >
                   {previewError}
                 </p>
               )}
-
-              {activeDocument === 'summary' &&
-                summarySaved.key === summaryRequestKey &&
-                summarySaved.error && (
-                  <p role="alert" className="message">
-                    Failed to load summary prices:
-                    {' '}
-                    {summarySaved.error}
-                  </p>
-                )}
 
               {preview ? (
                 <>
@@ -1214,6 +1374,8 @@ function ProjectEditorContent({ id }) {
                     </p>
                   )}
 
+                  {/* AFTER SALES DOWNLOAD */}
+
                   {activeDocument === AFTER_SALES_ID && (
                     <p>
                       <a
@@ -1224,6 +1386,8 @@ function ProjectEditorContent({ id }) {
                       </a>
                     </p>
                   )}
+
+                  {/* WARRANTY DOWNLOAD */}
 
                   {activeDocument === WARRANTY_ID && (
                     <p>
@@ -1236,6 +1400,8 @@ function ProjectEditorContent({ id }) {
                     </p>
                   )}
 
+                  {/* TECHNICAL SPECS DOWNLOAD */}
+
                   {activeDocument === 'technical' && (
                     <p>
                       <a
@@ -1246,6 +1412,8 @@ function ProjectEditorContent({ id }) {
                       </a>
                     </p>
                   )}
+
+                  {/* SCHEDULE DOWNLOAD */}
 
                   {activeDocument === 'schedule' && (
                     <p>
@@ -1258,6 +1426,8 @@ function ProjectEditorContent({ id }) {
                     </p>
                   )}
 
+                  {/* PRICE SCHEDULE DOWNLOAD */}
+
                   {activeDocument === 'priceSchedule' && (
                     <p>
                       <a
@@ -1269,18 +1439,33 @@ function ProjectEditorContent({ id }) {
                     </p>
                   )}
 
-                  {/* SUMMARY PDF DOWNLOAD */}
+                  {/* SUMMARY OF BID PRICES DOWNLOAD */}
 
                   {activeDocument === 'summary' && (
                     <p>
                       <a
                         href={preview}
-                        download={`Summary_of_Bid_Prices_${referenceNumber || 'document'}.pdf`}
+                        download={`Summary_of_Bid_Prices_${setup.referenceNumber || 'document'}.pdf`}
                       >
                         Download Updated Summary of Bid Prices PDF
                       </a>
                     </p>
                   )}
+
+                  {/* BID FORM DOWNLOAD */}
+
+                  {activeDocument === BID_FORM_ID && (
+                    <p>
+                      <a
+                        href={preview}
+                        download={`Bid_Form_${setup.referenceNumber || 'document'}.pdf`}
+                      >
+                        Download Updated Bid Form PDF
+                      </a>
+                    </p>
+                  )}
+
+                  {/* SLCC DOWNLOAD */}
 
                   {activeDocument === 'slcc' && (
                     <p>
@@ -1306,14 +1491,10 @@ function ProjectEditorContent({ id }) {
                 <p className="neutral-preview">
                   {previewError
                     ? 'PDF generation failed.'
-                    : activeDocument === 'summary' &&
-                        !referenceNumber
-                      ? 'Missing project reference number.'
-                      : activeDocument === 'summary' &&
-                          summarySaved.error &&
-                          summarySaved.key === summaryRequestKey
-                        ? 'Unable to load saved prices. Check the error above.'
-                        : 'Generating PDF preview...'}
+                    : isPricingDocument &&
+                        pricingSaved.error
+                      ? 'Unable to load prices for this document.'
+                      : 'Generating PDF preview...'}
                 </p>
               ) : (
                 <p className="neutral-preview">
