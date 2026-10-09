@@ -1,0 +1,50 @@
+.pdf-editor-shell .document-setup label { font-size: 11px; font-weight: 550; color: #475569; gap: 6px; margin-bottom: 14px; }
+.pdf-editor-shell .setup-panel :is(input, textarea, select) { border: 1px solid var(--editor-border); border-radius: var(--editor-radius-sm); color: var(--editor-ink); background-color: var(--editor-surface); font-size: 12px; line-height: 1.5; }
+.pdf-editor-shell .document-setup :is(input, textarea, select), .pdf-editor-shell .editor-section select { min-height: 39px; padding: 9px 10px; width: 100%; }
+.pdf-editor-shell .component-accordion { margin-bottom: 8px; border-radius: 10px; background: white; box-shadow: 0 1px 2px #14212b02; }
+.pdf-editor-shell .component-accordion:has([aria-expanded=true]) { border-color: #a6d4c0; }
+.pdf-editor-shell .accordion-trigger { padding: 14px 12px; gap: 10px; grid-template-columns: 18px minmax(0,1fr) 14px; color: #526578; position: relative; }
+.pdf-editor-shell .accordion-trigger strong { text-transform: none; font-size: 12px; font-weight: 600; line-height: 1.5; letter-spacing: 0; color: var(--editor-ink); }
+.pdf-editor-shell .accordion-trigger small { font-size: 10px; margin-top: 4px; }
+.pdf-editor-shell .accordion-trigger[aria-expanded=true] { background: var(--editor-soft); color: var(--editor-emerald); box-shadow: inset 3px 0 var(--editor-emerald); }
+.pdf-editor-shell .accordion-trigger[aria-expanded=true] strong { color: var(--editor-forest); }
+.accordion-chevron { width: 14px; height: 14px; transition: transform var(--editor-expand); }
+[aria-expanded=true] .accordion-chevron { transform: rotate(180deg); }
+.pdf-editor-shell .accordion-content { padding: 14px 10px; background: #fff; }
+.pdf-editor-shell .generate-primary { background: var(--editor-forest); border-color: var(--editor-forest); color: white; padding: 10px 17px; min-height: 42px; border-radius: 9px; box-shadow: 0 3px 7px #064e3b18; font-size: 12px; white-space: nowrap; }
+.pdf-editor-shell .generate-primary:hover:not(:disabled) { background: var(--editor-emerald); border-color: var(--editor-emerald); }
+.pdf-editor-shell .generate-footer { padding-top: 18px; border-top: 1px solid var(--editor-border); margin-top: 22px; }
+.generate-footer .generate-primary { width: 100%; }
+.generate-footer p { text-align: center; }
+.pdf-editor-shell .save-status { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; padding: 7px 10px; border: 1px solid var(--editor-border); border-radius: 30px; background: #fafcfc; }
+.pdf-editor-shell .save-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; }
+.pdf-editor-shell .save-saved { color: var(--editor-emerald); background: #f1faf6; border-color: #d8eee3; }
+.pdf-editor-shell .save-saved::before { content: ''; width: 8px; height: 5px; border: solid currentColor; border-width: 0 0 1.5px 1.5px; border-radius: 0; transform: rotate(-45deg); background: transparent; }
+.pdf-editor-shell .save-saving, .pdf-editor-shell .save-unsaved { color: var(--editor-muted); }
+.pdf-editor-shell .save-error { color: var(--editor-danger); }
+.pdf-editor-shell .save-error::before { background: var(--editor-danger); }
+.pdf-editor-shell .save-error-detail { font-size: 12px; padding: 8px 12px; border-radius: 8px; background: #fff1f0; }
+.pdf-editor-shell .pdf-open-link { font-size: 11px; padding: 7px 12px; border-color: #d7e8df; background: #f7fbf9; }
+.editor-section label { display: grid; gap: 10px; font-size: 12px; }
+.editor-save-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 16px; font-size: 11px; color: var(--editor-muted); }
+.editor-save-row button { min-height: 36px; font-size: 12px; }
+/* These editors retain their existing inline layout and all input handlers. */
+.pdf-editor-shell .premium-technical { padding: 0; }
+.pdf-editor-shell .premium-item { background: #fafcfc; border: 1px solid var(--editor-border); padding: 12px; border-radius: 10px; margin: 14px 0; }
+.pdf-editor-shell .premium-technical button { min-height: 30px; }
+.pdf-editor-shell .premium-technical button[aria-pressed] { min-height: 24px; }
+.pdf-editor-shell .premium-technical input[aria-label^="Compliance"] { min-width: 0; }
+.pdf-editor-shell .premium-technical textarea { border-color: #d7e2de; }
+.pdf-editor-shell .premium-pricing article { box-shadow: 0 2px 6px #14212b04; }
+.pdf-editor-shell .premium-pricing input { font-variant-numeric: tabular-nums; }
+.pdf-editor-shell .premium-pricing input[aria-label*="deduction"] { border-color: #e8d8c4; }
+.pdf-editor-shell .premium-pricing strong { font-variant-numeric: tabular-nums; }
+
+.premium-pricing { padding: 2px; color: var(--editor-ink); }
+.premium-spec-line { display: grid; grid-template-columns: 26px minmax(0,1fr) 24px; gap: 6px; align-items: start; margin-bottom: 14px; }
+.premium-spec-line > div { grid-column: 2; grid-row: 1 / 3; }
+.premium-spec-line > input { grid-column: 2; grid-row: 3; }
+.premium-spec-line > button { grid-column: 3; grid-row: 1; }
+.premium-spec-line > select { grid-column: 1; grid-row: 1; }
+.pdf-editor-shell .premium-spec-line > input[aria-label^="Compliance"] { text-align: left !important; padding: 7px 9px !important; font-size: 11px !important; background: var(--editor-soft); color: var(--editor-forest); }
+.premium-technical > p { margin-bottom: 16px; }

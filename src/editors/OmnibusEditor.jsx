@@ -54,12 +54,14 @@ export default function OmnibusEditor({
           Save
         </button>
 
-        <span>
+        <span role="status" className={saveStatus === 'Error saving' ? 'save-error' : ''}>
           {saveStatus === 'Saving...'
             ? 'Saving...'
             : saveStatus === 'Error saving'
             ? 'Error saving'
-            : 'Saved automatically'}
+            : saveStatus === 'Saved'
+            ? 'Saved automatically'
+            : 'Changes save automatically'}
         </span>
       </div>
     </div>

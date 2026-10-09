@@ -1,3 +1,4 @@
+import DashboardIcon from '../components/DashboardIcon'
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -292,6 +293,7 @@ export default function ProjectEditorPage() {
 
 function ProjectEditorContent({ id }) {
   const navigate = useNavigate()
+  const [panelOpen, setPanelOpen] = useState(false)
 
   // ===================================================
   // STATES
@@ -1410,11 +1412,12 @@ function ProjectEditorContent({ id }) {
   // ===================================================
 
   return (
-    <div className="pdf-editor-shell">
+    <div className={`pdf-editor-shell${panelOpen ? ' panel-open' : ''}`}>
       <header className="pdf-editor-topbar">
         <button
-          className="button-secondary"
+          className="button-secondary editor-back"
           type="button"
+          aria-label="Back to projects"
           onClick={async () => {
             try {
               await persistence.retry()
@@ -1424,18 +1427,29 @@ function ProjectEditorContent({ id }) {
             }
           }}
         >
-          Back
+          <DashboardIcon name="back" /><span className="back-label">Back</span>
         </button>
 
-        <h1>Bid Docs PDF Editor</h1>
+        <div className="editor-brand">
+          <span className="editor-brand-mark"><DashboardIcon name="document" className="editor-icon" /></span>
+          <div className="editor-brand-copy">
+            <h1>Bid Docs PDF Editor</h1>
+            <p className="editor-context" title={setup.projectTitle}>{setup.referenceNumber ? 'Ref. ' + setup.referenceNumber + ' / ' : ''}{setup.projectTitle}</p>
+          </div>
+        </div>
+        <button type="button" className="button-secondary mobile-panel-toggle" aria-expanded={panelOpen} aria-controls="editor-setup-panel" onClick={() => setPanelOpen(!panelOpen)}>
+          <DashboardIcon name="panel" />{panelOpen ? 'View preview' : 'Edit documents'}
+        </button>
 
         {/* GENERATE COMPLETE PDF BUTTON */}
         <button
-          className="button-secondary"
+          className="generate-primary"
           type="button"
+          aria-busy={generatingAll}
           onClick={handleGenerateAll}
           disabled={generatingAll}
         >
+          {generatingAll ? <span className="editor-spinner" aria-hidden="true" /> : <DashboardIcon name="download" />}
           {generatingAll
             ? 'Generating PDF...'
             : 'Generate PDF'}
@@ -1487,6 +1501,7 @@ function ProjectEditorContent({ id }) {
 
       <div className="pdf-editor-body">
         <ProjectSidebar
+          onShowPreview={() => setPanelOpen(false)}
           activeDocument={activeDocument}
 
           // Connect sidebar Generate PDF button.
@@ -1520,12 +1535,17 @@ function ProjectEditorContent({ id }) {
 
         <main className="pdf-preview-workspace">
           {!selected ? (
-            <p className="neutral-preview">
-              Select a document component to preview.
-            </p>
+            <div className="neutral-preview">
+              <span className="editor-brand-mark"><DashboardIcon name="document" width="28" height="28" /></span>
+              <span className="workspace-kicker">Your document workspace</span>
+              <h2>Prepare with confidence.</h2>
+              <p>Select a document component to edit its details and review the PDF. Your project information is shared across your bid documents.</p>
+              <small>Review your documents, then generate your complete bid package.</small>
+            </div>
           ) : (
             <>
               <header className="preview-heading">
+                <span className="workspace-kicker">Document preview</span>
                 <h2>{selected.title}</h2>
 
                 <p>{setup.projectTitle}</p>

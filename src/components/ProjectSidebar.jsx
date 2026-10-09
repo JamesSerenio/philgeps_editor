@@ -1,7 +1,9 @@
+import DashboardIcon from './DashboardIcon'
 
 import { projectDocuments } from '../lib/projectDocuments'
 
 export default function ProjectSidebar({
+  onShowPreview,
   activeDocument,
   onSelectDocument,
   sectionStatuses = {},
@@ -10,13 +12,41 @@ export default function ProjectSidebar({
   onGenerate,
   generating = false,
 }) {
+  function selectDocument(event, nextId) {
+    const panel = event.currentTarget.closest('.setup-panel')
+    const cards = [...panel.querySelectorAll('.component-accordion')]
+    const heights = cards.map((card) => {
+      card.getAnimations().forEach((animation) => animation.cancel())
+      return card.getBoundingClientRect().height
+    })
+
+    onSelectDocument(nextId)
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    // Animate only the surrounding cards; editor mounting and focus stay unchanged.
+    requestAnimationFrame(() => {
+      const duration = parseFloat(getComputedStyle(panel).getPropertyValue('--editor-expand')) || 220
+      cards.forEach((card, index) => {
+        if (!card.isConnected) return
+        const height = card.getBoundingClientRect().height
+        if (height !== heights[index]) {
+          card.animate(
+            [{ height: heights[index] + 'px' }, { height: height + 'px' }],
+            { duration, easing: 'ease-out' },
+          )
+        }
+      })
+    })
+  }
+
   return (
-    <aside className="setup-panel">
+    <aside className="setup-panel" id="editor-setup-panel" aria-label="Document setup and components">
       {/* DOCUMENT SETUP */}
       {children}
 
       <h2 className="components-heading">
-        Document Components
+        Document Components <span className="component-count">{projectDocuments.length}</span>
       </h2>
 
       {/* ALL EXISTING DOCUMENT COMPONENTS */}
@@ -28,7 +58,7 @@ export default function ProjectSidebar({
               sectionStatuses[document.section] ||
               'Unsaved'
             )
-          : 'Editor pending'
+          : 'Document preview'
 
         return (
           <section
@@ -42,15 +72,11 @@ export default function ProjectSidebar({
               aria-controls={
                 'component-' + document.id
               }
-              onClick={() =>
-                onSelectDocument(
-                  open ? null : document.id
-                )
+              onClick={(event) =>
+                selectDocument(event, open ? null : document.id)
               }
             >
-              <span aria-hidden="true">
-                ▤
-              </span>
+              <DashboardIcon name="document" className="editor-icon" />
 
               <span>
                 <strong>
@@ -70,9 +96,7 @@ export default function ProjectSidebar({
                 </small>
               </span>
 
-              <span aria-hidden="true">
-                {open ? '⌃' : '⌄'}
-              </span>
+              <DashboardIcon name="chevron" className="accordion-chevron" />
             </button>
 
             {open && (
@@ -83,6 +107,7 @@ export default function ProjectSidebar({
                 className="accordion-content"
               >
                 {renderEditor(document)}
+                <button type="button" className="button-secondary mobile-preview-button" onClick={onShowPreview}>View PDF preview <DashboardIcon name="arrow" /></button>
               </div>
             )}
           </section>
@@ -92,6 +117,7 @@ export default function ProjectSidebar({
       {/* GENERATE COMPLETE PDF */}
       <footer className="generate-footer">
         <button
+          className="generate-primary"
           type="button"
           onClick={onGenerate}
           disabled={
@@ -105,10 +131,12 @@ export default function ProjectSidebar({
               : 'Generate complete bid documents'
           }
         >
+          {generating ? <span className="editor-spinner" aria-hidden="true" /> : <DashboardIcon name="download" />}
           {generating
             ? 'Generating PDF...'
             : 'Generate PDF'}
         </button>
+        <p>Your complete bid package, in document order.</p>
       </footer>
     </aside>
   )

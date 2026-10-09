@@ -1,0 +1,16 @@
+@keyframes editor-appear { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes editor-spin { to { transform: rotate(360deg); } }
+.pdf-editor-shell { animation: editor-appear 240ms ease-out; }
+.pdf-editor-shell :is(button, a) { transition: background-color var(--editor-hover), border-color var(--editor-hover), color var(--editor-hover), box-shadow var(--editor-hover), transform var(--editor-press); }
+.pdf-editor-shell :is(input, textarea, select) { transition: border-color var(--editor-hover), box-shadow var(--editor-hover); }
+.pdf-editor-shell .generate-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 12px #064e3b24; }
+.pdf-editor-shell button:active:not(:disabled) { translate: 0 1px; }
+.pdf-editor-shell .component-accordion { transition: border-color var(--editor-hover), box-shadow var(--editor-hover); }
+.pdf-editor-shell .component-accordion:hover { box-shadow: 0 2px 7px #14212b08; }
+.pdf-editor-shell .accordion-content { animation: editor-appear var(--editor-expand) ease-out; }
+.pdf-editor-shell .save-status { transition: color 200ms, background-color 200ms, border-color 200ms; }
+.editor-spinner, .pdf-editor-shell .save-saving::before { display: inline-block; width: 14px; height: 14px; border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%; background: transparent; animation: editor-spin 800ms linear infinite; flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .pdf-editor-shell, .pdf-editor-shell *, .pdf-editor-shell *::before { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .pdf-editor-shell .generate-primary:hover:not(:disabled), .pdf-editor-shell button:active:not(:disabled) { transform: none; translate: none; }
+}

@@ -571,10 +571,7 @@ export default function TechnicalSpecsEditor({
 
   return (
     <section
-      style={{
-        padding: compact ? 8 : 16,
-        color: '#173e2e',
-      }}
+      className={`premium-technical${compact ? ' is-compact' : ''}`}
     >
       <div
         style={{
@@ -607,18 +604,7 @@ export default function TechnicalSpecsEditor({
       {items.map((item, itemIndex) => (
         <div
           key={item.id}
-          style={{
-            border:
-              '1px solid #d6e3db',
-
-            background: '#f8fbf9',
-
-            padding: 10,
-
-            borderRadius: 10,
-
-            marginBottom: 12,
-          }}
+          className="premium-item"
         >
           {/* ITEM HEADER */}
 
@@ -670,19 +656,7 @@ export default function TechnicalSpecsEditor({
             (line, lineIndex) => (
               <div
                 key={line.id}
-
-                style={{
-                  display: 'grid',
-
-                  gridTemplateColumns:
-                    '24px minmax(0,1fr) 59px 22px',
-
-                  gap: 4,
-
-                  alignItems: 'start',
-
-                  marginBottom: 7,
-                }}
+                className="premium-spec-line"
               >
                 {/* SYMBOL SELECT */}
 
@@ -1024,6 +998,7 @@ export default function TechnicalSpecsEditor({
               <input
                 type="text"
 
+                aria-label={`Item ${itemIndex + 1} quantity`}
                 inputMode="decimal"
 
                 value={item.qty}

@@ -1,0 +1,12 @@
+:root {
+  --editor-forest: #064e3b; --editor-emerald: #087f5b; --editor-soft: #ecfdf5;
+  --editor-bg: #f6f8fa; --editor-surface: #fff; --editor-ink: #14212b;
+  --editor-muted: #64748b; --editor-border: #e2e8f0; --editor-gold: #d4a643;
+  --editor-danger: #b42318; --editor-font: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --editor-space-1: 4px; --editor-space-2: 8px; --editor-space-3: 12px;
+  --editor-space-4: 16px; --editor-space-5: 24px; --editor-space-6: 32px;
+  --editor-radius-sm: 8px; --editor-radius: 12px; --editor-radius-lg: 18px;
+  --editor-shadow: 0 2px 4px #14212b03, 0 12px 32px #14212b06;
+  --editor-hover: 160ms; --editor-press: 150ms; --editor-expand: 220ms;
+  --editor-sidebar: 348px; --editor-header: 84px;
+}

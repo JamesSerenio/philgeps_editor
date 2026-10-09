@@ -460,12 +460,7 @@ export default function PriceScheduleEditor({
   // ========================================
 
   return (
-    <div
-      style={{
-        padding: 12,
-        fontFamily: 'Arial, sans-serif',
-        color: '#173d2d',
-      }}
+    <div className="premium-pricing"
     >
 
       {/* TITLE / SAVE STATUS */}

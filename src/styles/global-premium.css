@@ -1,0 +1,14 @@
+.pdf-editor-shell {
+  --primary: var(--editor-emerald); --primary-hover: var(--editor-forest);
+  --green: var(--editor-emerald); --green-soft: var(--editor-soft); --bg: var(--editor-bg);
+  --text: var(--editor-ink); --muted: var(--editor-muted); --border: var(--editor-border);
+  font-family: var(--editor-font); color: var(--editor-ink); background: var(--editor-bg);
+}
+.pdf-editor-shell :is(button, input, textarea, select) { font-family: inherit; }
+.pdf-editor-shell :is(button, a, input, textarea, select):focus-visible { outline: 2px solid var(--editor-emerald); outline-offset: 3px; }
+.pdf-editor-shell :is(input, textarea, select):focus { border-color: var(--editor-emerald); box-shadow: 0 0 0 3px #087f5b14; }
+.pdf-editor-shell :is(input, textarea, select) { scroll-margin-block: 20px; }
+.pdf-editor-shell input[readonly] { background: var(--editor-bg); }
+.pdf-editor-shell button:disabled { cursor: not-allowed; }
+.editor-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.pdf-editor-shell :is(.setup-panel, .pdf-preview-workspace) { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
