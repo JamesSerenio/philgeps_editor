@@ -25,21 +25,29 @@ import {
   generateSlccPreview,
 } from '../services/pdf/slccPdf'
 
-// TECHNICAL SPECIFICATIONS PDF
 import {
   generateTechnicalSpecsPreview,
 } from '../services/pdf/technicalSpecsPdf'
 
+import {
+  generateScheduleRequirementsPreview,
+} from '../services/pdf/schedulePdf'
+
 import useEditorPersistence from '../hooks/useEditorPersistence'
+
 import { createTechnicalItem } from '../lib/technicalSpecs'
-import { createInitialBidSecurityState } from '../lib/bidSecurity'
-import { createInitialOmnibusState } from '../lib/omnibus'
+
+import {
+  createInitialBidSecurityState,
+} from '../lib/bidSecurity'
+
+import {
+  createInitialOmnibusState,
+} from '../lib/omnibus'
 
 import {
   createDocumentSetup,
   setupProject,
-  alignScheduleItems,
-  sharedScheduleItems,
 } from '../lib/documentSetup'
 
 import { projectDocuments } from '../lib/projectDocuments'
@@ -56,9 +64,9 @@ import AfterSalesEditor from '../editors/AfterSalesEditor'
 import WarrantyEditor from '../editors/WarrantyEditor'
 import SLCCEditor from '../editors/SLCCEditor'
 
-// =====================================================
+// ======================================================
 // DOCUMENT IDS
-// =====================================================
+// ======================================================
 
 const AFTER_SALES_ID = projectDocuments.find(
   (doc) =>
@@ -74,9 +82,9 @@ const WARRANTY_ID = projectDocuments.find(
     )
 )?.id ?? 'warranty'
 
-// =====================================================
+// ======================================================
 // PREVIEW CONFIGURATION
-// =====================================================
+// ======================================================
 
 const PREVIEW_ONLY = new Set([
   'contents',
@@ -90,6 +98,7 @@ const LIVE_PREVIEW = new Set([
   'ongoing',
   'slcc',
   'technical',
+  'schedule',
   'nfcc',
   'bidSecurity',
   'manpower',
@@ -104,35 +113,151 @@ function normalizeVariant(value) {
     : 'without_table'
 }
 
-function yearsFromSetup(setup) {
-  const old = String(
-    setup?.servicePeriod ?? ''
-  ).match(/\((\d+)\)/)
+function yearsFromSetup(value) {
+  const match = String(
+    value?.servicePeriod ?? ''
+  ).match(/\b(\d+)\b/)
 
-  return (
-    setup?.servicePeriodYears ??
-    (old ? Number(old[1]) : 1)
-  )
+  return value?.servicePeriodYears ??
+    (match ? Number(match[1]) : 1)
 }
 
-function slccVariantFromSetup(setup) {
+function slccVariantFromSetup(value) {
   if (
-    setup?.slccVariant === 'cctv' ||
-    setup?.slccVariant === 'streetlight'
+    ['cctv', 'streetlight'].includes(
+      value?.slccVariant
+    )
   ) {
-    return setup.slccVariant
+    return value.slccVariant
   }
 
   return /cctv/i.test(
-    setup?.projectTitle ?? ''
+    value?.projectTitle ?? ''
   )
     ? 'cctv'
     : 'streetlight'
 }
 
-// =====================================================
+// ======================================================
+// TECHNICAL + SCHEDULE SYNCHRONIZATION
+// ======================================================
+
+// Technical Specifications supplies:
+// - Item Number
+// - Specification Lines
+// - Qty
+// - Unit
+// - Markers
+// - Bold formatting
+//
+// Schedule Requirements supplies:
+// - Delivery Period (editable)
+//
+// Match by the original Technical Item ID.
+// Use Item Number as a fallback for older records.
+
+function mergeScheduleWithTechnical(
+  technical,
+  schedule,
+  defaultPeriod = ''
+) {
+  const techItems = Array.isArray(technical)
+    ? technical
+    : []
+
+  const savedItems = Array.isArray(schedule)
+    ? schedule
+    : []
+
+  return techItems.map((item, index) => {
+    const technicalId = String(
+      item?.id ?? `technical-${index + 1}`
+    )
+
+    const existing =
+      savedItems.find(
+        (saved) =>
+          String(
+            saved.sharedItemId ??
+            saved.id ??
+            ''
+          ) === technicalId
+      ) ??
+      savedItems.find(
+        (saved) =>
+          String(saved.itemNo ?? '') ===
+          String(index + 1)
+      )
+
+    const sourceLines = Array.isArray(
+      item?.specificationLines
+    )
+      ? item.specificationLines
+      : []
+
+    const specificationLines =
+      sourceLines.map((line, lineIndex) => ({
+        id: String(
+          line?.id ??
+          `${technicalId}-line-${lineIndex}`
+        ),
+
+        text: String(
+          line?.text ?? ''
+        ),
+
+        marker: String(
+          line?.marker ?? ''
+        ),
+
+        bold: line?.bold === true,
+
+        compliance: String(
+          line?.compliance ?? 'COMPLY'
+        ),
+      }))
+
+    if (!specificationLines.length) {
+      specificationLines.push({
+        id: `${technicalId}-line-0`,
+        text: '',
+        marker: '',
+        bold: false,
+        compliance: 'COMPLY',
+      })
+    }
+
+    return {
+      id: String(
+        existing?.id ?? technicalId
+      ),
+
+      sharedItemId: technicalId,
+
+      itemNo: String(index + 1),
+
+      qty: String(
+        item?.qty ?? ''
+      ),
+
+      unit: String(
+        item?.unit ?? ''
+      ),
+
+      specificationLines,
+
+      deliveryPeriod: String(
+        existing?.deliveryPeriod ??
+        defaultPeriod ??
+        ''
+      ),
+    }
+  })
+}
+
+// ======================================================
 // MAIN COMPONENT
-// =====================================================
+// ======================================================
 
 export default function ProjectEditorPage() {
   const { id } = useParams()
@@ -163,9 +288,8 @@ function ProjectEditorContent({ id }) {
     setActiveDocument,
   ] = useState(null)
 
-  const [technical, setTechnical] = useState(
-    () => [createTechnicalItem(1)]
-  )
+  const [technical, setTechnical] =
+    useState(() => [createTechnicalItem(1)])
 
   const [schedule, setSchedule] =
     useState([])
@@ -194,17 +318,20 @@ function ProjectEditorContent({ id }) {
   const persistence = useEditorPersistence(
     id,
     (saved) => {
-      const items =
-        saved?.technical_specs ??
-        [createTechnicalItem(1)]
+      const items = Array.isArray(
+        saved?.technical_specs
+      )
+        ? saved.technical_specs
+        : [createTechnicalItem(1)]
 
       setTechnical(items)
 
       setSchedule(
-        alignScheduleItems(
-          items,
-          saved?.schedule_requirements ?? []
+        Array.isArray(
+          saved?.schedule_requirements
         )
+          ? saved.schedule_requirements
+          : []
       )
 
       setBidSecurity(
@@ -230,9 +357,9 @@ function ProjectEditorContent({ id }) {
     let cancelled = false
 
     getProjectById(id)
-      .then(({ data, error: projectError }) => {
-        if (projectError) {
-          throw projectError
+      .then(({ data, error: loadError }) => {
+        if (loadError) {
+          throw loadError
         }
 
         if (!cancelled) {
@@ -273,6 +400,26 @@ function ProjectEditorContent({ id }) {
   const templateVariant = normalizeVariant(
     bidSecurity?.templateVariant
   )
+
+  // ===================================================
+  // AUTOMATIC DELIVERY PERIOD
+  // ===================================================
+
+  const defaultDeliveryPeriod =
+    project?.delivery_period ??
+    project?.deliveryPeriod ??
+    ''
+
+  // ===================================================
+  // SYNCHRONIZED SCHEDULE ITEMS
+  // ===================================================
+
+  const scheduleItems =
+    mergeScheduleWithTechnical(
+      technical,
+      schedule,
+      defaultDeliveryPeriod
+    )
 
   // ===================================================
   // PREVIEW DATA
@@ -317,14 +464,17 @@ function ProjectEditorContent({ id }) {
           setup.designation ?? '',
 
         // AFTER-SALES
+
         servicePeriodYears:
           yearsFromSetup(setup),
 
         // PRODUCT WARRANTY
+
         productWarrantyYears:
           setup.productWarrantyYears ?? 2,
 
         // SLCC
+
         slccVariant:
           slccVariantFromSetup(setup),
 
@@ -335,18 +485,18 @@ function ProjectEditorContent({ id }) {
           setup.slccEntries ?? {},
 
         // =========================================
-        // TECHNICAL SPECIFICATIONS
+        // TECHNICAL + SCHEDULE
         // =========================================
-        // Include current saved editor items
-        // whenever Technical Specifications
-        // is the active document.
 
         items:
           activeDocument === 'technical'
             ? technical
-            : undefined,
+            : activeDocument === 'schedule'
+              ? scheduleItems
+              : undefined,
 
         // BID SECURITY / OMNIBUS
+
         templateVariant:
           activeDocument === 'omnibus'
             ? (
@@ -395,9 +545,13 @@ function ProjectEditorContent({ id }) {
       slcc:
         generateSlccPreview,
 
-      // TECHNICAL SPECIFICATIONS
       technical:
         generateTechnicalSpecsPreview,
+
+      // DYNAMIC SCHEDULE PDF
+
+      schedule:
+        generateScheduleRequirementsPreview,
 
       nfcc:
         generateNfccPreview,
@@ -427,13 +581,12 @@ function ProjectEditorContent({ id }) {
 
     let cancelled = false
 
-    // Generate PDF using current form values.
     Promise.resolve()
       .then(() => generator(data))
       .then((url) => {
         if (
-          !url ||
-          typeof url !== 'string'
+          typeof url !== 'string' ||
+          !url
         ) {
           throw new Error(
             'PDF generator returned no PDF URL.'
@@ -454,8 +607,8 @@ function ProjectEditorContent({ id }) {
         previewUrlsRef.current[documentId] =
           url
 
-        setPreviews((current) => ({
-          ...current,
+        setPreviews((previous) => ({
+          ...previous,
 
           [documentId]: {
             url,
@@ -463,13 +616,14 @@ function ProjectEditorContent({ id }) {
           },
         }))
 
-        setPreviewErrors((current) => ({
-          ...current,
+        setPreviewErrors((previous) => ({
+          ...previous,
 
           [documentId]: null,
         }))
 
         // Release previous PDF preview.
+
         if (
           oldUrl &&
           oldUrl !== url &&
@@ -478,23 +632,24 @@ function ProjectEditorContent({ id }) {
           URL.revokeObjectURL(oldUrl)
         }
       })
-      .catch((previewError) => {
+      .catch((generationError) => {
         if (cancelled) {
           return
         }
 
         console.error(
           `${documentId} PDF generation failed:`,
-          previewError
+          generationError
         )
 
-        setPreviewErrors((current) => ({
-          ...current,
+        setPreviewErrors((previous) => ({
+          ...previous,
 
           [documentId]: {
             key: previewKey,
+
             message:
-              previewError.message ||
+              generationError.message ||
               'Unable to generate PDF preview.',
           },
         }))
@@ -510,7 +665,8 @@ function ProjectEditorContent({ id }) {
   // ===================================================
 
   useEffect(() => {
-    const urls = previewUrlsRef.current
+    const urls =
+      previewUrlsRef.current
 
     return () => {
       Object.values(urls).forEach((url) => {
@@ -525,7 +681,10 @@ function ProjectEditorContent({ id }) {
   // ERRORS
   // ===================================================
 
-  if (error || persistence.loadError) {
+  if (
+    error ||
+    persistence.loadError
+  ) {
     return (
       <div
         className="message"
@@ -654,15 +813,6 @@ function ProjectEditorContent({ id }) {
   }
 
   // ===================================================
-  // SCHEDULE ITEMS
-  // ===================================================
-
-  const scheduleItems = sharedScheduleItems(
-    technical,
-    schedule
-  )
-
-  // ===================================================
   // SELECTED DOCUMENT
   // ===================================================
 
@@ -673,7 +823,8 @@ function ProjectEditorContent({ id }) {
   const generated =
     previews[activeDocument]
 
-  // Only show PDF that matches current values.
+  // Only show PDF matching current values.
+
   const preview = LIVE_PREVIEW.has(
     activeDocument
   )
@@ -705,9 +856,7 @@ function ProjectEditorContent({ id }) {
 
     const next = {
       ...bidSecurity,
-
       templateVariant,
-
       documentSetup: value,
     }
 
@@ -726,7 +875,6 @@ function ProjectEditorContent({ id }) {
   function changeTechnical(value) {
     setTechnical(value)
 
-    // Save all items and lines automatically.
     persistence.change(
       'technical_specs',
       value
@@ -751,16 +899,11 @@ function ProjectEditorContent({ id }) {
   // ===================================================
 
   function schedulePayload(value) {
-    return [
-      ...value,
-
-      ...schedule.filter(
-        (item) =>
-          !value.some(
-            (row) => row.id === item.id
-          )
-      ),
-    ]
+    return mergeScheduleWithTechnical(
+      technical,
+      value,
+      defaultDeliveryPeriod
+    )
   }
 
   function changeSchedule(value) {
@@ -770,6 +913,18 @@ function ProjectEditorContent({ id }) {
     setSchedule(next)
 
     persistence.change(
+      'schedule_requirements',
+      next
+    )
+  }
+
+  function saveSchedule(value) {
+    const next =
+      schedulePayload(value)
+
+    setSchedule(next)
+
+    return persistence.save(
       'schedule_requirements',
       next
     )
@@ -838,6 +993,7 @@ function ProjectEditorContent({ id }) {
 
   function renderEditor(document) {
     // SLCC
+
     if (document.id === 'slcc') {
       return (
         <SLCCEditor
@@ -848,6 +1004,7 @@ function ProjectEditorContent({ id }) {
     }
 
     // AFTER-SALES
+
     if (document.id === AFTER_SALES_ID) {
       return (
         <AfterSalesEditor
@@ -858,6 +1015,7 @@ function ProjectEditorContent({ id }) {
     }
 
     // WARRANTY
+
     if (document.id === WARRANTY_ID) {
       return (
         <WarrantyEditor
@@ -897,12 +1055,7 @@ function ProjectEditorContent({ id }) {
           project={sharedProject}
           value={scheduleItems}
           onChange={changeSchedule}
-          onSave={(value) =>
-            persistence.save(
-              'schedule_requirements',
-              schedulePayload(value)
-            )
-          }
+          onSave={saveSchedule}
         />
       )
     }
@@ -954,7 +1107,9 @@ function ProjectEditorContent({ id }) {
 
     return (
       <div className="pending-component">
-        <p>{document.template}</p>
+        <p>
+          {document.template}
+        </p>
 
         {[
           'priceSchedule',
@@ -962,8 +1117,7 @@ function ProjectEditorContent({ id }) {
         ].includes(document.id) && (
           <>
             <p>
-              Shared items from
-              Technical Specifications:
+              Shared items from Technical Specifications:
             </p>
 
             {technical.map((item) => (
@@ -990,6 +1144,7 @@ function ProjectEditorContent({ id }) {
     <div className="pdf-editor-shell">
 
       {/* TOP HEADER */}
+
       <header className="pdf-editor-topbar">
         <button
           className="button-secondary"
@@ -999,7 +1154,8 @@ function ProjectEditorContent({ id }) {
               await persistence.retry()
               navigate('/')
             } catch {
-              // Keep unsaved changes.
+              // Keep unsaved changes
+              // if network save fails.
             }
           }}
         >
@@ -1049,9 +1205,11 @@ function ProjectEditorContent({ id }) {
       </header>
 
       {/* BODY */}
+
       <div className="pdf-editor-body">
 
         {/* LEFT SIDEBAR */}
+
         <ProjectSidebar
           activeDocument={activeDocument}
           onSelectDocument={setActiveDocument}
@@ -1067,18 +1225,23 @@ function ProjectEditorContent({ id }) {
         </ProjectSidebar>
 
         {/* RIGHT PDF PREVIEW */}
+
         <main className="pdf-preview-workspace">
+
           {!selected ? (
             <p className="neutral-preview">
-              Select a document component
-              to preview.
+              Select a document component to preview.
             </p>
           ) : (
             <>
               <header className="preview-heading">
-                <h2>{selected.title}</h2>
+                <h2>
+                  {selected.title}
+                </h2>
 
-                <p>{setup.projectTitle}</p>
+                <p>
+                  {setup.projectTitle}
+                </p>
 
                 <p>
                   Reference No.{' '}
@@ -1087,6 +1250,7 @@ function ProjectEditorContent({ id }) {
               </header>
 
               {/* PREVIEW ERROR */}
+
               {previewError && (
                 <p
                   role="alert"
@@ -1098,7 +1262,9 @@ function ProjectEditorContent({ id }) {
 
               {preview ? (
                 <>
+
                   {/* PREVIEW STATUS */}
+
                   {!PREVIEW_ONLY.has(
                     activeDocument
                   ) && (
@@ -1122,6 +1288,7 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* AFTER-SALES DOWNLOAD */}
+
                   {activeDocument ===
                     AFTER_SALES_ID && (
                     <p>
@@ -1135,6 +1302,7 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* WARRANTY DOWNLOAD */}
+
                   {activeDocument ===
                     WARRANTY_ID && (
                     <p>
@@ -1147,10 +1315,7 @@ function ProjectEditorContent({ id }) {
                     </p>
                   )}
 
-                  {/* =================================
-                      TECHNICAL SPECIFICATIONS
-                      DOWNLOAD UPDATED PDF
-                  ================================= */}
+                  {/* TECHNICAL SPECIFICATIONS DOWNLOAD */}
 
                   {activeDocument === 'technical' && (
                     <p>
@@ -1163,7 +1328,21 @@ function ProjectEditorContent({ id }) {
                     </p>
                   )}
 
+                  {/* SCHEDULE REQUIREMENTS DOWNLOAD */}
+
+                  {activeDocument === 'schedule' && (
+                    <p>
+                      <a
+                        href={preview}
+                        download={`Schedule_of_Requirements_${setup.referenceNumber || 'document'}.pdf`}
+                      >
+                        Download Updated Schedule of Requirements PDF
+                      </a>
+                    </p>
+                  )}
+
                   {/* SLCC DOWNLOAD */}
+
                   {activeDocument === 'slcc' && (
                     <p>
                       <a
@@ -1181,14 +1360,15 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* LIVE PDF VIEW */}
+
                   <PdfPreview
                     src={preview}
                     title={selected.title}
                   />
                 </>
               ) : LIVE_PREVIEW.has(
-                  activeDocument
-                ) ? (
+                activeDocument
+              ) ? (
                 <p className="neutral-preview">
                   {previewError
                     ? 'PDF generation failed.'
@@ -1197,8 +1377,7 @@ function ProjectEditorContent({ id }) {
               ) : (
                 <p className="neutral-preview">
                   A template for{' '}
-                  {selected.title} is not
-                  available yet.
+                  {selected.title} is not available yet.
                 </p>
               )}
             </>
