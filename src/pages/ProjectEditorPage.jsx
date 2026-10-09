@@ -14,6 +14,10 @@ import {
 } from '../services/pdfService'
 
 import {
+  generateFullBidPackagePdf,
+} from '../services/pdf/fullBidPackagePdf'
+
+import {
   generateAfterSalesPreview,
 } from '../services/pdf/afterSalesPdf'
 
@@ -330,6 +334,13 @@ function ProjectEditorContent({ id }) {
   const [previewErrors, setPreviewErrors] = useState({})
 
   const previewUrlsRef = useRef({})
+
+  // ===================================================
+  // ADD: COMPLETE PDF GENERATION STATES
+  // ===================================================
+
+  const [generatingAll, setGeneratingAll] = useState(false)
+  const [generateAllError, setGenerateAllError] = useState('')
 
   // ===================================================
   // SUPABASE EDITOR PERSISTENCE
@@ -1040,6 +1051,130 @@ function ProjectEditorContent({ id }) {
   }
 
   // ===================================================
+  // ADD: GENERATE COMPLETE BID DOCUMENT PACKAGE
+  // ===================================================
+
+  async function handleGenerateAll() {
+    if (generatingAll || !setup) return
+
+    setGeneratingAll(true)
+    setGenerateAllError('')
+
+    try {
+      // Save pending editor changes first.
+      await persistence.retry()
+
+      const ref = String(
+        setup.referenceNumber ?? ''
+      ).trim()
+
+      if (!ref) {
+        throw new Error('Reference Number is missing.')
+      }
+
+      // Read saved Price Schedule from Supabase.
+      const {
+        data,
+        error: priceError,
+      } = await supabase
+        .from('bid_price_schedules')
+        .select('total_prices_per_unit')
+        .eq('reference_number', ref)
+        .order('updated_at', {
+          ascending: false,
+        })
+        .limit(1)
+
+      if (priceError) {
+        throw priceError
+      }
+
+      const remote =
+        data?.[0]?.total_prices_per_unit ?? {}
+
+      // Preserve unsynced prices from local editor cache.
+      let cache = null
+
+      try {
+        cache = JSON.parse(
+          window.localStorage.getItem(
+            `philgeps-price-schedule:${ref}`
+          ) || 'null'
+        )
+      } catch {
+        // Ignore invalid local cache.
+      }
+
+      const savedPrices = {
+        ...remote,
+
+        ...(
+          cache?.dirty &&
+          cache.values &&
+          typeof cache.values === 'object'
+            ? cache.values
+            : {}
+        ),
+
+        ...priceValues,
+      }
+
+      // Generate the complete PDF.
+      const url = await generateFullBidPackagePdf({
+        setup: {
+          ...setup,
+          slccVariant: slccVariantFromSetup(setup),
+          servicePeriodYears: yearsFromSetup(setup),
+        },
+
+        technical,
+        schedule: scheduleItems,
+        priceValues: savedPrices,
+        bidSecurity,
+        omnibus,
+      })
+
+      if (
+        typeof url !== 'string' ||
+        !url
+      ) {
+        throw new Error(
+          'Complete PDF generator returned no PDF URL.'
+        )
+      }
+
+      // Download the generated PDF.
+      const link = document.createElement('a')
+
+      link.href = url
+      link.download = `BID_DOCUMENTS_${ref}.pdf`
+
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+
+      if (url.startsWith('blob:')) {
+        window.setTimeout(() => {
+          URL.revokeObjectURL(url)
+        }, 60000)
+      }
+
+    } catch (generationError) {
+      console.error(
+        'Complete PDF generation failed:',
+        generationError
+      )
+
+      setGenerateAllError(
+        generationError?.message ||
+        'Unable to generate complete bid PDF.'
+      )
+    } finally {
+      setGeneratingAll(false)
+    }
+  }
+
+  // ===================================================
   // ALL DOCUMENT EDITORS
   // ===================================================
 
@@ -1254,6 +1389,27 @@ function ProjectEditorContent({ id }) {
 
         <h1>Bid Docs PDF Editor</h1>
 
+        {/* ADD: GENERATE COMPLETE PDF BUTTON */}
+        <button
+          className="button-secondary"
+          type="button"
+          onClick={handleGenerateAll}
+          disabled={generatingAll}
+        >
+          {generatingAll
+            ? 'Generating PDF...'
+            : 'Generate PDF'}
+        </button>
+
+        {generateAllError && (
+          <span
+            role="alert"
+            className="save-error-detail"
+          >
+            {generateAllError}
+          </span>
+        )}
+
         <span
           className={
             'save-status save-' +
@@ -1292,6 +1448,11 @@ function ProjectEditorContent({ id }) {
       <div className="pdf-editor-body">
         <ProjectSidebar
           activeDocument={activeDocument}
+
+          // ADD: Connect sidebar Generate PDF button.
+          onGenerate={handleGenerateAll}
+          generating={generatingAll}
+
           onSelectDocument={(nextId) => {
             // Reload saved prices when opening
             // Summary or Bid Form.
@@ -1375,7 +1536,6 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* AFTER SALES DOWNLOAD */}
-
                   {activeDocument === AFTER_SALES_ID && (
                     <p>
                       <a
@@ -1388,7 +1548,6 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* WARRANTY DOWNLOAD */}
-
                   {activeDocument === WARRANTY_ID && (
                     <p>
                       <a
@@ -1401,7 +1560,6 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* TECHNICAL SPECS DOWNLOAD */}
-
                   {activeDocument === 'technical' && (
                     <p>
                       <a
@@ -1414,7 +1572,6 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* SCHEDULE DOWNLOAD */}
-
                   {activeDocument === 'schedule' && (
                     <p>
                       <a
@@ -1427,7 +1584,6 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* PRICE SCHEDULE DOWNLOAD */}
-
                   {activeDocument === 'priceSchedule' && (
                     <p>
                       <a
@@ -1440,7 +1596,6 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* SUMMARY OF BID PRICES DOWNLOAD */}
-
                   {activeDocument === 'summary' && (
                     <p>
                       <a
@@ -1453,7 +1608,6 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* BID FORM DOWNLOAD */}
-
                   {activeDocument === BID_FORM_ID && (
                     <p>
                       <a
@@ -1466,7 +1620,6 @@ function ProjectEditorContent({ id }) {
                   )}
 
                   {/* SLCC DOWNLOAD */}
-
                   {activeDocument === 'slcc' && (
                     <p>
                       <a
