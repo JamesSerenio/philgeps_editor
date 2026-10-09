@@ -1093,127 +1093,198 @@ function ProjectEditorContent({ id }) {
   // GENERATE COMPLETE BID DOCUMENT PACKAGE
   // ===================================================
 
-  async function handleGenerateAll() {
-    if (generatingAll || !setup) return
 
-    setGeneratingAll(true)
-    setGenerateAllError('')
+async function handleGenerateAll() {
+  if (generatingAll || !setup) return
+
+  setGeneratingAll(true)
+  setGenerateAllError('')
+
+  try {
+    // ==========================================
+    // 1. SAVE ALL PENDING EDITOR CHANGES
+    // ==========================================
+
+    await persistence.retry()
+
+    // ==========================================
+    // 2. PROJECT INFORMATION
+    // ==========================================
+
+    const ref = String(
+      setup.referenceNumber ?? ''
+    ).trim()
+
+    if (!ref) {
+      throw new Error(
+        'Reference Number is missing.'
+      )
+    }
+
+    const projectTitle = String(
+      setup.projectTitle ?? ''
+    ).trim()
+
+
+    // ==========================================
+    // 3. AUTOMATIC PDF FILENAME
+    // ==========================================
+
+    const cleanProjectTitle = String(
+      projectTitle ?? ''
+    )
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 150)
+      .replace(/_+$/g, '')
+
+    const pdfFilename = `${
+      cleanProjectTitle ||
+      `BID_DOCUMENTS_${ref}`
+    }.pdf`
+
+
+    // ==========================================
+    // 4. LOAD SAVED PRICE SCHEDULE
+    // ==========================================
+
+    const {
+      data,
+      error: priceError,
+    } = await supabase
+      .from('bid_price_schedules')
+      .select('total_prices_per_unit')
+      .eq('reference_number', ref)
+      .order('updated_at', {
+        ascending: false,
+      })
+      .limit(1)
+
+    if (priceError) {
+      throw priceError
+    }
+
+    const remote =
+      data?.[0]?.total_prices_per_unit ?? {}
+
+    // ==========================================
+    // 5. PRESERVE UNSYNCED LOCAL PRICE DATA
+    // ==========================================
+
+    let cache = null
 
     try {
-      // Save pending editor changes first.
-      await persistence.retry()
-
-      const ref = String(
-        setup.referenceNumber ?? ''
-      ).trim()
-
-      if (!ref) {
-        throw new Error('Reference Number is missing.')
-      }
-
-      // Read saved Price Schedule from Supabase.
-      const {
-        data,
-        error: priceError,
-      } = await supabase
-        .from('bid_price_schedules')
-        .select('total_prices_per_unit')
-        .eq('reference_number', ref)
-        .order('updated_at', {
-          ascending: false,
-        })
-        .limit(1)
-
-      if (priceError) {
-        throw priceError
-      }
-
-      const remote =
-        data?.[0]?.total_prices_per_unit ?? {}
-
-      // Preserve unsynced prices from local editor cache.
-      let cache = null
-
-      try {
-        cache = JSON.parse(
-          window.localStorage.getItem(
-            `philgeps-price-schedule:${ref}`
-          ) || 'null'
-        )
-      } catch {
-        // Ignore invalid local cache.
-      }
-
-      const savedPrices = {
-        ...remote,
-
-        ...(
-          cache?.dirty &&
-          cache.values &&
-          typeof cache.values === 'object'
-            ? cache.values
-            : {}
-        ),
-
-        ...priceValues,
-      }
-
-      // Generate complete PDF including
-      // Secretary's Certificate through
-      // fullBidPackagePdf.js.
-      const url = await generateFullBidPackagePdf({
-        setup: {
-          ...setup,
-          slccVariant: slccVariantFromSetup(setup),
-          servicePeriodYears: yearsFromSetup(setup),
-        },
-
-        technical,
-        schedule: scheduleItems,
-        priceValues: savedPrices,
-        bidSecurity,
-        omnibus,
-      })
-
-      if (
-        typeof url !== 'string' ||
-        !url
-      ) {
-        throw new Error(
-          'Complete PDF generator returned no PDF URL.'
-        )
-      }
-
-      // Download the generated PDF.
-      const link = document.createElement('a')
-
-      link.href = url
-      link.download = `BID_DOCUMENTS_${ref}.pdf`
-
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-
-      if (url.startsWith('blob:')) {
-        window.setTimeout(() => {
-          URL.revokeObjectURL(url)
-        }, 60000)
-      }
-
-    } catch (generationError) {
-      console.error(
-        'Complete PDF generation failed:',
-        generationError
+      cache = JSON.parse(
+        window.localStorage.getItem(
+          `philgeps-price-schedule:${ref}`
+        ) || 'null'
       )
-
-      setGenerateAllError(
-        generationError?.message ||
-        'Unable to generate complete bid PDF.'
-      )
-    } finally {
-      setGeneratingAll(false)
+    } catch {
+      // Ignore invalid local cache.
     }
+
+    const savedPrices = {
+      ...remote,
+
+      ...(
+        cache?.dirty &&
+        cache.values &&
+        typeof cache.values === 'object'
+          ? cache.values
+          : {}
+      ),
+
+      ...priceValues,
+    }
+
+    // ==========================================
+    // 6. GENERATE THE COMPLETE 21-DOCUMENT PDF
+    // ==========================================
+
+    const url = await generateFullBidPackagePdf({
+      setup: {
+        ...setup,
+
+        slccVariant:
+          slccVariantFromSetup(setup),
+
+        servicePeriodYears:
+          yearsFromSetup(setup),
+      },
+
+      technical,
+
+      schedule: scheduleItems,
+
+      priceValues: savedPrices,
+
+      bidSecurity,
+
+      omnibus,
+    })
+
+    if (
+      typeof url !== 'string' ||
+      !url
+    ) {
+      throw new Error(
+        'Complete PDF generator returned no PDF URL.'
+      )
+    }
+
+    // ==========================================
+    // 7. DOWNLOAD USING PROJECT TITLE
+    // ==========================================
+
+    const link = document.createElement('a')
+
+    link.href = url
+
+    // IMPORTANT:
+    // Filename now comes from Project Title.
+    link.download = pdfFilename
+
+    document.body.appendChild(link)
+
+    link.click()
+
+    link.remove()
+
+    console.info(
+      'Generated PDF filename:',
+      pdfFilename
+    )
+
+    // ==========================================
+    // 8. CLEAN UP TEMPORARY PDF URL
+    // ==========================================
+
+    if (url.startsWith('blob:')) {
+      window.setTimeout(() => {
+        URL.revokeObjectURL(url)
+      }, 60000)
+    }
+
+  } catch (generationError) {
+    console.error(
+      'Complete PDF generation failed:',
+      generationError
+    )
+
+    setGenerateAllError(
+      generationError?.message ||
+      'Unable to generate complete bid PDF.'
+    )
+
+  } finally {
+    setGeneratingAll(false)
   }
+}
+
 
   // ===================================================
   // ALL DOCUMENT EDITORS
