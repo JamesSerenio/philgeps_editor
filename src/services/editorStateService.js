@@ -1,315 +1,501 @@
+
 import { supabase } from '../supabase'
 
-const fields = [
+// =====================================================
+// SUPABASE CONFIGURATION
+// =====================================================
+
+const TABLE = 'bid_docs_editor_state'
+
+const JSON_FIELDS = [
   'technical_specs',
   'schedule_requirements',
   'bid_security',
   'omnibus',
+  'contents',
 ]
 
-export function copyEditorItems(
-  value,
-  section,
-) {
-  if (
-    section === 'bid_security' ||
-    section === 'omnibus'
-  ) {
-    if (
-      !value ||
-      Object.getPrototypeOf(value) !== Object.prototype
-    ) {
-      throw new Error(
-        'Invalid declaration data.',
-      )
+const WRITABLE_FIELDS = new Set([
+  ...JSON_FIELDS,
+  'editor_status',
+])
+
+// =====================================================
+// HELPERS
+// =====================================================
+
+function isRecord(value) {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value)
+  )
+}
+
+function jsonCopy(value, name) {
+  try {
+    const json = JSON.stringify(value)
+
+    if (json === undefined) {
+      throw new Error('Not JSON serializable')
     }
 
-    if (
-      !['old', 'initao_lgu'].includes(
-        value.templateVariant,
-      )
-    ) {
-      throw new Error(
-        'Invalid template variant.',
-      )
-    }
-
-    return Object.fromEntries(
-      Object.entries(value).map(([key, field]) => {
-        if (
-          key === 'documentSetup' &&
-          section === 'bid_security'
-        ) {
-          if (
-            !field ||
-            Object.getPrototypeOf(field) !== Object.prototype ||
-            Object.values(field).some(
-              (v) => typeof v !== 'string',
-            )
-          ) {
-            throw new Error(
-              'Invalid document setup.',
-            )
-          }
-
-          return [
-            key,
-            {
-              ...field,
-            },
-          ]
-        }
-
-        if (typeof field !== 'string') {
-          throw new Error(
-            'Invalid declaration field: ' + key,
-          )
-        }
-
-        return [key, field]
-      }),
+    return JSON.parse(json)
+  } catch {
+    throw new Error(
+      `Invalid ${name}: must be JSON-serializable.`
     )
+  }
+}
+
+function text(value, fallback = '') {
+  return value === null ||
+    value === undefined
+    ? fallback
+    : String(value)
+}
+
+// =====================================================
+// NORMALIZE TECHNICAL SPECIFICATIONS
+// AND SCHEDULE REQUIREMENTS
+// =====================================================
+
+function normalizeRows(value, section) {
+  if (value == null) {
+    return null
   }
 
   if (!Array.isArray(value)) {
     throw new Error(
-      'Editor data must be an array.',
+      `Invalid ${section}: expected an array.`
     )
   }
 
-  const copyString = (
-    object,
-    key,
-  ) => {
-    if (
-      typeof object?.[key] !== 'string'
-    ) {
+  const rows = jsonCopy(value, section)
+
+  return rows.map((item, itemIndex) => {
+    if (!isRecord(item)) {
       throw new Error(
-        'Invalid editor field: ' + key,
+        `Invalid item ${itemIndex + 1} in ${section}.`
       )
     }
 
-    return object[key]
-  }
+    // =====================================
+    // FIX MISSING itemNo AND OTHER FIELDS
+    // =====================================
 
-  return value.map((item) => {
-    if (
-      !item ||
-      Object.getPrototypeOf(item) !== Object.prototype
-    ) {
-      throw new Error(
-        'Invalid editor item.',
-      )
+    const itemId = text(
+      item.id,
+      `item-${itemIndex + 1}`
+    )
+
+    const itemNo = text(
+      item.itemNo,
+      String(itemIndex + 1)
+    )
+
+    const result = {
+      ...item,
+
+      id: itemId,
+
+      itemNo:
+        itemNo || String(itemIndex + 1),
+
+      qty: text(item.qty),
+
+      unit: text(item.unit),
     }
 
-    if (
-      !Array.isArray(
-        item.specificationLines,
-      ) ||
-      !item.specificationLines.length
-    ) {
-      throw new Error(
-        'Each item needs a specification line.',
-      )
-    }
-
-    const result =
-      Object.fromEntries(
-        [
-          'id',
-          'itemNo',
-          'qty',
-          'unit',
-        ].map((key) => [
-          key,
-          copyString(item, key),
-        ]),
-      )
+    // =====================================
+    // SCHEDULE REQUIREMENTS
+    // =====================================
 
     if (
-      section === 'schedule_requirements'
+      section === 'schedule_requirements' &&
+      item.deliveryPeriod != null
     ) {
-      result.deliveryPeriod =
-        copyString(
-          item,
-          'deliveryPeriod',
-        )
-
-      if (
-        item.sharedItemId != null
-      ) {
-        result.sharedItemId =
-          copyString(
-            item,
-            'sharedItemId',
-          )
-      }
+      result.deliveryPeriod = text(
+        item.deliveryPeriod
+      )
     }
+
+    // =====================================
+    // SPECIFICATION LINES
+    // =====================================
+
+    const sourceLines = Array.isArray(
+      item.specificationLines
+    )
+      ? item.specificationLines
+      : []
 
     result.specificationLines =
-      item.specificationLines.map((line) => {
-        const row = {
-          id: copyString(
-            line,
-            'id',
-          ),
-          text: copyString(
-            line,
-            'text',
-          ),
-        }
+      sourceLines.map(
+        (line, lineIndex) => {
+          const lineId =
+            `${itemId}-line-${lineIndex + 1}`
 
-        if (
-          section === 'technical_specs'
-        ) {
-          row.compliance =
-            copyString(
-              line,
-              'compliance',
+          // Support older string-only lines.
+          if (typeof line === 'string') {
+            return {
+              id: lineId,
+              text: line,
+
+              ...(section ===
+              'technical_specs'
+                ? {
+                    compliance: 'COMPLY',
+                  }
+                : {}),
+            }
+          }
+
+          if (!isRecord(line)) {
+            throw new Error(
+              `Invalid specification line ${lineIndex + 1} in item ${itemIndex + 1}.`
             )
-        }
+          }
 
-        return row
-      })
+          // Keep additional properties like
+          // marker, underline and formatting.
+
+          const normalized = {
+            ...line,
+
+            id: text(
+              line.id,
+              lineId
+            ),
+
+            text: text(line.text),
+          }
+
+          // =================================
+          // AUTOMATIC COMPLY
+          // =================================
+
+          if (
+            section === 'technical_specs'
+          ) {
+            normalized.compliance =
+              text(
+                line.compliance,
+                'COMPLY'
+              ) || 'COMPLY'
+          }
+
+          return normalized
+        }
+      )
+
+    // =====================================
+    // ALLOW A NEW EMPTY ITEM TO BE SAVED
+    // =====================================
+
+    if (
+      section === 'technical_specs' &&
+      result.specificationLines.length === 0
+    ) {
+      result.specificationLines = [
+        {
+          id: `${itemId}-line-1`,
+
+          text: '',
+
+          compliance: 'COMPLY',
+        },
+      ]
+    }
 
     return result
   })
 }
 
-export async function getEditorState(
-  projectId,
+// =====================================================
+// COPY AND VALIDATE EDITOR DATA
+// =====================================================
+
+export function copyEditorItems(
+  value,
+  section
 ) {
+  if (!WRITABLE_FIELDS.has(section)) {
+    throw new Error(
+      'Unsupported editor section: ' +
+      section
+    )
+  }
+
+  if (section === 'editor_status') {
+    return text(value, 'editing')
+  }
+
+  if (value == null) {
+    return null
+  }
+
+  // =====================================
+  // TECHNICAL + SCHEDULE
+  // =====================================
+
+  if (
+    section === 'technical_specs' ||
+    section === 'schedule_requirements'
+  ) {
+    return normalizeRows(
+      value,
+      section
+    )
+  }
+
+  // =====================================
+  // DECLARATIONS + TABLE OF CONTENTS
+  // =====================================
+
+  // Preserve nested data including
+  // Document Setup and template settings.
+
+  const copy = jsonCopy(
+    value,
+    section
+  )
+
+  if (
+    (
+      section === 'bid_security' ||
+      section === 'omnibus'
+    ) &&
+    !isRecord(copy)
+  ) {
+    throw new Error(
+      `Invalid ${section}: expected an object.`
+    )
+  }
+
+  return copy
+}
+
+// =====================================================
+// LOAD SAVED EDITOR DATA FROM SUPABASE
+// =====================================================
+
+export async function getEditorState(
+  projectId
+) {
+  if (
+    projectId == null ||
+    String(projectId).trim() === ''
+  ) {
+    throw new Error(
+      'Missing project ID.'
+    )
+  }
+
   const {
     data,
     error,
   } = await supabase
-    .from('bid_docs_editor_state')
+    .from(TABLE)
     .select('*')
-    .eq('project_id', projectId)
+    .eq(
+      'project_id',
+      String(projectId)
+    )
     .maybeSingle()
 
-  if (error) throw error
+  if (error) {
+    throw error
+  }
 
-  if (data) {
-    for (const field of fields) {
-      if (data[field] != null) {
-        data[field] =
-          copyEditorItems(
-            data[field],
-            field,
-          )
-      }
+  if (!data) {
+    return null
+  }
+
+  // =====================================
+  // RESTORE EACH SECTION
+  // =====================================
+
+  const restored = {
+    ...data,
+  }
+
+  for (const section of JSON_FIELDS) {
+    if (restored[section] != null) {
+      restored[section] =
+        copyEditorItems(
+          restored[section],
+          section
+        )
     }
   }
 
-  return data
+  return restored
 }
+
+// =====================================================
+// SAVE EDITOR CHANGES TO SUPABASE
+// =====================================================
 
 export async function saveEditorState(
   projectId,
-  patch,
+  patch
 ) {
+  if (
+    projectId == null ||
+    String(projectId).trim() === ''
+  ) {
+    throw new Error(
+      'Missing project ID.'
+    )
+  }
+
+  if (!isRecord(patch)) {
+    throw new Error(
+      'Invalid editor changes.'
+    )
+  }
+
+  const changedFields =
+    Object.keys(patch)
+
+  if (!changedFields.length) {
+    throw new Error(
+      'No editor data to save.'
+    )
+  }
+
+  // =====================================
+  // DATABASE PAYLOAD
+  // =====================================
+
   const payload = {
-    project_id: projectId,
-    editor_status: 'editing',
+    project_id:
+      String(projectId),
+
+    editor_status:
+      'editing',
+
     updated_at:
       new Date().toISOString(),
   }
 
-  for (const field of Object.keys(patch)) {
-    if (!fields.includes(field)) {
+  // =====================================
+  // NORMALIZE EVERY MODIFIED SECTION
+  // =====================================
+
+  for (const section of changedFields) {
+    if (!WRITABLE_FIELDS.has(section)) {
       throw new Error(
-        'Unsupported editor section: ' + field,
+        'Unsupported editor section: ' +
+        section
       )
     }
 
-    payload[field] =
+    payload[section] =
       copyEditorItems(
-        patch[field],
-        field,
+        patch[section],
+        section
       )
   }
 
-  if (
-    !fields.some((field) =>
-      Object.hasOwn(
-        payload,
-        field,
-      ),
-    )
-  ) {
-    throw new Error(
-      'No editor data to save.',
-    )
-  }
+  // =====================================
+  // SAVE OR UPDATE PROJECT RECORD
+  // =====================================
 
-  const { error } =
-    await supabase
-      .from('bid_docs_editor_state')
-      .upsert(payload, {
+  const { error } = await supabase
+    .from(TABLE)
+    .upsert(
+      payload,
+      {
         onConflict: 'project_id',
-        defaultToNull: false,
-      })
 
-  if (error) throw error
+        // Keep other database columns
+        // when saving only one section.
+        defaultToNull: false,
+      }
+    )
+
+  if (error) {
+    throw error
+  }
 }
+
+// =====================================================
+// SAVE TECHNICAL SPECIFICATIONS
+// =====================================================
 
 export function saveTechnicalSpecs(
   projectId,
-  value,
+  value
 ) {
   return saveEditorState(
     projectId,
     {
       technical_specs: value,
-    },
+    }
   )
 }
 
+// =====================================================
+// SAVE SCHEDULE REQUIREMENTS
+// =====================================================
+
 export function saveScheduleRequirements(
   projectId,
-  value,
+  value
 ) {
   return saveEditorState(
     projectId,
     {
       schedule_requirements: value,
-    },
+    }
   )
 }
 
+// =====================================================
+// SAVE BID SECURITY
+// =====================================================
+
 export function saveBidSecurity(
   projectId,
-  value,
+  value
 ) {
   return saveEditorState(
     projectId,
     {
       bid_security: value,
-    },
+    }
   )
 }
 
+// =====================================================
+// SAVE OMNIBUS
+// =====================================================
+
 export function saveOmnibus(
   projectId,
-  value,
+  value
 ) {
   return saveEditorState(
     projectId,
     {
       omnibus: value,
-    },
+    }
   )
 }
 
+// =====================================================
+// CHECK DECLARATION DATABASE COLUMNS
+// =====================================================
+
 export async function hasDeclarationColumns() {
-  const { error } =
-    await supabase
-      .from('bid_docs_editor_state')
-      .select(
-        'bid_security,omnibus',
-      )
-      .limit(0)
+  const { error } = await supabase
+    .from(TABLE)
+    .select(
+      'bid_security,omnibus'
+    )
+    .limit(0)
 
   if (
     error &&
@@ -321,7 +507,9 @@ export async function hasDeclarationColumns() {
     return false
   }
 
-  if (error) throw error
+  if (error) {
+    throw error
+  }
 
   return true
 }

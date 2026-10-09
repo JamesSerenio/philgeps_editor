@@ -25,6 +25,11 @@ import {
   generateSlccPreview,
 } from '../services/pdf/slccPdf'
 
+// TECHNICAL SPECIFICATIONS PDF
+import {
+  generateTechnicalSpecsPreview,
+} from '../services/pdf/technicalSpecsPdf'
+
 import useEditorPersistence from '../hooks/useEditorPersistence'
 import { createTechnicalItem } from '../lib/technicalSpecs'
 import { createInitialBidSecurityState } from '../lib/bidSecurity'
@@ -52,7 +57,7 @@ import WarrantyEditor from '../editors/WarrantyEditor'
 import SLCCEditor from '../editors/SLCCEditor'
 
 // =====================================================
-// DOCUMENT CONFIGURATION
+// DOCUMENT IDS
 // =====================================================
 
 const AFTER_SALES_ID = projectDocuments.find(
@@ -69,6 +74,10 @@ const WARRANTY_ID = projectDocuments.find(
     )
 )?.id ?? 'warranty'
 
+// =====================================================
+// PREVIEW CONFIGURATION
+// =====================================================
+
 const PREVIEW_ONLY = new Set([
   'contents',
   'ongoing',
@@ -80,6 +89,7 @@ const LIVE_PREVIEW = new Set([
   'contents',
   'ongoing',
   'slcc',
+  'technical',
   'nfcc',
   'bidSecurity',
   'manpower',
@@ -137,6 +147,10 @@ export default function ProjectEditorPage() {
 
 function ProjectEditorContent({ id }) {
   const navigate = useNavigate()
+
+  // ===================================================
+  // STATES
+  // ===================================================
 
   const [project, setProject] =
     useState(null)
@@ -261,7 +275,7 @@ function ProjectEditorContent({ id }) {
   )
 
   // ===================================================
-  // LIVE PREVIEW INFORMATION
+  // PREVIEW DATA
   // ===================================================
 
   const previewData = setup
@@ -310,19 +324,27 @@ function ProjectEditorContent({ id }) {
         productWarrantyYears:
           setup.productWarrantyYears ?? 2,
 
-        // SLCC TEMPLATE
+        // SLCC
         slccVariant:
           slccVariantFromSetup(setup),
 
-        // Separate contract selection for
-        // CCTV and STREETLIGHT.
         slccContractTypes:
           setup.slccContractTypes ?? {},
 
-        // Saved owner, nature and description
-        // for each template and contract type.
         slccEntries:
           setup.slccEntries ?? {},
+
+        // =========================================
+        // TECHNICAL SPECIFICATIONS
+        // =========================================
+        // Include current saved editor items
+        // whenever Technical Specifications
+        // is the active document.
+
+        items:
+          activeDocument === 'technical'
+            ? technical
+            : undefined,
 
         // BID SECURITY / OMNIBUS
         templateVariant:
@@ -359,6 +381,10 @@ function ProjectEditorContent({ id }) {
       return undefined
     }
 
+    // ===============================================
+    // PDF GENERATORS
+    // ===============================================
+
     const generators = {
       contents:
         generateTableOfContentsPreview,
@@ -368,6 +394,10 @@ function ProjectEditorContent({ id }) {
 
       slcc:
         generateSlccPreview,
+
+      // TECHNICAL SPECIFICATIONS
+      technical:
+        generateTechnicalSpecsPreview,
 
       nfcc:
         generateNfccPreview,
@@ -397,6 +427,7 @@ function ProjectEditorContent({ id }) {
 
     let cancelled = false
 
+    // Generate PDF using current form values.
     Promise.resolve()
       .then(() => generator(data))
       .then((url) => {
@@ -434,9 +465,11 @@ function ProjectEditorContent({ id }) {
 
         setPreviewErrors((current) => ({
           ...current,
+
           [documentId]: null,
         }))
 
+        // Release previous PDF preview.
         if (
           oldUrl &&
           oldUrl !== url &&
@@ -473,7 +506,7 @@ function ProjectEditorContent({ id }) {
   }, [previewKey])
 
   // ===================================================
-  // CLEANUP GENERATED PDF URLS
+  // CLEAN UP GENERATED PDF URLS
   // ===================================================
 
   useEffect(() => {
@@ -580,6 +613,10 @@ function ProjectEditorContent({ id }) {
       setup.submittedBy,
   }
 
+  // ===================================================
+  // BID SECURITY VALUES
+  // ===================================================
+
   const bidValue = {
     ...createInitialBidSecurityState(
       sharedProject
@@ -598,6 +635,10 @@ function ProjectEditorContent({ id }) {
       setup.designation,
   }
 
+  // ===================================================
+  // OMNIBUS VALUES
+  // ===================================================
+
   const omnibusValue = {
     ...(
       omnibus ??
@@ -612,10 +653,18 @@ function ProjectEditorContent({ id }) {
       setup.designation,
   }
 
+  // ===================================================
+  // SCHEDULE ITEMS
+  // ===================================================
+
   const scheduleItems = sharedScheduleItems(
     technical,
     schedule
   )
+
+  // ===================================================
+  // SELECTED DOCUMENT
+  // ===================================================
 
   const selected = projectDocuments.find(
     (doc) => doc.id === activeDocument
@@ -624,8 +673,7 @@ function ProjectEditorContent({ id }) {
   const generated =
     previews[activeDocument]
 
-  // Only display the PDF generated from
-  // the currently selected form values.
+  // Only show PDF that matches current values.
   const preview = LIVE_PREVIEW.has(
     activeDocument
   )
@@ -657,7 +705,9 @@ function ProjectEditorContent({ id }) {
 
     const next = {
       ...bidSecurity,
+
       templateVariant,
+
       documentSetup: value,
     }
 
@@ -676,9 +726,23 @@ function ProjectEditorContent({ id }) {
   function changeTechnical(value) {
     setTechnical(value)
 
+    // Save all items and lines automatically.
     persistence.change(
       'technical_specs',
       value
+    )
+  }
+
+  function saveTechnical(value) {
+    const next = Array.isArray(value)
+      ? value
+      : technical
+
+    setTechnical(next)
+
+    return persistence.save(
+      'technical_specs',
+      next
     )
   }
 
@@ -769,10 +833,11 @@ function ProjectEditorContent({ id }) {
   }
 
   // ===================================================
-  // SIDEBAR EDITORS
+  // SIDEBAR DOCUMENT EDITORS
   // ===================================================
 
   function renderEditor(document) {
+    // SLCC
     if (document.id === 'slcc') {
       return (
         <SLCCEditor
@@ -782,6 +847,7 @@ function ProjectEditorContent({ id }) {
       )
     }
 
+    // AFTER-SALES
     if (document.id === AFTER_SALES_ID) {
       return (
         <AfterSalesEditor
@@ -791,6 +857,7 @@ function ProjectEditorContent({ id }) {
       )
     }
 
+    // WARRANTY
     if (document.id === WARRANTY_ID) {
       return (
         <WarrantyEditor
@@ -804,6 +871,10 @@ function ProjectEditorContent({ id }) {
       return null
     }
 
+    // ===============================================
+    // TECHNICAL SPECIFICATIONS
+    // ===============================================
+
     if (document.id === 'technical') {
       return (
         <TechnicalSpecsEditor
@@ -811,15 +882,14 @@ function ProjectEditorContent({ id }) {
           project={sharedProject}
           value={technical}
           onChange={changeTechnical}
-          onSave={(value) =>
-            persistence.save(
-              'technical_specs',
-              value
-            )
-          }
+          onSave={saveTechnical}
         />
       )
     }
+
+    // ===============================================
+    // SCHEDULE REQUIREMENTS
+    // ===============================================
 
     if (document.id === 'schedule') {
       return (
@@ -837,6 +907,10 @@ function ProjectEditorContent({ id }) {
       )
     }
 
+    // ===============================================
+    // BID SECURITY
+    // ===============================================
+
     if (document.id === 'bidSecurity') {
       return (
         <BidSecurityEditor
@@ -849,6 +923,10 @@ function ProjectEditorContent({ id }) {
         />
       )
     }
+
+    // ===============================================
+    // OMNIBUS
+    // ===============================================
 
     if (document.id === 'omnibus') {
       return (
@@ -869,6 +947,10 @@ function ProjectEditorContent({ id }) {
         />
       )
     }
+
+    // ===============================================
+    // OTHER DOCUMENTS
+    // ===============================================
 
     return (
       <div className="pending-component">
@@ -901,11 +983,13 @@ function ProjectEditorContent({ id }) {
   }
 
   // ===================================================
-  // MAIN USER INTERFACE
+  // MAIN INTERFACE
   // ===================================================
 
   return (
     <div className="pdf-editor-shell">
+
+      {/* TOP HEADER */}
       <header className="pdf-editor-topbar">
         <button
           className="button-secondary"
@@ -964,7 +1048,10 @@ function ProjectEditorContent({ id }) {
         )}
       </header>
 
+      {/* BODY */}
       <div className="pdf-editor-body">
+
+        {/* LEFT SIDEBAR */}
         <ProjectSidebar
           activeDocument={activeDocument}
           onSelectDocument={setActiveDocument}
@@ -979,6 +1066,7 @@ function ProjectEditorContent({ id }) {
           />
         </ProjectSidebar>
 
+        {/* RIGHT PDF PREVIEW */}
         <main className="pdf-preview-workspace">
           {!selected ? (
             <p className="neutral-preview">
@@ -998,6 +1086,7 @@ function ProjectEditorContent({ id }) {
                 </p>
               </header>
 
+              {/* PREVIEW ERROR */}
               {previewError && (
                 <p
                   role="alert"
@@ -1009,6 +1098,7 @@ function ProjectEditorContent({ id }) {
 
               {preview ? (
                 <>
+                  {/* PREVIEW STATUS */}
                   {!PREVIEW_ONLY.has(
                     activeDocument
                   ) && (
@@ -1031,6 +1121,7 @@ function ProjectEditorContent({ id }) {
                     </p>
                   )}
 
+                  {/* AFTER-SALES DOWNLOAD */}
                   {activeDocument ===
                     AFTER_SALES_ID && (
                     <p>
@@ -1038,12 +1129,12 @@ function ProjectEditorContent({ id }) {
                         href={preview}
                         download="After-Sales-Service-Certificate.pdf"
                       >
-                        Download Updated
-                        After-Sales PDF
+                        Download Updated After-Sales PDF
                       </a>
                     </p>
                   )}
 
+                  {/* WARRANTY DOWNLOAD */}
                   {activeDocument ===
                     WARRANTY_ID && (
                     <p>
@@ -1051,12 +1142,28 @@ function ProjectEditorContent({ id }) {
                         href={preview}
                         download="Certificate-of-Product-Warranty.pdf"
                       >
-                        Download Updated
-                        Warranty PDF
+                        Download Updated Warranty PDF
                       </a>
                     </p>
                   )}
 
+                  {/* =================================
+                      TECHNICAL SPECIFICATIONS
+                      DOWNLOAD UPDATED PDF
+                  ================================= */}
+
+                  {activeDocument === 'technical' && (
+                    <p>
+                      <a
+                        href={preview}
+                        download={`Technical_Specifications_${setup.referenceNumber || 'document'}.pdf`}
+                      >
+                        Download Updated Technical Specifications PDF
+                      </a>
+                    </p>
+                  )}
+
+                  {/* SLCC DOWNLOAD */}
                   {activeDocument === 'slcc' && (
                     <p>
                       <a
@@ -1068,12 +1175,12 @@ function ProjectEditorContent({ id }) {
                             : 'SLCC_STREETLIGHT.pdf'
                         }
                       >
-                        Download Updated
-                        SLCC PDF
+                        Download Updated SLCC PDF
                       </a>
                     </p>
                   )}
 
+                  {/* LIVE PDF VIEW */}
                   <PdfPreview
                     src={preview}
                     title={selected.title}
