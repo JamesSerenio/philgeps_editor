@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-
+import { supabase } from '../supabase'
 import { getProjectById } from '../services/projectService'
 
 import {
@@ -33,10 +33,13 @@ import {
   generateScheduleRequirementsPreview,
 } from '../services/pdf/schedulePdf'
 
-// PRICE SCHEDULE PDF GENERATOR
 import {
   generatePriceSchedulePreview,
 } from '../services/pdf/priceSchedulePdf'
+
+import {
+  generateSummaryPreview,
+} from '../services/pdf/summaryPdf'
 
 import useEditorPersistence from '../hooks/useEditorPersistence'
 import { createTechnicalItem } from '../lib/technicalSpecs'
@@ -63,6 +66,7 @@ import PdfPreview from '../components/PdfPreview'
 import TechnicalSpecsEditor from '../editors/TechnicalSpecsEditor'
 import ScheduleEditor from '../editors/ScheduleEditor'
 import PriceScheduleEditor from '../editors/PriceScheduleEditor'
+import SummaryEditor from '../editors/SummaryEditor'
 import BidSecurityEditor from '../editors/BidSecurityEditor'
 import OmnibusEditor from '../editors/OmnibusEditor'
 import AfterSalesEditor from '../editors/AfterSalesEditor'
@@ -87,10 +91,6 @@ const WARRANTY_ID =
     )
   )?.id ?? 'warranty'
 
-// =====================================================
-// PREVIEW CONFIGURATION
-// =====================================================
-
 const PREVIEW_ONLY = new Set([
   'contents',
   'ongoing',
@@ -98,6 +98,7 @@ const PREVIEW_ONLY = new Set([
   'manpower',
 ])
 
+// Summary is now a LIVE PDF document.
 const LIVE_PREVIEW = new Set([
   'contents',
   'ongoing',
@@ -105,6 +106,7 @@ const LIVE_PREVIEW = new Set([
   'technical',
   'schedule',
   'priceSchedule',
+  'summary',
   'nfcc',
   'bidSecurity',
   'manpower',
@@ -225,9 +227,7 @@ function mergeScheduleWithTechnical(
     }
 
     return {
-      id: String(
-        existing?.id ?? technicalId
-      ),
+      id: String(existing?.id ?? technicalId),
       sharedItemId: technicalId,
       itemNo: String(index + 1),
       qty: String(item?.qty ?? ''),
@@ -273,15 +273,24 @@ function ProjectEditorContent({ id }) {
   )
 
   const [schedule, setSchedule] = useState([])
-
   const [bidSecurity, setBidSecurity] = useState(null)
   const [omnibus, setOmnibus] = useState(null)
   const [documentSetup, setDocumentSetup] = useState(null)
 
-  // PRICE SCHEDULE VALUES
-  // Values come from PriceScheduleEditor and Supabase.
+  // PRICE SCHEDULE
   const [priceValues, setPriceValues] = useState({})
 
+  // SUMMARY OF BID PRICES
+  const [summaryRefresh, setSummaryRefresh] = useState(0)
+
+  const [summarySaved, setSummarySaved] = useState({
+    key: '',
+    status: 'idle',
+    prices: {},
+    error: '',
+  })
+
+  // PDF PREVIEWS
   const [previews, setPreviews] = useState({})
   const [previewErrors, setPreviewErrors] = useState({})
 
@@ -306,13 +315,8 @@ function ProjectEditorContent({ id }) {
           : []
       )
 
-      setBidSecurity(
-        saved?.bid_security ?? null
-      )
-
-      setOmnibus(
-        saved?.omnibus ?? null
-      )
+      setBidSecurity(saved?.bid_security ?? null)
+      setOmnibus(saved?.omnibus ?? null)
 
       setDocumentSetup(
         saved?.bid_security?.documentSetup ?? null
@@ -383,69 +387,181 @@ function ProjectEditorContent({ id }) {
     )
 
   // ===================================================
+  // SUMMARY - SUPABASE SAVED PRICES
+  // ===================================================
+
+  const referenceNumber = String(
+    setup?.referenceNumber ?? ''
+  )
+
+  const summaryRequestKey =
+    `${referenceNumber}:${summaryRefresh}`
+
+  const summaryReady =
+    summarySaved.key === summaryRequestKey &&
+    summarySaved.status === 'ready'
+
+  useEffect(() => {
+    if (
+      activeDocument !== 'summary' ||
+      !referenceNumber
+    ) {
+      return undefined
+    }
+
+    let cancelled = false
+
+    async function loadSummary() {
+      try {
+        // Load the most recently saved Price Schedule.
+        const {
+          data,
+          error: queryError,
+        } = await supabase
+          .from('bid_price_schedules')
+          .select('total_prices_per_unit')
+          .eq('reference_number', referenceNumber)
+          .order('updated_at', {
+            ascending: false,
+          })
+          .limit(1)
+
+        if (queryError) {
+          throw queryError
+        }
+
+        const remote =
+          data?.[0]?.total_prices_per_unit ?? {}
+
+        // Read an unsaved local backup if available.
+        let cache = null
+
+        try {
+          cache = JSON.parse(
+            window.localStorage.getItem(
+              `philgeps-price-schedule:${referenceNumber}`
+            ) || 'null'
+          )
+        } catch {
+          // Invalid local cache is ignored.
+        }
+
+        const prices =
+          cache?.dirty &&
+          cache.values &&
+          typeof cache.values === 'object'
+            ? {
+                ...remote,
+                ...cache.values,
+              }
+            : remote
+
+        if (!cancelled) {
+          setSummarySaved({
+            key: summaryRequestKey,
+            status: 'ready',
+            prices,
+            error: '',
+          })
+        }
+      } catch (loadError) {
+        if (!cancelled) {
+          setSummarySaved({
+            key: summaryRequestKey,
+            status: 'error',
+            prices: {},
+            error:
+              loadError?.message ||
+              'Could not load saved prices.',
+          })
+        }
+      }
+    }
+
+    void loadSummary()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    activeDocument,
+    referenceNumber,
+    summaryRequestKey,
+  ])
+
+  // ===================================================
   // PDF PREVIEW DATA
   // ===================================================
 
-  const previewData = setup
-    ? {
-        province: setup.province ?? '',
-        municipality: setup.municipality ?? '',
-        projectTitle: setup.projectTitle ?? '',
-        referenceNumber: setup.referenceNumber ?? '',
-        procuringEntity: setup.procuringEntity ?? '',
-        date: setup.date ?? '',
-        bidderName: setup.bidderName ?? '',
-        businessAddress: setup.businessAddress ?? '',
-        submittedBy: setup.submittedBy ?? '',
+  const previewData =
+    setup &&
+    (
+      activeDocument !== 'summary' ||
+      summaryReady
+    )
+      ? {
+          province: setup.province ?? '',
+          municipality: setup.municipality ?? '',
+          projectTitle: setup.projectTitle ?? '',
+          referenceNumber: setup.referenceNumber ?? '',
+          procuringEntity: setup.procuringEntity ?? '',
+          date: setup.date ?? '',
+          bidderName: setup.bidderName ?? '',
+          businessAddress: setup.businessAddress ?? '',
 
-        authorizedRepresentative:
-          setup.submittedBy ?? '',
+          submittedBy: setup.submittedBy ?? '',
 
-        designation: setup.designation ?? '',
+          authorizedRepresentative:
+            setup.submittedBy ?? '',
 
-        representativeDesignation:
-          setup.designation ?? '',
+          designation: setup.designation ?? '',
 
-        servicePeriodYears:
-          yearsFromSetup(setup),
+          representativeDesignation:
+            setup.designation ?? '',
 
-        productWarrantyYears:
-          setup.productWarrantyYears ?? 2,
+          servicePeriodYears:
+            yearsFromSetup(setup),
 
-        slccVariant:
-          slccVariantFromSetup(setup),
+          productWarrantyYears:
+            setup.productWarrantyYears ?? 2,
 
-        slccContractTypes:
-          setup.slccContractTypes ?? {},
+          slccVariant:
+            slccVariantFromSetup(setup),
 
-        slccEntries:
-          setup.slccEntries ?? {},
+          slccContractTypes:
+            setup.slccContractTypes ?? {},
 
-        // TECHNICAL ITEMS USED BY PRICE SCHEDULE
-        items:
-          activeDocument === 'technical' ||
-          activeDocument === 'priceSchedule'
-            ? technical
-            : activeDocument === 'schedule'
-              ? scheduleItems
-              : undefined,
+          slccEntries:
+            setup.slccEntries ?? {},
 
-        // PRICES USED BY PRICE SCHEDULE PDF
-        priceValues:
-          activeDocument === 'priceSchedule'
-            ? priceValues
-            : undefined,
+          // Shared technical items.
+          items:
+            activeDocument === 'technical' ||
+            activeDocument === 'priceSchedule' ||
+            activeDocument === 'summary'
+              ? technical
+              : activeDocument === 'schedule'
+                ? scheduleItems
+                : undefined,
 
-        templateVariant:
-          activeDocument === 'omnibus'
-            ? (
-                omnibus?.templateVariant === 'initao_lgu'
-                  ? 'initao_lgu'
-                  : 'old_default'
-              )
-            : templateVariant,
-      }
-    : null
+          // Shared Price Schedule prices.
+          priceValues:
+            activeDocument === 'priceSchedule'
+              ? priceValues
+              : activeDocument === 'summary'
+                ? summarySaved.prices
+                : undefined,
+
+          templateVariant:
+            activeDocument === 'omnibus'
+              ? (
+                  omnibus?.templateVariant === 'initao_lgu'
+                    ? 'initao_lgu'
+                    : 'old_default'
+                )
+              : templateVariant,
+        }
+      : null
 
   const previewKey = JSON.stringify({
     document: activeDocument,
@@ -475,21 +591,25 @@ function ProjectEditorContent({ id }) {
       slcc: generateSlccPreview,
       technical: generateTechnicalSpecsPreview,
       schedule: generateScheduleRequirementsPreview,
-
-      // LIVE PRICE SCHEDULE GENERATOR
       priceSchedule: generatePriceSchedulePreview,
+
+      // SUMMARY PDF
+      summary: generateSummaryPreview,
 
       nfcc: generateNfccPreview,
       bidSecurity: generateBidSecurityPreview,
       manpower: generateManpowerPreview,
       omnibus: generateOmnibusPreview,
+
       [AFTER_SALES_ID]: generateAfterSalesPreview,
       [WARRANTY_ID]: generateProductWarrantyPreview,
     }
 
     const generator = generators[documentId]
 
-    if (!generator) return undefined
+    if (!generator) {
+      return undefined
+    }
 
     let cancelled = false
 
@@ -660,7 +780,7 @@ function ProjectEditorContent({ id }) {
   }
 
   // ===================================================
-  // SELECTED DOCUMENT
+  // SELECTED DOCUMENT AND PDF PREVIEW
   // ===================================================
 
   const selected = projectDocuments.find(
@@ -825,7 +945,6 @@ function ProjectEditorContent({ id }) {
   // ===================================================
 
   function renderEditor(document) {
-
     // SLCC
     if (document.id === 'slcc') {
       return (
@@ -856,10 +975,7 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    // =========================================
     // PRICE SCHEDULE FOR GOODS
-    // =========================================
-
     if (document.id === 'priceSchedule') {
       return (
         <PriceScheduleEditor
@@ -867,6 +983,34 @@ function ProjectEditorContent({ id }) {
           items={technical}
           referenceNumber={setup.referenceNumber}
           onValuesChange={setPriceValues}
+        />
+      )
+    }
+
+    // =================================================
+    // SUMMARY OF BID PRICES - VIEW ONLY
+    // =================================================
+
+    if (document.id === 'summary') {
+      return (
+        <SummaryEditor
+          items={technical}
+          priceValues={
+            summaryReady
+              ? summarySaved.prices
+              : {}
+          }
+          loading={
+            !summaryReady &&
+            summarySaved.status !== 'error'
+          }
+          error={
+            !referenceNumber
+              ? 'Missing project reference number.'
+              : summarySaved.key === summaryRequestKey
+                ? summarySaved.error
+                : ''
+          }
         />
       )
     }
@@ -932,28 +1076,9 @@ function ProjectEditorContent({ id }) {
       )
     }
 
-    // OTHER DOCUMENTS
     return (
       <div className="pending-component">
         <p>{document.template}</p>
-
-        {document.id === 'summary' && (
-          <>
-            <p>
-              Shared items from Technical Specifications:
-            </p>
-
-            {technical.map((item) => (
-              <p key={item.id}>
-                Item {item.itemNo}: {item.qty} {item.unit}
-                {' - '}
-                {(item.specificationLines ?? [])
-                  .map((line) => line.text)
-                  .join('; ')}
-              </p>
-            ))}
-          </>
-        )}
       </div>
     )
   }
@@ -964,9 +1089,7 @@ function ProjectEditorContent({ id }) {
 
   return (
     <div className="pdf-editor-shell">
-
       <header className="pdf-editor-topbar">
-
         <button
           className="button-secondary"
           type="button"
@@ -975,7 +1098,7 @@ function ProjectEditorContent({ id }) {
               await persistence.retry()
               navigate('/')
             } catch {
-              // Keep the editor open if saving fails.
+              // Keep editor open when saving fails.
             }
           }}
         >
@@ -1017,15 +1140,21 @@ function ProjectEditorContent({ id }) {
             {persistence.saveError}
           </span>
         )}
-
       </header>
 
       <div className="pdf-editor-body">
-
         <ProjectSidebar
           activeDocument={activeDocument}
-          onSelectDocument={setActiveDocument}
-          sectionStatuses={persistence.sectionStatuses}
+          onSelectDocument={(nextId) => {
+            if (nextId === 'summary') {
+              setSummaryRefresh((value) => value + 1)
+            }
+
+            setActiveDocument(nextId)
+          }}
+          sectionStatuses={
+            persistence.sectionStatuses
+          }
           renderEditor={renderEditor}
         >
           <DocumentSetup
@@ -1035,14 +1164,12 @@ function ProjectEditorContent({ id }) {
         </ProjectSidebar>
 
         <main className="pdf-preview-workspace">
-
           {!selected ? (
             <p className="neutral-preview">
               Select a document component to preview.
             </p>
           ) : (
             <>
-
               <header className="preview-heading">
                 <h2>{selected.title}</h2>
 
@@ -1059,9 +1186,18 @@ function ProjectEditorContent({ id }) {
                 </p>
               )}
 
+              {activeDocument === 'summary' &&
+                summarySaved.key === summaryRequestKey &&
+                summarySaved.error && (
+                  <p role="alert" className="message">
+                    Failed to load summary prices:
+                    {' '}
+                    {summarySaved.error}
+                  </p>
+                )}
+
               {preview ? (
                 <>
-
                   {!PREVIEW_ONLY.has(activeDocument) && (
                     <p className="pdf-preview-notice">
                       {LIVE_PREVIEW.has(activeDocument)
@@ -1122,7 +1258,6 @@ function ProjectEditorContent({ id }) {
                     </p>
                   )}
 
-                  {/* PRICE SCHEDULE DOWNLOAD */}
                   {activeDocument === 'priceSchedule' && (
                     <p>
                       <a
@@ -1130,6 +1265,19 @@ function ProjectEditorContent({ id }) {
                         download={`Price_Schedule_for_Goods_${setup.referenceNumber || 'document'}.pdf`}
                       >
                         Download Updated Price Schedule PDF
+                      </a>
+                    </p>
+                  )}
+
+                  {/* SUMMARY PDF DOWNLOAD */}
+
+                  {activeDocument === 'summary' && (
+                    <p>
+                      <a
+                        href={preview}
+                        download={`Summary_of_Bid_Prices_${referenceNumber || 'document'}.pdf`}
+                      >
+                        Download Updated Summary of Bid Prices PDF
                       </a>
                     </p>
                   )}
@@ -1153,23 +1301,28 @@ function ProjectEditorContent({ id }) {
                     src={preview}
                     title={selected.title}
                   />
-
                 </>
               ) : LIVE_PREVIEW.has(activeDocument) ? (
                 <p className="neutral-preview">
                   {previewError
                     ? 'PDF generation failed.'
-                    : 'Generating PDF preview...'}
+                    : activeDocument === 'summary' &&
+                        !referenceNumber
+                      ? 'Missing project reference number.'
+                      : activeDocument === 'summary' &&
+                          summarySaved.error &&
+                          summarySaved.key === summaryRequestKey
+                        ? 'Unable to load saved prices. Check the error above.'
+                        : 'Generating PDF preview...'}
                 </p>
               ) : (
                 <p className="neutral-preview">
-                  A template for {selected.title} is not available yet.
+                  A template for {selected.title} is
+                  not available yet.
                 </p>
               )}
-
             </>
           )}
-
         </main>
       </div>
     </div>
