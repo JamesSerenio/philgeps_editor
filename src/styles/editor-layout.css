@@ -1,11 +1,11 @@
-.pdf-editor-shell { height: 100dvh; overflow: hidden; }
+.pdf-editor-shell { height: 100vh; height: var(--editor-visible-height, 100dvh); overflow: hidden; }
 .pdf-editor-topbar { position: relative; z-index: 10; min-height: var(--editor-header); flex-shrink: 0; padding: 16px 24px; gap: 16px; box-shadow: 0 1px 3px #14212b03; }
 .editor-brand { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .editor-brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid #d3e9e0; border-radius: 12px; background: var(--editor-soft); color: var(--editor-forest); flex-shrink: 0; }
 .editor-brand-copy { min-width: 0; }
 .pdf-editor-topbar .editor-brand h1 { font-size: 18px; font-weight: 650; letter-spacing: -.5px; }
 .editor-context { color: var(--editor-muted); font-size: 11px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46vw; }
-.pdf-editor-body { grid-template-columns: var(--editor-sidebar) minmax(0, 1fr); overflow: hidden; }
+.pdf-editor-body { position: relative; min-height: 0; grid-template-columns: var(--editor-sidebar) minmax(0, 1fr); overflow: hidden; }
 .setup-panel { padding: 20px 16px 24px; background: #fafcfc; overscroll-behavior: contain; }
 .document-setup { padding: 18px 16px 8px; border: 1px solid var(--editor-border); border-radius: var(--editor-radius); background: var(--editor-surface); box-shadow: 0 2px 4px #14212b02; }
 .document-setup h2 { font-size: 16px; letter-spacing: -.25px; margin-bottom: 6px; }
@@ -30,3 +30,5 @@
 .neutral-preview p { font-size: 13px; line-height: 1.8; }
 .neutral-preview small { display: block; margin-top: 24px; font-size: 11px; }
 .mobile-panel-toggle, .mobile-preview-button { display: none; }
+
+.sidebar-backdrop, .sidebar-mobile-heading { display: none; }

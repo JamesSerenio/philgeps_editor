@@ -1,42 +1,82 @@
-@media (max-width: 1100px) {
+/* Desktop retains its two independently scrolling columns. */
+@media (min-width: 1024px) and (max-width: 1100px) {
   .pdf-editor-shell { --editor-sidebar: 326px; }
   .pdf-editor-topbar { padding: 14px 18px; gap: 12px; }
   .pdf-preview-workspace { padding: 22px 20px; }
   .editor-context { max-width: 30vw; }
 }
-@media (max-width: 760px) {
-  .pdf-editor-shell { height: 100dvh; min-height: 0; overflow: hidden; }
-  .pdf-editor-topbar { padding: 12px; gap: 10px; }
-  .pdf-editor-topbar .editor-brand h1 { font-size: 15px; }
+
+/* Shared tablet/phone controls. Hidden panels remain mounted to preserve drafts. */
+@media (max-width: 1023px) {
+  .pdf-editor-shell { min-height: 0; overflow: hidden; }
+  .pdf-editor-topbar { padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); gap: 10px; min-height: auto; }
+  .mobile-panel-toggle { display: inline-flex; min-height: 44px; padding: 9px 12px; font-size: 12px; }
+  .sidebar-mobile-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .sidebar-mobile-heading strong { font-size: 15px; }
+  .sidebar-close { width: 44px; min-height: 44px; padding: 10px; }
+  .mobile-preview-button { display: inline-flex; width: 100%; margin-top: 14px; min-height: 44px; }
+  .pdf-editor-shell .setup-panel { overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; scroll-padding-block: 16px; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .pdf-editor-shell .setup-panel :is(input, textarea, select) { font-size: 16px !important; min-height: 44px; max-width: 100%; }
+  .pdf-editor-shell .setup-panel :is(button, .pdf-open-link) { min-height: 44px; }
+  .pdf-editor-shell .setup-panel button { touch-action: manipulation; }
+  .pdf-editor-shell .premium-technical button[aria-pressed] { min-width: 44px; min-height: 36px; }
+  .pdf-editor-shell .premium-technical textarea { padding-top: 46px !important; }
+  .pdf-editor-shell .premium-spec-line { grid-template-columns: 44px minmax(0,1fr) 44px; }
+  .pdf-editor-shell .premium-spec-line > div { grid-column: 1 / -1; grid-row: 2; }
+  .pdf-editor-shell .premium-spec-line > input { grid-column: 1 / -1; grid-row: 3; font-size: 16px !important; }
+  .pdf-editor-shell .premium-spec-line > select { width: 44px !important; height: 44px !important; margin-top: 0 !important; }
+  .pdf-editor-shell .premium-spec-line > button { min-width: 44px; }
+  .pdf-editor-shell .generate-primary, .pdf-editor-shell .pdf-open-link { min-height: 44px; }
+  .pdf-editor-shell .pdf-open-link { align-items: center; }
+  .pdf-preview-workspace { min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; padding: 20px max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) 16px; }
+  .pdf-editor-shell .save-error-detail { max-height: 72px; overflow: auto; }
+}
+
+/* Tablet: collapse the column to give the viewer all available width. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .pdf-editor-shell { --editor-sidebar: 340px; }
+  .pdf-editor-body { display: grid; grid-template-columns: 0 minmax(0,1fr); transition: grid-template-columns var(--editor-expand) ease; }
+  .pdf-editor-shell.panel-open .pdf-editor-body { grid-template-columns: var(--editor-sidebar) minmax(0,1fr); }
+  .setup-panel { width: var(--editor-sidebar); visibility: hidden; opacity: 0; transform: translateX(-16px); transition: opacity var(--editor-expand), transform var(--editor-expand), visibility var(--editor-expand); }
+  .pdf-editor-shell.panel-open .setup-panel { visibility: visible; opacity: 1; transform: none; }
+  .pdf-editor-topbar .editor-brand { flex-basis: calc(100% - 110px); }
+  .pdf-editor-topbar .editor-context { max-width: 75vw; }
+  .pdf-editor-topbar > .save-status { margin-left: auto; }
+  .pdf-editor-topbar .generate-primary { order: 4; }
+}
+
+/* Phone: drawer overlays the workspace; the iframe is never unmounted. */
+@media (max-width: 767px) {
+  .pdf-editor-body { display: grid; grid-template-columns: minmax(0,1fr); overflow: hidden; }
+  .pdf-editor-topbar { gap: 8px; }
+  .pdf-editor-topbar .editor-brand { flex: 1 1 calc(100% - 60px); gap: 8px; }
+  .pdf-editor-topbar .editor-brand h1 { font-size: 15px; white-space: nowrap; }
   .editor-brand-mark { width: 34px; height: 34px; border-radius: 9px; }
-  .editor-brand { gap: 8px; }
-  .editor-context { max-width: 52vw; font-size: 10px; }
-  .pdf-editor-topbar .editor-back { padding: 8px; min-width: 36px; }
+  .pdf-editor-topbar .editor-context { max-width: 70vw; font-size: 10px; }
+  .pdf-editor-topbar .editor-back { padding: 8px; min-width: 44px; min-height: 44px; }
   .editor-back .back-label { display: none; }
-  .pdf-editor-topbar .generate-primary { order: 4; margin-left: auto; padding: 8px 12px; min-height: 38px; }
-  .pdf-editor-topbar > .save-status { order: 3; font-size: 10px; padding: 6px 8px; }
-  .mobile-panel-toggle { display: inline-flex; order: 2; font-size: 11px; padding: 8px 10px; }
-  .pdf-editor-body { display: grid; grid-template-columns: minmax(0,1fr); min-height: 0; }
-  .setup-panel { display: none; overflow-y: auto; border: 0; padding: 14px; }
-  .pdf-editor-shell.panel-open .setup-panel { display: block; }
-  .pdf-editor-shell.panel-open .pdf-preview-workspace { display: none; }
-  .mobile-preview-button { display: inline-flex; width: 100%; margin-top: 14px; }
-  .pdf-preview-workspace { min-height: 0; padding: 20px 12px 12px; overflow-y: auto; }
+  .pdf-editor-topbar .mobile-panel-toggle { order: 2; padding: 8px; font-size: 11px; }
+  .pdf-editor-topbar > .save-status { order: 3; font-size: 10px; padding: 6px 8px; margin-left: auto; }
+  .pdf-editor-topbar .generate-primary { order: 4; padding: 8px 10px; font-size: 11px; }
+  .pdf-editor-topbar .save-error-detail { order: 5; }
+  .setup-panel { position: absolute; inset: 0 auto 0 0; z-index: 4; width: min(100%, 390px); display: block; border: 0; padding: 14px max(14px, env(safe-area-inset-left)); visibility: hidden; transform: translateX(-100%); transition: transform var(--editor-expand) ease, visibility var(--editor-expand); background: #fafcfc; }
+  .pdf-editor-shell.panel-open .setup-panel { visibility: visible; transform: translateX(0); box-shadow: 8px 0 28px #14212b20; }
+  .sidebar-backdrop { position: absolute; inset: 0; z-index: 3; display: block; border: 0; border-radius: 0; padding: 0; background: #14212b50; opacity: 0; visibility: hidden; transition: opacity var(--editor-expand), visibility var(--editor-expand); }
+  .pdf-editor-shell.panel-open .sidebar-backdrop { visibility: visible; opacity: 1; }
+  .sidebar-backdrop:hover:not(:disabled) { background: #14212b50; }
+  .pdf-preview-workspace { width: 100%; padding: 18px 12px max(12px, env(safe-area-inset-bottom)); }
   .preview-heading h2 { font-size: 18px; }
   .preview-heading { margin-bottom: 16px; }
   .pdf-preview-workspace > .pdf-preview { min-height: 65dvh; }
   .pdf-editor-shell .pdf-preview-frame { min-height: 50dvh; }
-  .pdf-editor-shell .pdf-preview-toolbar { padding: 10px 12px; }
-  .pdf-editor-shell .pdf-preview-help { padding: 10px 12px; }
-  .pdf-editor-shell .setup-panel :is(input, textarea, select) { font-size: 16px; }
-  .pdf-editor-shell .setup-panel button { min-height: 40px; }
-  .pdf-editor-shell .premium-technical button[aria-pressed] { min-height: 28px; }
-  .pdf-editor-shell .premium-technical input[aria-label^="Compliance"] { font-size: 11px; }
-  .pdf-editor-shell .save-error-detail { order: 5; }
+  .pdf-editor-shell .pdf-preview-toolbar, .pdf-editor-shell .pdf-preview-help { padding: 10px 12px; }
+  .pdf-editor-shell .premium-item, .pdf-editor-shell .document-setup { width: 100%; min-width: 0; }
 }
 
-@media (max-width: 760px) {
-  .pdf-editor-topbar .editor-brand { flex: 1 1 calc(100% - 56px); }
-  .pdf-editor-topbar .editor-brand h1 { white-space: nowrap; }
-  .pdf-editor-topbar .editor-context { max-width: 72vw; }
+@media (max-width: 359px) {
+  .pdf-editor-topbar .mobile-panel-toggle span { display: none; }
+  .pdf-editor-topbar .mobile-panel-toggle { width: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pdf-editor-body, .setup-panel, .sidebar-backdrop { transition: none !important; }
 }

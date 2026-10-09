@@ -4,6 +4,7 @@ import { projectDocuments } from '../lib/projectDocuments'
 
 export default function ProjectSidebar({
   onShowPreview,
+  hidden = false,
   activeDocument,
   onSelectDocument,
   sectionStatuses = {},
@@ -41,7 +42,13 @@ export default function ProjectSidebar({
   }
 
   return (
-    <aside className="setup-panel" id="editor-setup-panel" aria-label="Document setup and components">
+    <aside className="setup-panel" id="editor-setup-panel" aria-label="Document setup and components" inert={hidden}>
+      <div className="sidebar-mobile-heading">
+        <strong>Documents</strong>
+        <button type="button" className="button-secondary sidebar-close" aria-label="Close documents and view preview" onClick={onShowPreview}>
+          <svg className="editor-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M6 18 18 6" /></svg>
+        </button>
+      </div>
       {/* DOCUMENT SETUP */}
       {children}
 

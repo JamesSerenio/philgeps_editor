@@ -294,6 +294,80 @@ export default function ProjectEditorPage() {
 function ProjectEditorContent({ id }) {
   const navigate = useNavigate()
   const [panelOpen, setPanelOpen] = useState(false)
+  const [responsiveMode, setResponsiveMode] = useState(() =>
+    window.matchMedia('(max-width: 767px)').matches ? 'mobile'
+      : window.matchMedia('(max-width: 1023px)').matches ? 'tablet' : 'desktop'
+  )
+  const panelToggleRef = useRef(null)
+  const editorShellRef = useRef(null)
+  const compactLayout = responsiveMode !== 'desktop'
+
+  function closePanel() {
+    setPanelOpen(false)
+    panelToggleRef.current?.focus({ preventScroll: true })
+  }
+
+  useEffect(() => {
+    const mobile = window.matchMedia('(max-width: 767px)')
+    const compact = window.matchMedia('(max-width: 1023px)')
+    const updateMode = () => setResponsiveMode(
+      mobile.matches ? 'mobile' : compact.matches ? 'tablet' : 'desktop'
+    )
+    mobile.addEventListener('change', updateMode)
+    compact.addEventListener('change', updateMode)
+    return () => {
+      mobile.removeEventListener('change', updateMode)
+      compact.removeEventListener('change', updateMode)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!panelOpen || !compactLayout) return undefined
+    const frame = requestAnimationFrame(() => {
+      editorShellRef.current?.querySelector('.sidebar-close')?.focus({ preventScroll: true })
+    })
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closePanel()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [panelOpen, compactLayout])
+
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return undefined
+    let frame
+    const resize = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const shell = editorShellRef.current
+        if (!shell) return
+        // Follow the keyboard's visible viewport without interfering with pinch zoom.
+        if (viewport.scale === 1 && window.matchMedia('(max-width: 1023px)').matches) {
+          shell.style.setProperty('--editor-visible-height', viewport.height + 'px')
+          const input = document.activeElement
+          if (shell.contains(input) && input.matches('input, textarea, select')) {
+            input.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+          }
+        } else {
+          shell.style.removeProperty('--editor-visible-height')
+        }
+      })
+    }
+    viewport.addEventListener('resize', resize)
+    window.addEventListener('orientationchange', resize)
+    return () => {
+      cancelAnimationFrame(frame)
+      viewport.removeEventListener('resize', resize)
+      window.removeEventListener('orientationchange', resize)
+    }
+  }, [])
 
   // ===================================================
   // STATES
@@ -1483,7 +1557,7 @@ async function handleGenerateAll() {
   // ===================================================
 
   return (
-    <div className={`pdf-editor-shell${panelOpen ? ' panel-open' : ''}`}>
+    <div ref={editorShellRef} className={`pdf-editor-shell${panelOpen ? ' panel-open' : ''}`}>
       <header className="pdf-editor-topbar">
         <button
           className="button-secondary editor-back"
@@ -1508,8 +1582,8 @@ async function handleGenerateAll() {
             <p className="editor-context" title={setup.projectTitle}>{setup.referenceNumber ? 'Ref. ' + setup.referenceNumber + ' / ' : ''}{setup.projectTitle}</p>
           </div>
         </div>
-        <button type="button" className="button-secondary mobile-panel-toggle" aria-expanded={panelOpen} aria-controls="editor-setup-panel" onClick={() => setPanelOpen(!panelOpen)}>
-          <DashboardIcon name="panel" />{panelOpen ? 'View preview' : 'Edit documents'}
+        <button ref={panelToggleRef} type="button" className="button-secondary mobile-panel-toggle" aria-label={panelOpen ? 'Close documents' : 'Open documents'} aria-expanded={panelOpen} aria-controls="editor-setup-panel" onClick={() => panelOpen ? closePanel() : setPanelOpen(true)}>
+          <svg className="editor-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d={panelOpen ? 'M6 6l12 12M6 18 18 6' : 'M4 6h16M4 12h16M4 18h16'} /></svg><span>Documents</span>
         </button>
 
         {/* GENERATE COMPLETE PDF BUTTON */}
@@ -1571,8 +1645,10 @@ async function handleGenerateAll() {
       </header>
 
       <div className="pdf-editor-body">
+        <button type="button" className="sidebar-backdrop" tabIndex={-1} aria-label="Close document drawer" aria-hidden={!panelOpen || responsiveMode !== 'mobile'} onClick={closePanel} />
         <ProjectSidebar
-          onShowPreview={() => setPanelOpen(false)}
+          hidden={compactLayout && !panelOpen}
+          onShowPreview={closePanel}
           activeDocument={activeDocument}
 
           // Connect sidebar Generate PDF button.
@@ -1604,7 +1680,7 @@ async function handleGenerateAll() {
           />
         </ProjectSidebar>
 
-        <main className="pdf-preview-workspace">
+        <main className="pdf-preview-workspace" inert={responsiveMode === 'mobile' && panelOpen}>
           {!selected ? (
             <div className="neutral-preview">
               <span className="editor-brand-mark"><DashboardIcon name="document" width="28" height="28" /></span>
