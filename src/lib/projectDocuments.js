@@ -70,4 +70,10 @@ export const projectDocuments = [
     title: 'Summary of Bid Prices',
     template: 'SUMMARY OF BID PRICES.pdf',
   },
+
+  {
+  id: 'secretaryCertificate',
+  title: "SECRETARY'S CERTIFICATE",
+  section: null,
+},
 ]

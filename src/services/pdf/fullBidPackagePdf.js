@@ -46,6 +46,10 @@ import {
   generateBidFormPreview,
 } from './bidFormPdf'
 
+import {
+  generateSecretaryCertificatePreview,
+} from './secretarysCertificatePdf'
+
 // =====================================================
 // CCTV OR STREETLIGHT SELECTION
 // =====================================================
@@ -66,6 +70,32 @@ function chooseVariant(setup) {
 }
 
 // =====================================================
+// STATIC PDF FILES
+// =====================================================
+
+// Use filenames exactly as they appear in public/pdf/static.
+// Add the full filenames of Mayor's Permit and tax returns
+// here when confirmed.
+
+const LEGAL_STATIC_FILES = [
+  'PhilGEPS Platinum Certificate.pdf',
+  'SEC Registration Certificate.pdf',
+  'Certificate of Registration (COR).pdf',
+]
+
+const FINANCIAL_STATIC_FILES = [
+  'Audited Financial Statements.pdf',
+]
+
+function staticDoc(filename) {
+  return {
+    id: `static:${filename}`,
+    title: filename,
+    staticPath: filename,
+  }
+}
+
+// =====================================================
 // DOCUMENT ORDER
 // =====================================================
 
@@ -74,7 +104,9 @@ function documentOrder() {
     (doc) => doc.id !== 'slcc'
   )
 
-  const ongoingIndex = docs.findIndex(
+  // Put the selected CCTV / Streetlight SLCC table
+  // after Statement of Ongoing Contracts.
+  const index = docs.findIndex(
     (doc) => doc.id === 'ongoing'
   )
 
@@ -82,17 +114,98 @@ function documentOrder() {
     (doc) => doc.id === 'slcc'
   )
 
-  if (slcc && ongoingIndex !== -1) {
-    // Statement of Ongoing Contracts
-    // immediately followed by selected SLCC table.
+  if (index !== -1 && slcc) {
     docs.splice(
-      ongoingIndex + 1,
+      index + 1,
       0,
       slcc
     )
   } else if (slcc) {
     docs.push(slcc)
   }
+
+  // ===================================================
+  // SECRETARY'S CERTIFICATE
+  // ===================================================
+
+  // Include even if it is not yet listed in
+  // projectDocuments.js.
+  if (
+    !docs.some(
+      (doc) => doc.id === 'secretaryCertificate'
+    )
+  ) {
+    const index = docs.findIndex(
+      (doc) => doc.id === 'omnibus'
+    )
+
+    const item = {
+      id: 'secretaryCertificate',
+      title: "SECRETARY'S CERTIFICATE",
+    }
+
+    if (index === -1) {
+      docs.push(item)
+    } else {
+      docs.splice(
+        index + 1,
+        0,
+        item
+      )
+    }
+  }
+
+  // ===================================================
+  // LEGAL STATIC FILES
+  // ===================================================
+
+  const contentsIndex = docs.findIndex(
+    (doc) => doc.id === 'contents'
+  )
+
+  const legal = LEGAL_STATIC_FILES
+    .filter(
+      (filename) =>
+        !docs.some(
+          (doc) =>
+            doc.staticPath === filename
+        )
+    )
+    .map(staticDoc)
+
+  docs.splice(
+    contentsIndex === -1
+      ? 0
+      : contentsIndex + 1,
+    0,
+    ...legal
+  )
+
+  // ===================================================
+  // FINANCIAL STATIC FILES
+  // ===================================================
+
+  const financeIndex = docs.findIndex(
+    (doc) => doc.id === 'nfcc'
+  )
+
+  const financial = FINANCIAL_STATIC_FILES
+    .filter(
+      (filename) =>
+        !docs.some(
+          (doc) =>
+            doc.staticPath === filename
+        )
+    )
+    .map(staticDoc)
+
+  docs.splice(
+    financeIndex === -1
+      ? docs.length
+      : financeIndex,
+    0,
+    ...financial
+  )
 
   return docs
 }
@@ -114,13 +227,15 @@ async function readPdf(source, title) {
 
   const bytes = await response.arrayBuffer()
 
-  const header = new TextDecoder('ascii').decode(
+  const header = new TextDecoder(
+    'ascii'
+  ).decode(
     bytes.slice(0, 8)
   )
 
   if (!header.startsWith('%PDF-')) {
     throw new Error(
-      `${title}: URL returned HTML or non-PDF data. Check the template path.`
+      `${title}: URL returned an HTML page or non-PDF. Check the template path.`
     )
   }
 
@@ -143,6 +258,10 @@ const GENERATORS = {
   omnibus: generateOmnibusPreview,
   priceSchedule: generatePriceSchedulePreview,
   summary: generateSummaryPreview,
+
+  // NEW
+  secretaryCertificate:
+    generateSecretaryCertificatePreview,
 }
 
 // =====================================================
@@ -165,7 +284,11 @@ function getGenerator(doc) {
     return generateAfterSalesPreview
   }
 
-  if (/certificate of product warranty/i.test(label)) {
+  if (
+    /certificate of product warranty/i.test(
+      label
+    )
+  ) {
     return generateProductWarrantyPreview
   }
 
@@ -225,7 +348,8 @@ export async function generateFullBidPackagePdf({
 
   try {
     for (const doc of documentOrder()) {
-      const generator = getGenerator(doc)
+      const generator =
+        getGenerator(doc)
 
       let source
 
@@ -266,25 +390,33 @@ export async function generateFullBidPackagePdf({
         if (source.startsWith('blob:')) {
           generatedUrls.push(source)
         }
+
+      } else if (doc.staticPath) {
+        // Load the original static PDF unchanged.
+        source =
+          `/pdf/static/${encodeURIComponent(doc.staticPath)}`
+
       } else if (doc.template) {
         source =
           `/pdf/templates/${encodeURIComponent(doc.template)}`
+
       } else {
         throw new Error(
           `${doc.title ?? doc.id}: No PDF generator or template configured.`
         )
       }
 
-      // Load the completed PDF for this document.
       const pdf = await readPdf(
         source,
         doc.title ?? doc.id
       )
 
-      // Copy all pages into the final document.
+      const pageNumbers =
+        pdf.getPageIndices()
+
       const pages = await combined.copyPages(
         pdf,
-        pdf.getPageIndices()
+        pageNumbers
       )
 
       for (const page of pages) {
@@ -302,16 +434,15 @@ export async function generateFullBidPackagePdf({
       useObjectStreams: false,
     })
 
-    const blob = new Blob(
-      [bytes],
-      {
-        type: 'application/pdf',
-      }
+    return URL.createObjectURL(
+      new Blob(
+        [bytes],
+        {
+          type: 'application/pdf',
+        }
+      )
     )
-
-    return URL.createObjectURL(blob)
   } finally {
-    // Clean up temporary individual PDFs.
     for (const url of generatedUrls) {
       URL.revokeObjectURL(url)
     }

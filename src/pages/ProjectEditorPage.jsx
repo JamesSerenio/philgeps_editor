@@ -49,6 +49,11 @@ import {
   generateBidFormPreview,
 } from '../services/pdf/bidFormPdf'
 
+// NEW: SECRETARY'S CERTIFICATE
+import {
+  generateSecretaryCertificatePreview,
+} from '../services/pdf/secretarysCertificatePdf'
+
 import useEditorPersistence from '../hooks/useEditorPersistence'
 import { createTechnicalItem } from '../lib/technicalSpecs'
 
@@ -110,6 +115,9 @@ const BID_FORM_ID =
     )
   )?.id ?? 'bidForm'
 
+// NEW: SECRETARY'S CERTIFICATE IDENTIFIER
+const SECRETARY_ID = 'secretaryCertificate'
+
 // =====================================================
 // DOCUMENT PREVIEW CONFIGURATION
 // =====================================================
@@ -119,6 +127,10 @@ const PREVIEW_ONLY = new Set([
   'ongoing',
   'nfcc',
   'manpower',
+
+  // Secretary's Certificate gets its values
+  // automatically from Document Setup.
+  SECRETARY_ID,
 ])
 
 const LIVE_PREVIEW = new Set([
@@ -136,6 +148,9 @@ const LIVE_PREVIEW = new Set([
   'omnibus',
   AFTER_SALES_ID,
   WARRANTY_ID,
+
+  // NEW
+  SECRETARY_ID,
 ])
 
 // =====================================================
@@ -192,8 +207,7 @@ function mergeScheduleWithTechnical(
 
   const sharedPeriod = String(
     savedItems.find(
-      (item) =>
-        item?.deliveryPeriod != null
+      (item) => item?.deliveryPeriod != null
     )?.deliveryPeriod ??
     defaultPeriod ??
     ''
@@ -250,9 +264,7 @@ function mergeScheduleWithTechnical(
     }
 
     return {
-      id: String(
-        existing?.id ?? technicalId
-      ),
+      id: String(existing?.id ?? technicalId),
       sharedItemId: technicalId,
       itemNo: String(index + 1),
       qty: String(item?.qty ?? ''),
@@ -336,7 +348,7 @@ function ProjectEditorContent({ id }) {
   const previewUrlsRef = useRef({})
 
   // ===================================================
-  // ADD: COMPLETE PDF GENERATION STATES
+  // COMPLETE PDF GENERATION STATES
   // ===================================================
 
   const [generatingAll, setGeneratingAll] = useState(false)
@@ -477,10 +489,7 @@ function ProjectEditorContent({ id }) {
         } = await supabase
           .from('bid_price_schedules')
           .select('total_prices_per_unit')
-          .eq(
-            'reference_number',
-            referenceNumber
-          )
+          .eq('reference_number', referenceNumber)
           .order('updated_at', {
             ascending: false,
           })
@@ -595,6 +604,23 @@ function ProjectEditorContent({ id }) {
           representativeDesignation:
             setup.designation ?? '',
 
+          // ============================================
+          // NEW: SECRETARY'S CERTIFICATE DATA
+          // ============================================
+
+          corporateSecretaryName:
+            setup.corporateSecretaryName ?? '',
+
+          companyPresidentName:
+            setup.companyPresidentName ?? '',
+
+          boardMeetingDate:
+            setup.boardMeetingDate ?? '',
+
+          // ============================================
+          // EXISTING FIELDS
+          // ============================================
+
           servicePeriodYears:
             yearsFromSetup(setup),
 
@@ -692,6 +718,17 @@ function ProjectEditorContent({ id }) {
       bidSecurity: generateBidSecurityPreview,
       manpower: generateManpowerPreview,
       omnibus: generateOmnibusPreview,
+
+      // ================================================
+      // NEW: SECRETARY'S CERTIFICATE
+      // ================================================
+
+      [SECRETARY_ID]:
+        generateSecretaryCertificatePreview,
+
+      // ================================================
+      // EXISTING DOCUMENTS
+      // ================================================
 
       [AFTER_SALES_ID]: generateAfterSalesPreview,
       [WARRANTY_ID]: generateProductWarrantyPreview,
@@ -1051,7 +1088,7 @@ function ProjectEditorContent({ id }) {
   }
 
   // ===================================================
-  // ADD: GENERATE COMPLETE BID DOCUMENT PACKAGE
+  // GENERATE COMPLETE BID DOCUMENT PACKAGE
   // ===================================================
 
   async function handleGenerateAll() {
@@ -1119,7 +1156,9 @@ function ProjectEditorContent({ id }) {
         ...priceValues,
       }
 
-      // Generate the complete PDF.
+      // Generate complete PDF including
+      // Secretary's Certificate through
+      // fullBidPackagePdf.js.
       const url = await generateFullBidPackagePdf({
         setup: {
           ...setup,
@@ -1279,6 +1318,7 @@ function ProjectEditorContent({ id }) {
 
     // ================================================
     // PREVIEW ONLY DOCUMENTS
+    // INCLUDING SECRETARY'S CERTIFICATE
     // ================================================
 
     if (PREVIEW_ONLY.has(document.id)) {
@@ -1389,7 +1429,7 @@ function ProjectEditorContent({ id }) {
 
         <h1>Bid Docs PDF Editor</h1>
 
-        {/* ADD: GENERATE COMPLETE PDF BUTTON */}
+        {/* GENERATE COMPLETE PDF BUTTON */}
         <button
           className="button-secondary"
           type="button"
@@ -1449,7 +1489,7 @@ function ProjectEditorContent({ id }) {
         <ProjectSidebar
           activeDocument={activeDocument}
 
-          // ADD: Connect sidebar Generate PDF button.
+          // Connect sidebar Generate PDF button.
           onGenerate={handleGenerateAll}
           generating={generatingAll}
 
@@ -1615,6 +1655,22 @@ function ProjectEditorContent({ id }) {
                         download={`Bid_Form_${setup.referenceNumber || 'document'}.pdf`}
                       >
                         Download Updated Bid Form PDF
+                      </a>
+                    </p>
+                  )}
+
+                  {/* ====================================
+                      NEW: SECRETARY'S CERTIFICATE
+                      DOWNLOAD
+                  ==================================== */}
+
+                  {activeDocument === SECRETARY_ID && (
+                    <p>
+                      <a
+                        href={preview}
+                        download={`Secretarys_Certificate_${setup.referenceNumber || 'document'}.pdf`}
+                      >
+                        Download Updated Secretary's Certificate PDF
                       </a>
                     </p>
                   )}
