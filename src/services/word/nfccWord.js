@@ -1,4 +1,3 @@
-
 import {
   AlignmentType,
   BorderStyle,
@@ -16,7 +15,7 @@ import {
   WidthType,
 } from 'docx'
 
-import { formatBidDate } from '../../lib/bidFormData'
+import { formatLongDate } from '../../lib/documentSetup'
 import { sectionMarker } from './wordHelpers'
 
 // ============================================
@@ -74,11 +73,7 @@ function text(value, fallback = '') {
 
 function firstValue(...values) {
   for (const value of values) {
-    if (
-      value !== null &&
-      value !== undefined &&
-      String(value).trim() !== ''
-    ) {
+    if (value !== null && value !== undefined && String(value).trim() !== '') {
       return value
     }
   }
@@ -91,9 +86,7 @@ function numeric(value, fallback = 0) {
     return fallback
   }
 
-  const result = Number(
-    String(value).replace(/[₱,\s]/g, '')
-  )
+  const result = Number(String(value).replace(/[₱,\s]/g, ''))
 
   return Number.isFinite(result) ? result : fallback
 }
@@ -108,8 +101,9 @@ function peso(value) {
 function run(content, options = {}) {
   return new TextRun({
     text: String(content ?? ''),
-    font: FONT,
+    font: options.font ?? FONT,
     size: Math.round((options.size ?? 9.5) * 2),
+    // PDF uses Arial/Helvetica at these sizes; Word stores half-point sizes.
     color: options.color ?? BLACK,
     bold: options.bold ?? false,
     italics: options.italic ?? false,
@@ -132,6 +126,10 @@ function paragraph(content = '', options = {}) {
     keepNext = false,
     border,
     bookmark = false,
+    firstLine = 0,
+    hanging = 0,
+    underline = false,
+    font = FONT,
   } = options
 
   const children = []
@@ -140,8 +138,9 @@ function paragraph(content = '', options = {}) {
     children.push(sectionMarker(10))
   }
 
-  String(content ?? '').split('\n').forEach(
-    (part, index) => {
+  String(content ?? '')
+    .split('\n')
+    .forEach((part, index) => {
       children.push(
         run(part, {
           size,
@@ -149,18 +148,24 @@ function paragraph(content = '', options = {}) {
           italic,
           color,
           break: index ? 1 : 0,
-        })
+          underline,
+          font,
+        }),
       )
-    }
-  )
+    })
 
   return new Paragraph({
     alignment: align,
     keepNext,
     border,
-    indent: indent
-      ? { left: PT(indent) }
-      : undefined,
+    indent:
+      indent || firstLine || hanging
+        ? {
+            left: PT(indent),
+            firstLine: firstLine ? PT(firstLine) : undefined,
+            hanging: hanging ? PT(hanging) : undefined,
+          }
+        : undefined,
     spacing: {
       before: PT(before),
       after: PT(after),
@@ -180,9 +185,7 @@ function blank(height = 9) {
 }
 
 function cell(content, width, options = {}) {
-  const children = Array.isArray(content)
-    ? content
-    : [content]
+  const children = Array.isArray(content) ? content : [content]
 
   return new TableCell({
     width: {
@@ -210,70 +213,56 @@ function cell(content, width, options = {}) {
 // ============================================
 
 function informationTable(setup) {
-  const widths = [
-    PT(166),
-    PT(12),
-    PT(341),
-  ]
+  const widths = [PT(174), PT(17), PT(345)]
 
   const entries = [
-    [
-      'NAME OF THE PROCURING ENTITY',
-      setup.procuringEntity,
-    ],
-    [
-      'PROJECT TITLE',
-      setup.projectTitle,
-    ],
-    [
-      'REFERENCE NUMBER',
-      setup.referenceNumber,
-    ],
-    [
-      'CONTRACTOR',
-      setup.bidderName,
-    ],
+    ['NAME OF THE PROCURING ENTITY', setup.procuringEntity],
+    ['PROJECT TITLE', setup.projectTitle],
+    ['REFERENCE NUMBER', setup.referenceNumber],
+    ['CONTRACTOR', setup.bidderName],
     [
       'ADDRESS',
       firstValue(
         setup.businessAddress,
         setup.bidderAddress,
-        setup.companyAddress
+        setup.companyAddress,
       ),
     ],
   ]
 
-  const rows = entries.map(([label, value]) => {
+  const rows = entries.map(([label, value], index) => {
     return new TableRow({
       height: {
-        value: PT(19),
+        value: PT(index === 1 ? 26 : 19),
         rule: HeightRule.ATLEAST,
       },
 
       children: [
+        cell(paragraph('', { size: 1, line: 1 }), PT(9), { left: 0, right: 0 }),
         cell(
           paragraph(label, {
-            size: 8.7,
+            size: 9.4,
             line: 11,
           }),
-          widths[0]
+          widths[0],
         ),
 
         cell(
           paragraph(':', {
             size: 9,
           }),
-          widths[1]
+          widths[1],
         ),
 
         cell(
-          paragraph(text(value), {
-            size: 8.7,
+          paragraph(text(value).toUpperCase(), {
+            size:
+              label === 'PROJECT TITLE' || label === 'ADDRESS' ? 9.5 : 10.2,
             bold: true,
             color: RED,
             line: 11,
           }),
-          widths[2]
+          widths[2],
         ),
       ],
     })
@@ -281,11 +270,11 @@ function informationTable(setup) {
 
   return new Table({
     width: {
-      size: widths.reduce((a, b) => a + b, 0),
+      size: PT(9) + widths.reduce((a, b) => a + b, 0),
       type: WidthType.DXA,
     },
 
-    columnWidths: widths,
+    columnWidths: [PT(9), ...widths],
     layout: TableLayoutType.FIXED,
     borders: NONE,
     rows,
@@ -309,8 +298,7 @@ function financialData(options, setup) {
   // number 13261581 only.
   // For other projects, values must come from
   // the provided NFCC/financial data.
-  const sample =
-    String(setup.referenceNumber ?? '') === '13261581'
+  const sample = String(setup.referenceNumber ?? '') === '13261581'
 
   const defaultAssets = sample ? 2441561 : 0
   const defaultLiabilities = sample ? 566693 : 0
@@ -321,9 +309,9 @@ function financialData(options, setup) {
       values.current_assets,
       values.assets,
       options.currentAssets,
-      setup.currentAssets
+      setup.currentAssets,
     ),
-    defaultAssets
+    defaultAssets,
   )
 
   const currentLiabilities = numeric(
@@ -332,28 +320,23 @@ function financialData(options, setup) {
       values.current_liabilities,
       values.liabilities,
       options.currentLiabilities,
-      setup.currentLiabilities
+      setup.currentLiabilities,
     ),
-    defaultLiabilities
+    defaultLiabilities,
   )
 
   const netWorkingCapital = numeric(
     firstValue(
       values.netWorkingCapital,
       values.net_working_capital,
-      options.netWorkingCapital
+      options.netWorkingCapital,
     ),
-    currentAssets - currentLiabilities
+    currentAssets - currentLiabilities,
   )
 
   const multiplier = numeric(
-    firstValue(
-      values.multiplier,
-      values.k,
-      values.K,
-      options.multiplier
-    ),
-    15
+    firstValue(values.multiplier, values.k, values.K, options.multiplier),
+    15,
   )
 
   const outstanding = numeric(
@@ -362,9 +345,9 @@ function financialData(options, setup) {
       values.outstanding,
       values.outstandingWorks,
       values.outstanding_contracts,
-      options.outstandingContracts
+      options.outstandingContracts,
     ),
-    0
+    0,
   )
 
   return {
@@ -372,11 +355,9 @@ function financialData(options, setup) {
     currentLiabilities,
     netWorkingCapital,
     multiplier,
-    multipliedAmount:
-      netWorkingCapital * multiplier,
+    multipliedAmount: netWorkingCapital * multiplier,
     outstanding,
-    computedNfcc:
-      netWorkingCapital * multiplier - outstanding,
+    computedNfcc: netWorkingCapital * multiplier - outstanding,
   }
 }
 
@@ -385,37 +366,27 @@ function financialData(options, setup) {
 // ============================================
 
 function amountTable(data) {
-  const widths = [
-    PT(284),
-    PT(166),
-  ]
+  const widths = [PT(246), PT(221)]
 
-  function amountRow(
-    label,
-    amount,
-    options = {}
-  ) {
+  function amountRow(label, amount, options = {}) {
     const labelParagraph = paragraph(label, {
-      size: options.small ? 8.7 : 9,
+      size: 10,
       bold: options.bold ?? false,
       italic: options.italic ?? false,
-      line: options.small ? 10.5 : 11,
+      line: options.small ? 12.4 : 11.5,
     })
 
-    const amountParagraph = paragraph(
-      peso(amount),
-      {
-        size: options.numberSize ?? 12,
-        line: 14,
-        align: AlignmentType.RIGHT,
-      }
-    )
+    const amountParagraph = paragraph(peso(amount), {
+      size: options.numberSize ?? 16,
+      line: 16.5,
+      align: AlignmentType.RIGHT,
+    })
 
     return new TableRow({
       cantSplit: true,
 
       height: {
-        value: PT(options.height ?? 21),
+        value: PT(options.height ?? 17),
         rule: HeightRule.ATLEAST,
       },
 
@@ -441,33 +412,30 @@ function amountTable(data) {
     cantSplit: true,
 
     height: {
-      value: PT(17),
+      value: PT(13),
       rule: HeightRule.ATLEAST,
     },
 
     children: [
       cell(
-        paragraph(
-          'Net Financial Contracting Capacity',
-          {
-            size: 9,
-            bold: true,
-            line: 11,
-          }
-        ),
+        paragraph('Net Financial Contracting Capacity', {
+          size: 10,
+          bold: true,
+          line: 11,
+        }),
         widths[0],
-        { borders: ALL_BORDERS, left: 4 }
+        { borders: ALL_BORDERS, left: 4 },
       ),
 
       cell(
         paragraph('Amount', {
-          size: 9,
+          size: 10,
           bold: true,
           line: 11,
           align: AlignmentType.CENTER,
         }),
         widths[1],
-        { borders: ALL_BORDERS }
+        { borders: ALL_BORDERS },
       ),
     ],
   })
@@ -475,42 +443,30 @@ function amountTable(data) {
   const rows = [
     header,
 
-    amountRow(
-      'Current Assets',
-      data.currentAssets,
-      { bold: true }
-    ),
+    amountRow('Current Assets', data.currentAssets, { bold: true }),
 
-    amountRow(
-      'Current Liabilities',
-      data.currentLiabilities,
-      { bold: true }
-    ),
+    amountRow('Current Liabilities', data.currentLiabilities, { bold: true }),
 
-    amountRow(
-      'Net Working Capital (6)',
-      data.netWorkingCapital,
-      { bold: true }
-    ),
+    amountRow('Net Working Capital (6)', data.netWorkingCapital, {
+      bold: true,
+    }),
 
-    amountRow(
-      `Multiply by ${data.multiplier}`,
-      data.multipliedAmount,
-      { bold: true }
-    ),
+    amountRow(`Multiply by ${data.multiplier}`, data.multipliedAmount, {
+      bold: true,
+    }),
 
     amountRow(
       'Less: Value of all outstanding and uncompleted\n' +
-      'portions of sub-projects under on-going\n' +
-      'contracts including awarded contracts to be\n' +
-      'started coinciding with contract to be bid',
+        'portions of sub-projects under on-going contracts\n' +
+        'including awarded contracts to be started\n' +
+        'coinciding with contract to be bid',
       data.outstanding,
       {
         small: true,
         bold: true,
         italic: true,
-        height: 68,
-      }
+        height: 52,
+      },
     ),
   ]
 
@@ -534,86 +490,68 @@ function amountTable(data) {
 // ============================================
 
 function signatureTable(setup) {
-  const widths = [
-    PT(91),
-    PT(17),
-    PT(342),
-  ]
+  const widths = [PT(96), PT(27), PT(400)]
 
   const signatory = text(
-    firstValue(
-      setup.submittedBy,
-      setup.authorizedRepresentative
-    )
+    firstValue(setup.submittedBy, setup.authorizedRepresentative),
   )
 
   const entries = [
     [
       'Submitted',
       [
-        paragraph(signatory, {
-          size: 9.2,
+        paragraph(signatory.toUpperCase(), {
+          underline: true,
+          size: 10.3,
           bold: true,
           line: 12,
         }),
 
-        paragraph(
-          '(Printed Name & Signature)',
-          {
-            size: 7,
-            line: 9,
-            indent: 12,
-          }
-        ),
+        paragraph('(Printed Name & Signature)', {
+          size: 6.3,
+          line: 9,
+          indent: 0,
+        }),
       ],
-      34,
+      35,
     ],
 
     [
       'Designation',
       [
         paragraph(
-          firstValue(
-            setup.designation,
-            setup.representativeDesignation
-          ) ?? '',
+          firstValue(setup.designation, setup.representativeDesignation) ?? '',
           {
-            size: 9.2,
+            size: 10.3,
             italic: true,
             line: 12,
-          }
+          },
         ),
       ],
-      21,
+      23,
     ],
 
     [
       'Name of Firm',
       [
-        paragraph(
-          text(setup.bidderName),
-          {
-            size: 9.2,
-            bold: true,
-            line: 12,
-          }
-        ),
+        paragraph(text(setup.bidderName), {
+          size: 10.3,
+          bold: true,
+          line: 12,
+        }),
       ],
-      21,
+      23,
     ],
 
     [
       'Date',
       [
-        paragraph(
-          formatBidDate(setup.date) || '',
-          {
-            size: 9.2,
-            line: 12,
-          }
-        ),
+        paragraph(formatLongDate(setup.date) || '', {
+          size: 10.3,
+          line: 12,
+        }),
       ],
-      21,
+      23,
     ],
   ]
 
@@ -626,37 +564,40 @@ function signatureTable(setup) {
         },
 
         children: [
+          cell(paragraph('', { size: 1, line: 1 }), PT(14), {
+            left: 0,
+            right: 0,
+          }),
           cell(
             paragraph(label, {
-              size: 9,
+              size: 10,
               line: 12,
             }),
-            widths[0]
+            widths[0],
+            { left: 0, right: 0 },
           ),
 
           cell(
             paragraph(':', {
-              size: 9,
+              size: 10,
               line: 12,
             }),
-            widths[1]
+            widths[1],
+            { left: 0, right: 0 },
           ),
 
-          cell(
-            contents,
-            widths[2]
-          ),
+          cell(contents, widths[2], { left: 0, right: 0 }),
         ],
-      })
+      }),
   )
 
   return new Table({
     width: {
-      size: widths.reduce((a, b) => a + b, 0),
+      size: PT(14) + widths.reduce((a, b) => a + b, 0),
       type: WidthType.DXA,
     },
 
-    columnWidths: widths,
+    columnWidths: [PT(14), ...widths],
     layout: TableLayoutType.FIXED,
     borders: NONE,
     rows,
@@ -676,26 +617,23 @@ export function nfccWord(options = {}) {
     // DOCUMENT TITLE
     // ========================================
 
-    paragraph(
-      'NET FINANCIAL CONTRACTING CAPACITY (NFCC)',
-      {
-        size: 12,
-        bold: true,
-        align: AlignmentType.CENTER,
-        line: 16,
-        after: 12,
-        bookmark: true,
+    paragraph('NET FINANCIAL CONTRACTING CAPACITY (NFCC)', {
+      size: 12,
+      bold: true,
+      align: AlignmentType.CENTER,
+      line: 16,
+      after: 12,
+      bookmark: true,
 
-        border: {
-          bottom: {
-            style: BorderStyle.SINGLE,
-            color: BLACK,
-            size: 7,
-            space: 3,
-          },
+      border: {
+        bottom: {
+          style: BorderStyle.SINGLE,
+          color: BLACK,
+          size: 7,
+          space: 3,
         },
-      }
-    ),
+      },
+    }),
 
     // ========================================
     // PROJECT DETAILS
@@ -703,7 +641,7 @@ export function nfccWord(options = {}) {
 
     informationTable(setup),
 
-    blank(11),
+    blank(5),
 
     // ========================================
     // CERTIFICATION STATEMENT
@@ -711,19 +649,19 @@ export function nfccWord(options = {}) {
 
     paragraph(
       'The undersigned duly authorized representative ' +
-      'of the Bidder, for and in behalf of the Bidder ' +
-      'hereby submits this computation of Net Financial ' +
-      'Contracting Capacity (NFCC) in relation with our ' +
-      'bid proposal for the subject to be bid. That ' +
-      'personally, and in behalf of the Bidder, I ' +
-      'certify that the following computation of the ' +
-      'NFCC is complete, true and correct.',
+        'of the Bidder, for and in behalf of the Bidder ' +
+        'hereby submits this computation of Net Financial ' +
+        'Contracting Capacity (NFCC) in relation with our ' +
+        'bid proposal for the subject to be bid. That ' +
+        'personally, and in behalf of the Bidder, I ' +
+        'certify that the following computation of the ' +
+        'NFCC is complete, true and correct.',
       {
-        size: 9.5,
-        line: 11.6,
-        indent: 18,
+        size: 12,
+        line: 13.8,
+        firstLine: 36,
         after: 13,
-      }
+      },
     ),
 
     // ========================================
@@ -732,16 +670,17 @@ export function nfccWord(options = {}) {
 
     paragraph(
       'A. Summary of Bidder’s Assets and Liabilities ' +
-      'based on the attached audited Financial ' +
-      'Statements, stamped “RECEIVED” by the Bureau ' +
-      'of Internal Revenue or the BIR authorized ' +
-      'collecting agent, for the preceding calendar year.',
+        'based on the attached audited Financial ' +
+        'Statements, stamped “RECEIVED” by the Bureau ' +
+        'of Internal Revenue or the BIR authorized ' +
+        'collecting agent, for the preceding calendar year.',
       {
-        size: 9.5,
-        line: 12,
-        indent: 12,
+        size: 12,
+        line: 13.8,
+        indent: 32,
+        hanging: 18,
         after: 13,
-      }
+      },
     ),
 
     // ========================================
@@ -750,59 +689,51 @@ export function nfccWord(options = {}) {
 
     paragraph(
       'The Net Financial Contracting Capacity ' +
-      '(NFCC) is computed as follows:',
+        '(NFCC) is computed as follows:',
       {
-        size: 10,
+        size: 14,
         bold: true,
         italic: true,
-        line: 13,
-        indent: 32,
-        after: 3,
-      }
+        line: 16,
+        indent: 36,
+        after: 0,
+      },
     ),
 
     paragraph(
       'NFCC = K(current asset – current liabilities) ' +
-      'minus value of all outstanding works under ' +
-      'ongoing contracts including awarded contracts ' +
-      'yet to be started.',
+        'minus value of all outstanding works under ' +
+        'ongoing contracts including awarded contracts ' +
+        'yet to be started.',
       {
-        size: 9.1,
-        line: 11.5,
-        indent: 32,
+        size: 12,
+        line: 13.8,
+        indent: 36,
         after: 3,
-      }
+      },
     ),
 
     paragraph(
-      'Where K = 10 for a contract duration of ' +
-      'one (1) year or less',
+      'Where K = 10 for a contract duration of ' + 'one (1) year or less',
       {
-        size: 9,
-        line: 11,
-        indent: 32,
-      }
+        size: 12,
+        line: 13.8,
+        indent: 36,
+      },
     ),
 
-    paragraph(
-      '15 for more than one (1) year up to ' +
-      'two (2) years',
-      {
-        size: 9,
-        line: 11,
-        indent: 83,
-      }
-    ),
+    paragraph('15 for more than one (1) year up to ' + 'two (2) years', {
+      size: 12,
+      line: 13.8,
+      indent: 92,
+    }),
 
-    paragraph(
-      '20 for more than two (2) years',
-      {
-        size: 9,
-        line: 11,
-        indent: 83,
-        after: 13,
-      }
-    ),
+    paragraph('20 for more than two (2) years', {
+      size: 12,
+      line: 13.8,
+      indent: 92,
+      after: 17,
+    }),
 
     // ========================================
     // FINANCIAL TABLE
@@ -838,8 +769,8 @@ export function nfccWord(options = {}) {
           margin: {
             top: PT(37),
             bottom: PT(36),
-            left: PT(38),
-            right: PT(38),
+            left: PT(18),
+            right: PT(18),
           },
         },
       },

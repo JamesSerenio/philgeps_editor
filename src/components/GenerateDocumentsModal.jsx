@@ -43,7 +43,7 @@ export default function GenerateDocumentsModal({
     Math.min(Number(progress.completed) || 0, Number(progress.total) || 21),
   )
   function download() {
-    if (!canDownload || busy) return
+    if (!canDownload || busy || outdated) return
     const link = document.createElement('a')
     link.href = file.url
     link.download = file.filename
@@ -136,7 +136,10 @@ export default function GenerateDocumentsModal({
             className="bid-export-primary bid-export-generate"
             disabled={busy || rendering}
             aria-busy={busy || rendering}
-            onClick={() => { setAttemptedFormat(format); onGenerate(format) }}
+            onClick={() => {
+              setAttemptedFormat(format)
+              onGenerate(format)
+            }}
           >
             {busy ? (
               <span className="bid-export-spinner" />
@@ -147,9 +150,9 @@ export default function GenerateDocumentsModal({
               ? 'Generating preview...'
               : rendering
                 ? 'Rendering preview...'
-              : ready
-                ? 'Regenerate Preview'
-                : 'Generate Preview'}
+                : ready
+                  ? 'Regenerate Preview'
+                  : 'Generate Preview'}
           </button>
         </div>
         {busy && (
@@ -191,6 +194,15 @@ export default function GenerateDocumentsModal({
                   !!results[value] && results[value].contentKey !== contentKey
                 }
                 onStatus={onPreviewStatus}
+                onDownload={download}
+                downloadDisabled={
+                  busy ||
+                  !results[value] ||
+                  results[value].contentKey !== contentKey ||
+                  !['ready', 'error'].includes(
+                    previewStatuses[results[value]?.url],
+                  )
+                }
               />
             </div>
           ))}
@@ -226,7 +238,7 @@ export default function GenerateDocumentsModal({
             <button
               type="button"
               className="bid-export-primary"
-              disabled={!canDownload || busy}
+              disabled={!canDownload || busy || outdated}
               onClick={download}
             >
               <DashboardIcon name="download" />

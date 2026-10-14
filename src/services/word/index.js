@@ -161,6 +161,13 @@ export async function generateFullBidPackageWord(
       'editable Word text and tables; six static certificate sections retain page images.',
 
     styles: {
+      paragraphStyles: [{
+        id: 'TechnicalSpecifications',
+        name: 'Technical Specifications',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 20 },
+        paragraph: { spacing: { after: 0 } },
+      }],
       default: {
         document: {
           run: {
