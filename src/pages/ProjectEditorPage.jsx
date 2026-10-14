@@ -1,3 +1,5 @@
+import GenerateDocumentsModal from '../components/GenerateDocumentsModal'
+import { exportFilename } from '../lib/exportFilename'
 import DashboardIcon from '../components/DashboardIcon'
 
 import { useEffect, useRef, useState } from 'react'
@@ -429,6 +431,18 @@ function ProjectEditorContent({ id }) {
 
   const [generatingAll, setGeneratingAll] = useState(false)
   const [generateAllError, setGenerateAllError] = useState('')
+  const [generateModalOpen, setGenerateModalOpen] = useState(false)
+  const [exportProgress, setExportProgress] = useState({})
+  const [exportResult, setExportResult] = useState(null)
+  const exportSaveRef = useRef(null)
+  const exportBusyRef = useRef(false)
+  const exportUrlRef = useRef(null)
+  useEffect(() => () => { if (exportUrlRef.current) URL.revokeObjectURL(exportUrlRef.current) }, [])
+
+  function openGenerateModal() {
+    setGenerateAllError('')
+    setGenerateModalOpen(true)
+  }
 
   // ===================================================
   // SUPABASE EDITOR PERSISTENCE
@@ -1168,8 +1182,15 @@ function ProjectEditorContent({ id }) {
   // ===================================================
 
 
-async function handleGenerateAll() {
-  if (generatingAll || !setup) return
+
+async function handleGenerateAll(format = 'pdf') {
+  if (exportBusyRef.current || !setup) return
+
+  exportBusyRef.current = true
+  setExportResult(null)
+  setExportProgress({
+    message: 'Saving pending changes...'
+  })
 
   setGeneratingAll(true)
   setGenerateAllError('')
@@ -1180,6 +1201,7 @@ async function handleGenerateAll() {
     // ==========================================
 
     await persistence.retry()
+    await exportSaveRef.current?.()
 
     // ==========================================
     // 2. PROJECT INFORMATION
@@ -1199,28 +1221,24 @@ async function handleGenerateAll() {
       setup.projectTitle ?? ''
     ).trim()
 
-
     // ==========================================
-    // 3. AUTOMATIC PDF FILENAME
+    // 3. AUTOMATIC FILENAME
     // ==========================================
 
-    const cleanProjectTitle = String(
-      projectTitle ?? ''
+    const baseFilename = exportFilename(
+      projectTitle,
+      ref,
+      format
     )
-      .normalize('NFKD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]+/g, '_')
-      .replace(/^_+|_+$/g, '')
-      .slice(0, 150)
-      .replace(/_+$/g, '')
 
-    const pdfFilename = `${
-      cleanProjectTitle ||
-      `BID_DOCUMENTS_${ref}`
-    }.pdf`
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')
 
+    const filename = baseFilename.replace(
+      /\.(pdf|docx)$/i,
+      `_${timestamp}.${format === 'docx' ? 'docx' : 'pdf'}`
+    )
 
     // ==========================================
     // 4. LOAD SAVED PRICE SCHEDULE
@@ -1228,13 +1246,13 @@ async function handleGenerateAll() {
 
     const {
       data,
-      error: priceError,
+      error: priceError
     } = await supabase
       .from('bid_price_schedules')
-      .select('total_prices_per_unit')
+      .select('id,total_prices_per_unit')
       .eq('reference_number', ref)
       .order('updated_at', {
-        ascending: false,
+        ascending: false
       })
       .limit(1)
 
@@ -1272,14 +1290,62 @@ async function handleGenerateAll() {
           : {}
       ),
 
-      ...priceValues,
+      // Do not let values left over from another
+      // editor overwrite current database prices.
+      ...(
+        activeDocument === 'priceSchedule'
+          ? priceValues
+          : {}
+      )
+    }
+
+    // Recover pending prices even when the
+    // Price Schedule editor has not been opened.
+
+    if (cache?.dirty) {
+      const payload = {
+        reference_number: ref,
+        total_prices_per_unit: savedPrices,
+        updated_at: new Date().toISOString()
+      }
+
+      const query = data?.[0]?.id != null
+        ? supabase
+            .from('bid_price_schedules')
+            .update(payload)
+            .eq('id', data[0].id)
+        : supabase
+            .from('bid_price_schedules')
+            .insert(payload)
+
+      const {
+        error: savePriceError
+      } = await query
+        .select('id')
+        .single()
+
+      if (savePriceError) {
+        throw savePriceError
+      }
+
+      try {
+        window.localStorage.setItem(
+          'philgeps-price-schedule:' + ref,
+          JSON.stringify({
+            dirty: false,
+            values: savedPrices
+          })
+        )
+      } catch {
+        // Remote save remains authoritative.
+      }
     }
 
     // ==========================================
-    // 6. GENERATE THE COMPLETE 21-DOCUMENT PDF
+    // 6. PREPARE ALL 21 DOCUMENTS
     // ==========================================
 
-    const url = await generateFullBidPackagePdf({
+    const exportData = {
       setup: {
         ...setup,
 
@@ -1287,7 +1353,7 @@ async function handleGenerateAll() {
           slccVariantFromSetup(setup),
 
         servicePeriodYears:
-          yearsFromSetup(setup),
+          yearsFromSetup(setup)
       },
 
       technical,
@@ -1299,65 +1365,129 @@ async function handleGenerateAll() {
       bidSecurity,
 
       omnibus,
+
+      onProgress: setExportProgress
+    }
+
+    setExportProgress({
+      completed: 0,
+      total: 21,
+      message: 'Preparing document package...'
     })
+
+    // ==========================================
+    // 7. GENERATE WORD OR PDF
+    // ==========================================
+
+    let url
+    let blob = null
+
+    if (format === 'docx') {
+      const {
+        generateFullBidPackageWord
+      } = await import('../services/word/index')
+
+      const result =
+        await generateFullBidPackageWord(
+          exportData
+        )
+
+      blob = result?.blob
+
+      if (
+        !(blob instanceof Blob) ||
+        !blob.size
+      ) {
+        throw new Error(
+          'Word generator returned an empty DOCX file.'
+        )
+      }
+
+      url = URL.createObjectURL(blob)
+    } else {
+      url = await generateFullBidPackagePdf(
+        exportData
+      )
+    }
 
     if (
       typeof url !== 'string' ||
       !url
     ) {
       throw new Error(
-        'Complete PDF generator returned no PDF URL.'
+        'Document generator returned no download URL.'
       )
     }
 
     // ==========================================
-    // 7. DOWNLOAD USING PROJECT TITLE
+    // 8. PREVENT OLD STATIC TEMPLATE OUTPUT
     // ==========================================
 
-    const link = document.createElement('a')
-
-    link.href = url
-
-    // IMPORTANT:
-    // Filename now comes from Project Title.
-    link.download = pdfFilename
-
-    document.body.appendChild(link)
-
-    link.click()
-
-    link.remove()
+    if (!url.startsWith('blob:')) {
+      throw new Error(
+        'Expected a freshly generated document, ' +
+        'not a static template URL.'
+      )
+    }
 
     console.info(
-      'Generated PDF filename:',
-      pdfFilename
+      'Generated document ready for preview:',
+      filename
     )
 
     // ==========================================
-    // 8. CLEAN UP TEMPORARY PDF URL
+    // 9. SHOW PREVIEW FIRST
     // ==========================================
 
-    if (url.startsWith('blob:')) {
-      window.setTimeout(() => {
-        URL.revokeObjectURL(url)
-      }, 60000)
+    // No automatic download here.
+    // The user reviews the document first.
+    //
+    // PDF preview:
+    // Uses the newly generated PDF blob URL.
+    //
+    // Word preview:
+    // Uses the exact generated DOCX blob.
+    //
+    // Download:
+    // Uses the SAME URL as the preview.
+
+    if (exportUrlRef.current) {
+      URL.revokeObjectURL(
+        exportUrlRef.current
+      )
     }
+
+    exportUrlRef.current = url
+
+    setExportResult({
+      url,
+      blob,
+      filename,
+      format
+    })
+
+    setExportProgress({
+      completed: 21,
+      total: 21,
+      message: 'Ready for preview and download.'
+    })
 
   } catch (generationError) {
     console.error(
-      'Complete PDF generation failed:',
+      'Complete document generation failed:',
       generationError
     )
 
     setGenerateAllError(
       generationError?.message ||
-      'Unable to generate complete bid PDF.'
+      'Unable to generate complete bid documents.'
     )
-
   } finally {
+    exportBusyRef.current = false
     setGeneratingAll(false)
   }
 }
+
 
 
   // ===================================================
@@ -1402,6 +1532,7 @@ async function handleGenerateAll() {
     if (document.id === 'priceSchedule') {
       return (
         <PriceScheduleEditor
+          exportSaveRef={exportSaveRef}
           key={setup.referenceNumber}
           items={technical}
           referenceNumber={setup.referenceNumber}
@@ -1558,6 +1689,7 @@ async function handleGenerateAll() {
 
   return (
     <div ref={editorShellRef} className={`pdf-editor-shell${panelOpen ? ' panel-open' : ''}`}>
+      {generateModalOpen && <GenerateDocumentsModal busy={generatingAll} progress={exportProgress} error={generateAllError} result={exportResult} onGenerate={handleGenerateAll} onClose={() => setGenerateModalOpen(false)} />}
       <header className="pdf-editor-topbar">
         <button
           className="button-secondary editor-back"
@@ -1591,13 +1723,13 @@ async function handleGenerateAll() {
           className="generate-primary"
           type="button"
           aria-busy={generatingAll}
-          onClick={handleGenerateAll}
+          onClick={openGenerateModal}
           disabled={generatingAll}
         >
           {generatingAll ? <span className="editor-spinner" aria-hidden="true" /> : <DashboardIcon name="download" />}
           {generatingAll
             ? 'Generating PDF...'
-            : 'Generate PDF'}
+            : 'Generate'}
         </button>
 
         {generateAllError && (
@@ -1652,7 +1784,7 @@ async function handleGenerateAll() {
           activeDocument={activeDocument}
 
           // Connect sidebar Generate PDF button.
-          onGenerate={handleGenerateAll}
+          onGenerate={openGenerateModal}
           generating={generatingAll}
 
           onSelectDocument={(nextId) => {

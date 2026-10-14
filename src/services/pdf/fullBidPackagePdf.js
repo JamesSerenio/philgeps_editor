@@ -808,7 +808,7 @@ function buildDocumentOrder({
 // GENERATE FULL BID PACKAGE
 // =====================================================
 
-export async function generateFullBidPackagePdf({
+export function getBidPackageDocuments({
   setup = {},
 
   technical = [],
@@ -882,6 +882,13 @@ export async function generateFullBidPackagePdf({
     )
   }
 
+  return documents
+}
+
+export async function generateFullBidPackagePdf(options = {}) {
+  const documents = getBidPackageDocuments(options)
+  const setup = options.setup ?? {}
+  const onProgress = options.onProgress ?? (() => {})
   // ---------------------------------------------------
   // CREATE FINAL PDF
   // ---------------------------------------------------
@@ -976,6 +983,8 @@ export async function generateFullBidPackagePdf({
             pdf,
             document.name
           )
+
+        onProgress({ completed: index + 1, total: documents.length, message: document.name })
 
         console.info(
           `[${index + 1}/21] ` +

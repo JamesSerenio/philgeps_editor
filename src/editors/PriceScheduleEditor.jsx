@@ -84,6 +84,7 @@ const inputStyle = {
 // ==========================================
 
 export default function PriceScheduleEditor({
+  exportSaveRef,
   items = [],
   referenceNumber = '',
   onValuesChange,
@@ -221,6 +222,17 @@ export default function PriceScheduleEditor({
     },
     [referenceNumber, storageKey]
   )
+
+  // Export uses the same serialized save queue, including its pending debounce.
+  useEffect(() => {
+    if (!exportSaveRef) return
+    exportSaveRef.current = () => {
+      window.clearTimeout(saveTimerRef.current)
+      return dirtyRef.current
+        ? persist(latestRef.current, versionRef.current)
+        : chainRef.current
+    }
+  }, [exportSaveRef, persist])
 
   // ========================================
   // LOAD SAVED PRICES

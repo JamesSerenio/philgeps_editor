@@ -141,7 +141,7 @@ export default function ProjectSidebar({
           {generating ? <span className="editor-spinner" aria-hidden="true" /> : <DashboardIcon name="download" />}
           {generating
             ? 'Generating PDF...'
-            : 'Generate PDF'}
+            : 'Generate'}
         </button>
         <p>Your complete bid package, in document order.</p>
       </footer>
