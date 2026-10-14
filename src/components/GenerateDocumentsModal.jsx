@@ -1,543 +1,238 @@
-
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import DashboardIcon from './DashboardIcon'
+import DocumentPreview from './DocumentPreview'
 import '../styles/generate-documents.css'
-
-const ui = {
-  dialog: {
-    width: 'min(1120px, 96vw)',
-    height: 'min(94vh, 920px)',
-    maxWidth: 'none',
-    maxHeight: 'none',
-    padding: 0,
-    border: '1px solid #cbd5e1',
-    borderRadius: 16,
-    overflow: 'hidden',
-    color: '#172033',
-    background: '#fff',
-    boxShadow: '0 22px 70px #0005'
-  },
-  shell: {
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: 0,
-    fontFamily: 'inherit'
-  },
-  header: {
-    padding: '16px 20px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: 12,
-    alignItems: 'center',
-    borderBottom: '1px solid #e2e8f0'
-  },
-  title: {
-    margin: 0,
-    fontSize: 21,
-    color: '#0f172a'
-  },
-  subtitle: {
-    margin: '4px 0 0',
-    fontSize: 12,
-    color: '#64748b'
-  },
-  toolbar: {
-    padding: '12px 20px',
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: 10,
-    alignItems: 'center',
-    borderBottom: '1px solid #e2e8f0'
-  },
-  select: {
-    padding: '10px 12px',
-    border: '1px solid #cbd5e1',
-    borderRadius: 9,
-    background: '#fff',
-    color: '#0f172a',
-    fontSize: 13
-  },
-  button: {
-    padding: '10px 16px',
-    border: '1px solid #cbd5e1',
-    borderRadius: 9,
-    cursor: 'pointer',
-    fontWeight: 700,
-    background: '#fff',
-    color: '#0f172a'
-  },
-  primary: {
-    padding: '10px 16px',
-    border: '1px solid #1d4ed8',
-    borderRadius: 9,
-    cursor: 'pointer',
-    fontWeight: 700,
-    background: '#1d4ed8',
-    color: '#fff'
-  },
-  download: {
-    padding: '10px 16px',
-    border: '1px solid #047857',
-    borderRadius: 9,
-    cursor: 'pointer',
-    fontWeight: 700,
-    background: '#047857',
-    color: '#fff'
-  },
-  preview: {
-    flex: 1,
-    minHeight: 0,
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
-    background: '#e2e8f0'
-  },
-  blank: {
-    flex: 1,
-    minHeight: 0,
-    display: 'grid',
-    placeContent: 'center',
-    textAlign: 'center',
-    padding: 24,
-    color: '#475569'
-  },
-  documentHeader: {
-    background: '#fff',
-    borderBottom: '1px solid #cbd5e1',
-    padding: '10px 18px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    flexWrap: 'wrap',
-    fontSize: 12
-  },
-  progress: {
-    padding: '8px 20px',
-    background: '#eff6ff',
-    color: '#1d4ed8',
-    fontSize: 12
-  },
-  error: {
-    padding: '12px 20px',
-    background: '#fef2f2',
-    color: '#b91c1c',
-    margin: 0,
-    fontSize: 13
-  },
-  foot: {
-    borderTop: '1px solid #e2e8f0',
-    padding: '12px 20px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: 10,
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    fontSize: 12,
-    background: '#fff',
-    color: '#64748b'
-  }
-}
-
-function WordPreview({ blob, url }) {
-  const containerRef = useRef(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    const container = containerRef.current
-    let cancelled = false
-
-    if (!container) return undefined
-
-    async function render() {
-      setLoading(true)
-      setError('')
-      container.replaceChildren()
-
-      try {
-        const { renderAsync } = await import('docx-preview')
-
-        const source = blob instanceof Blob
-          ? blob
-          : await fetch(url, {
-              cache: 'no-store'
-            }).then((response) => {
-              if (!response.ok) {
-                throw new Error(
-                  'Unable to load DOCX file.'
-                )
-              }
-
-              return response.blob()
-            })
-
-        if (cancelled) return
-
-        await renderAsync(
-          source,
-          container,
-          container,
-          {
-            inWrapper: true,
-            breakPages: true,
-            renderHeaders: true,
-            renderFooters: true,
-            renderFootnotes: true,
-            renderEndnotes: true,
-            ignoreWidth: false,
-            ignoreHeight: false,
-            useBase64URL: true
-          }
-        )
-      } catch (e) {
-        if (!cancelled) {
-          setError(
-            e?.message ||
-            'Word preview failed.'
-          )
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
-      }
-    }
-
-    void render()
-
-    return () => {
-      cancelled = true
-      container.replaceChildren()
-    }
-  }, [blob, url])
-
-  return (
-    <div
-      style={{
-        flex: 1,
-        overflow: 'auto',
-        minHeight: 0,
-        padding: '16px 6px'
-      }}
-    >
-      <p
-        style={{
-          margin: '0 0 12px',
-          padding: '0 16px',
-          fontSize: 12,
-          color: '#475569'
-        }}
-      >
-        Word preview is approximate.
-        For the exact final formatting,
-        open the downloaded DOCX in Microsoft Word.
-      </p>
-
-      {loading && (
-        <p
-          role="status"
-          style={{ textAlign: 'center' }}
-        >
-          Rendering Word pages...
-        </p>
-      )}
-
-      {error && (
-        <p
-          role="alert"
-          style={{
-            color: '#b91c1c',
-            padding: 16
-          }}
-        >
-          {error}
-          {' '}
-          You can still download the DOCX.
-        </p>
-      )}
-
-      <div
-        ref={containerRef}
-        className="bid-word-preview"
-      />
-    </div>
-  )
-}
 
 export default function GenerateDocumentsModal({
   busy = false,
   progress = {},
   error = '',
-  result = null,
+  results = {},
+  contentKey,
   onGenerate,
-  onClose
+  onClose,
 }) {
   const dialogRef = useRef(null)
   const [format, setFormat] = useState('pdf')
-
+  const [downloadedUrl, setDownloadedUrl] = useState(null)
+  const [attemptedFormat, setAttemptedFormat] = useState(null)
+  const [previewStatuses, setPreviewStatuses] = useState({})
+  const onPreviewStatus = useCallback(
+    (url, status) =>
+      setPreviewStatuses((previous) => ({ ...previous, [url]: status })),
+    [],
+  )
   useEffect(() => {
-    const dialog = dialogRef.current
-    const previousFocus = document.activeElement
-
-    if (dialog && !dialog.open) {
-      dialog.showModal()
-    }
-
+    const dialog = dialogRef.current,
+      previous = document.activeElement
+    if (!dialog.open) dialog.showModal()
     return () => {
-      if (dialog?.open) {
-        dialog.close()
-      }
-
-      if (previousFocus?.isConnected) {
-        previousFocus.focus?.({
-          preventScroll: true
-        })
-      }
+      if (dialog.open) dialog.close()
+      if (previous?.isConnected) previous.focus?.({ preventScroll: true })
     }
   }, [])
-
-  const ready = Boolean(
-    result?.url &&
-    result?.filename &&
-    result?.format === format
+  const file = results[format]
+  const ready = !!(file?.url && file?.filename && file.format === format)
+  const rendered = ready && previewStatuses[file.url] === 'ready'
+  const failed = ready && previewStatuses[file.url] === 'error'
+  const canDownload = ready && (rendered || failed)
+  const rendering = ready && !rendered && !failed
+  const outdated = ready && file.contentKey !== contentKey
+  const completed = Math.max(
+    0,
+    Math.min(Number(progress.completed) || 0, Number(progress.total) || 21),
   )
-
-  const count = Number(
-    progress?.completed
-  ) || 0
-
-  const total = Number(
-    progress?.total
-  ) || 0
-
   function download() {
-    if (!ready || busy) return
-
+    if (!canDownload || busy) return
     const link = document.createElement('a')
-
-    // Same generated file as preview.
-    link.href = result.url
-    link.download = result.filename
-
+    link.href = file.url
+    link.download = file.filename
     document.body.appendChild(link)
     link.click()
     link.remove()
+    setDownloadedUrl(file.url)
   }
-
   return (
     <dialog
       ref={dialogRef}
-      style={ui.dialog}
+      className="bid-export-dialog"
       aria-labelledby="bid-export-title"
+      aria-describedby="bid-export-description"
       onCancel={(event) => {
         event.preventDefault()
-
-        if (!busy) {
-          onClose?.()
-        }
+        if (!busy) onClose?.()
       }}
     >
-      <div style={ui.shell}>
-        <header style={ui.header}>
-          <div>
-            <h2
-              id="bid-export-title"
-              style={ui.title}
-            >
-              Preview &amp; Download Bid Documents
-            </h2>
-
-            <p style={ui.subtitle}>
-              Generate first, review the latest
-              PDF or Word file, then download.
+      <div className="bid-export-shell">
+        <header className="bid-export-header">
+          <span className="bid-export-brand">
+            <DashboardIcon name="document" />
+          </span>
+          <div className="bid-export-heading">
+            <h2 id="bid-export-title">Generate Bid Documents</h2>
+            <p id="bid-export-description">
+              Preview your complete bid package before downloading.
             </p>
           </div>
-
+          <span className="bid-export-count">21 Documents</span>
           <button
             type="button"
-            style={ui.button}
+            className="bid-export-close-icon"
+            aria-label="Close preview"
             disabled={busy}
             onClick={onClose}
-            aria-label="Close preview"
           >
-            Close
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 6 12 12M6 18 18 6" />
+            </svg>
           </button>
         </header>
-
-        <div style={ui.toolbar}>
-          <label
-            htmlFor="bid-export-format"
-            style={{
-              fontSize: 13,
-              fontWeight: 700
-            }}
-          >
-            Format:
-          </label>
-
-          <select
-            id="bid-export-format"
-            value={format}
-            onChange={(event) => {
-              setFormat(event.target.value)
-            }}
-            disabled={busy}
-            style={ui.select}
-          >
-            <option value="pdf">
-              PDF (fixed layout)
-            </option>
-
-            <option value="docx">
-              Word / DOCX (editable)
-            </option>
-          </select>
-
+        <div className="bid-export-controls">
+          <fieldset className="bid-export-formats" disabled={busy}>
+            <legend className="sr-only">Document format</legend>
+            {[
+              [
+                'pdf',
+                'PDF Document',
+                'Print-ready with original document formatting.',
+              ],
+              [
+                'docx',
+                'Microsoft Word',
+                'Editable document with formatted text and tables.',
+              ],
+            ].map(([value, title, description]) => (
+              <label
+                key={value}
+                className={
+                  'bid-export-format' + (format === value ? ' is-selected' : '')
+                }
+              >
+                <span
+                  className={'bid-export-format-icon is-' + value}
+                  aria-hidden="true"
+                >
+                  {value === 'pdf' ? 'PDF' : 'W'}
+                </span>
+                <span className="bid-export-format-copy">
+                  <strong>
+                    {title}
+                    <small>.{value}</small>
+                  </strong>
+                  <span>{description}</span>
+                </span>
+                <input
+                  type="radio"
+                  name="bid-export-format"
+                  value={value}
+                  checked={format === value}
+                  onChange={() => setFormat(value)}
+                />
+              </label>
+            ))}
+          </fieldset>
           <button
             type="button"
-            style={ui.primary}
-            disabled={busy}
-            onClick={() => onGenerate(format)}
+            className="bid-export-primary bid-export-generate"
+            disabled={busy || rendering}
+            aria-busy={busy || rendering}
+            onClick={() => { setAttemptedFormat(format); onGenerate(format) }}
           >
+            {busy ? (
+              <span className="bid-export-spinner" />
+            ) : (
+              <DashboardIcon name="document" />
+            )}
             {busy
-              ? 'Generating...'
+              ? 'Generating preview...'
+              : rendering
+                ? 'Rendering preview...'
               : ready
                 ? 'Regenerate Preview'
                 : 'Generate Preview'}
           </button>
-
-          <button
-            type="button"
-            style={{
-              ...ui.download,
-              opacity: ready && !busy ? 1 : 0.5
-            }}
-            disabled={!ready || busy}
-            onClick={download}
-          >
-            Download {format === 'pdf' ? 'PDF' : 'Word'}
-          </button>
         </div>
-
         {busy && (
-          <div
-            role="status"
-            style={ui.progress}
-          >
+          <div className="bid-export-progress" role="status" aria-live="polite">
             <div>
-              {progress?.message ||
-                'Preparing document...'}
+              <span>{progress.message || 'Saving pending changes...'}</span>
+              {progress.total > 0 && (
+                <strong>
+                  {completed} / {progress.total} sections
+                </strong>
+              )}
             </div>
-
-            {total > 0 && (
-              <progress
-                style={{ width: '100%' }}
-                value={count}
-                max={total}
-              />
-            )}
+            <progress
+              aria-label="Document preparation"
+              value={progress.total ? completed : undefined}
+              max={progress.total || 21}
+            />
           </div>
         )}
-
-        {error && (
-          <p role="alert" style={ui.error}>
+        {error && (!attemptedFormat || attemptedFormat === format) && (
+          <p className="bid-export-error" role="alert">
             {error}
           </p>
         )}
-
-        <section
-          style={ui.preview}
-          aria-label="Generated file preview"
-        >
-          {ready && !busy ? (
-            <>
-              <div style={ui.documentHeader}>
-                <span
-                  style={{
-                    fontWeight: 700,
-                    overflowWrap: 'anywhere'
-                  }}
-                >
-                  {result.filename}
-                </span>
-
-                {format === 'pdf' && (
-                  <button
-                    type="button"
-                    style={ui.button}
-                    onClick={() => {
-                      window.open(
-                        result.url,
-                        '_blank',
-                        'noopener,noreferrer'
-                      )
-                    }}
-                  >
-                    Open PDF in new tab
-                  </button>
-                )}
-              </div>
-
-              {format === 'pdf' ? (
-                <iframe
-                  title="Actual generated PDF preview"
-                  src={result.url}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    flex: 1,
-                    border: 0,
-                    background: '#fff',
-                    minHeight: 0
-                  }}
-                />
-              ) : (
-                <WordPreview
-                  key={result.url}
-                  blob={result.blob}
-                  url={result.url}
-                />
-              )}
-            </>
-          ) : (
-            <div style={ui.blank}>
-              <strong
-                style={{
-                  fontSize: 18,
-                  marginBottom: 7
-                }}
-              >
-                {busy
-                  ? 'Generating your documents...'
-                  : 'No document preview yet'}
-              </strong>
-
-              <span>
-                {busy
-                  ? 'Please wait for the package to finish.'
-                  : 'Select PDF or Word and click Generate Preview.'}
-              </span>
+        <div className="bid-export-preview-deck">
+          {['pdf', 'docx'].map((value) => (
+            <div
+              key={value}
+              className="bid-export-preview-panel"
+              hidden={format !== value}
+              inert={format !== value}
+            >
+              <DocumentPreview
+                key={results[value]?.url || 'empty'}
+                file={results[value] || null}
+                format={value}
+                busy={busy && format === value}
+                outdated={
+                  !!results[value] && results[value].contentKey !== contentKey
+                }
+                onStatus={onPreviewStatus}
+              />
             </div>
-          )}
-        </section>
-
-        <footer style={ui.foot}>
-          <span>
-            Preview first • Download the same generated file
-          </span>
-
-          <button
-            type="button"
-            style={{
-              ...ui.download,
-              opacity: ready && !busy ? 1 : 0.5
-            }}
-            disabled={!ready || busy}
-            onClick={download}
-          >
-            Download {format === 'pdf' ? 'PDF' : 'Word'}
-          </button>
+          ))}
+        </div>
+        <footer className="bid-export-footer">
+          <p role="status">
+            <span
+              className={'bid-export-status-dot' + (ready ? ' is-ready' : '')}
+            />
+            {busy
+              ? 'Preparing your preview...'
+              : outdated
+                ? 'Preview may be outdated'
+                : downloadedUrl === file?.url && ready
+                  ? 'Download started'
+                  : rendered
+                    ? 'Ready to download'
+                    : failed
+                      ? 'Preview unavailable; file ready'
+                      : ready
+                        ? 'Rendering preview...'
+                        : 'Generate a preview to continue.'}
+          </p>
+          <div>
+            <button
+              type="button"
+              className="bid-export-secondary"
+              disabled={busy}
+              onClick={onClose}
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              className="bid-export-primary"
+              disabled={!canDownload || busy}
+              onClick={download}
+            >
+              <DashboardIcon name="download" />
+              Download {format === 'pdf' ? 'PDF' : 'Word'}
+            </button>
+          </div>
         </footer>
       </div>
     </dialog>

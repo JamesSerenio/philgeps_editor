@@ -433,11 +433,12 @@ function ProjectEditorContent({ id }) {
   const [generateAllError, setGenerateAllError] = useState('')
   const [generateModalOpen, setGenerateModalOpen] = useState(false)
   const [exportProgress, setExportProgress] = useState({})
-  const [exportResult, setExportResult] = useState(null)
+  const [exportResults, setExportResults] = useState({ pdf: null, docx: null })
   const exportSaveRef = useRef(null)
   const exportBusyRef = useRef(false)
-  const exportUrlRef = useRef(null)
-  useEffect(() => () => { if (exportUrlRef.current) URL.revokeObjectURL(exportUrlRef.current) }, [])
+  const exportUrlRef = useRef({})
+  const exportAliveRef = useRef(true)
+  useEffect(() => { const urls = exportUrlRef.current; exportAliveRef.current = true; return () => { exportAliveRef.current = false; Object.values(urls).forEach(url => URL.revokeObjectURL(url)) } }, [])
 
   function openGenerateModal() {
     setGenerateAllError('')
@@ -1183,11 +1184,12 @@ function ProjectEditorContent({ id }) {
 
 
 
+const exportContentKey = JSON.stringify({ setup, technical, schedule: scheduleItems, bidSecurity, omnibus, priceValues })
+
 async function handleGenerateAll(format = 'pdf') {
   if (exportBusyRef.current || !setup) return
 
   exportBusyRef.current = true
-  setExportResult(null)
   setExportProgress({
     message: 'Saving pending changes...'
   })
@@ -1451,20 +1453,10 @@ async function handleGenerateAll(format = 'pdf') {
     // Download:
     // Uses the SAME URL as the preview.
 
-    if (exportUrlRef.current) {
-      URL.revokeObjectURL(
-        exportUrlRef.current
-      )
-    }
-
-    exportUrlRef.current = url
-
-    setExportResult({
-      url,
-      blob,
-      filename,
-      format
-    })
+    if (!exportAliveRef.current) { URL.revokeObjectURL(url); return }
+    if (exportUrlRef.current[format]) URL.revokeObjectURL(exportUrlRef.current[format])
+    exportUrlRef.current[format] = url
+    setExportResults(previous => ({ ...previous, [format]: { url, blob, filename, format, contentKey: exportContentKey } }))
 
     setExportProgress({
       completed: 21,
@@ -1689,7 +1681,7 @@ async function handleGenerateAll(format = 'pdf') {
 
   return (
     <div ref={editorShellRef} className={`pdf-editor-shell${panelOpen ? ' panel-open' : ''}`}>
-      {generateModalOpen && <GenerateDocumentsModal busy={generatingAll} progress={exportProgress} error={generateAllError} result={exportResult} onGenerate={handleGenerateAll} onClose={() => setGenerateModalOpen(false)} />}
+      {generateModalOpen && <GenerateDocumentsModal busy={generatingAll} progress={exportProgress} error={generateAllError} results={exportResults} contentKey={exportContentKey} onGenerate={handleGenerateAll} onClose={() => setGenerateModalOpen(false)} />}
       <header className="pdf-editor-topbar">
         <button
           className="button-secondary editor-back"
