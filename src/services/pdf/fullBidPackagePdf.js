@@ -489,6 +489,7 @@ function createDocumentData({
   omnibusVariant,
 }) {
   const common = {
+    tableOfContentsVariant: omnibusVariant,
     ...setup,
 
     items: technical,
@@ -573,7 +574,7 @@ function buildDocumentOrder({
   return [
     // 01
     generatedDocument(
-      'TABLE OF CONTENTS.pdf',
+      common.tableOfContentsVariant === 'initao_lgu' ? 'TABLE OF CONTENTS-INITAO.pdf' : 'TABLE OF CONTENTS.pdf',
       [
         [
           pdfService,

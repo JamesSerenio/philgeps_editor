@@ -753,7 +753,7 @@ function ProjectEditorContent({ id }) {
                 : undefined,
 
           templateVariant:
-            activeDocument === 'omnibus'
+            (activeDocument === 'omnibus' || activeDocument === 'contents')
               ? (
                   omnibus?.templateVariant === 'initao_lgu'
                     ? 'initao_lgu'
