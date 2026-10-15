@@ -332,3 +332,13 @@
   background: white;
   box-shadow: 0 4px 18px #0006;
 }
+
+.bid-export-pdf-page {
+  position: relative;
+  flex-shrink: 0;
+  margin: 0 auto 16px;
+  background: white;
+  box-shadow: 0 4px 18px #0006;
+}
+.bid-export-pdf-page:last-child { margin-bottom: 0; }
+.bid-export-pdf-page canvas { box-shadow: none; }
