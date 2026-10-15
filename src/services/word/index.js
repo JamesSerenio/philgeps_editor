@@ -163,6 +163,12 @@ export async function generateFullBidPackageWord(
 
     styles: {
       paragraphStyles: [{
+        id: 'BidForm',
+        name: 'Bid Form',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 23 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
         id: 'Warranty',
         name: 'Product Warranty Certificate',
         basedOn: 'Normal',
