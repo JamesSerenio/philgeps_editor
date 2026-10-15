@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 export default function DocumentViewerToolbar({
   pagination,
+  zoomLabel = 'Word',
   zoomControls,
   fullscreen,
   onFullscreen,
@@ -59,8 +60,8 @@ export default function DocumentViewerToolbar({
       {zoomControls && (
         <div className="document-viewer-group">
           <button
-            aria-label="Zoom out Word preview"
-            disabled={zoomControls.zoom <= 0.5}
+            aria-label={'Zoom out ' + zoomLabel + ' preview'}
+            disabled={zoomControls.zoom <= (zoomControls.minZoom ?? 0.5)}
             onClick={() => zoomControls.applyZoom(zoomControls.zoom - 0.1)}
           >
             -
@@ -69,7 +70,7 @@ export default function DocumentViewerToolbar({
             {Math.round(zoomControls.zoom * 100)}%
           </span>
           <button
-            aria-label="Zoom in Word preview"
+            aria-label={'Zoom in ' + zoomLabel + ' preview'}
             disabled={zoomControls.zoom >= 2}
             onClick={() => zoomControls.applyZoom(zoomControls.zoom + 0.1)}
           >

@@ -314,3 +314,21 @@
   word-break: normal;
   overflow-wrap: normal;
 }
+
+/* Mobile browsers cannot reliably embed generated blob PDFs in an iframe. */
+.bid-export-pdf-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: #525659;
+  padding: 12px;
+}
+.bid-export-pdf-scroll canvas {
+  display: block;
+  max-width: none;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 4px 18px #0006;
+}
