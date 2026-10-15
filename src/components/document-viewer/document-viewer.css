@@ -302,3 +302,15 @@
   word-break: normal;
   overflow-wrap: normal;
 }
+
+.bid-export-word-mount p.docx_summaryprices {
+  font-family: 'Times New Roman', serif;
+  font-size: 9.5pt;
+}
+.bid-export-word-mount p.docx_summaryprices,
+.bid-export-word-mount p.docx_summaryprices span {
+  -webkit-hyphens: none;
+  hyphens: none;
+  word-break: normal;
+  overflow-wrap: normal;
+}
