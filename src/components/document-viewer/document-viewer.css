@@ -342,3 +342,10 @@
 }
 .bid-export-pdf-page:last-child { margin-bottom: 0; }
 .bid-export-pdf-page canvas { box-shadow: none; }
+
+.bid-export-word-mount p.docx_initaodivider { font-family: "Times New Roman", serif; font-size: 10pt; }
+
+.bid-export-word-mount p.docx_tabbing { font-family: 'Times New Roman', serif; font-size: 10pt; }
+.bid-export-word-mount p.docx_tabbing,
+.bid-export-word-mount p.docx_tabbing span { hyphens: none; -webkit-hyphens: none; overflow-wrap: normal; word-break: normal; }
+.bid-export-word-mount p.docx_tabbinglogo { position: absolute; top: 0; left: 0; height: 0; line-height: 0; margin: 0 !important; }

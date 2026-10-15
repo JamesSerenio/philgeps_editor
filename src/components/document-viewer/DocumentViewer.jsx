@@ -9,6 +9,7 @@ export default function DocumentViewer({
   file,
   format,
   busy = false,
+  documentCount = 22,
   outdated = false,
   onStatus,
   onDownload,
@@ -159,7 +160,7 @@ export default function DocumentViewer({
               <span className="bid-export-spinner" />
             ) : (
               <span className="bid-export-empty-detail">
-                22 documents, one complete package
+                {documentCount} documents, one complete package
               </span>
             )}
           </div>

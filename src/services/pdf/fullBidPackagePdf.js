@@ -1,3 +1,6 @@
+import { generateTabbingPreview } from './tabbingPdf'
+import { getDeadline } from '../../lib/projectFormatters'
+import { generateInitaoDividerPreview } from './initaoDividersPdf'
 
 import {
   PDFDocument,
@@ -816,6 +819,7 @@ function buildDocumentOrder({
 
 export function getBidPackageDocuments({
   setup = {},
+  project = {},
 
   technical = [],
   schedule = [],
@@ -880,15 +884,25 @@ export function getBidPackageDocuments({
   // ---------------------------------------------------
 
   // Keep generator identity independent of its position in either template order.
+  const tabbing = { name: 'TABBING.pdf', wordSection: 'tabbing', generate: () => generateTabbingPreview({ ...setup, closingDate: getDeadline(project) ?? setup.closingDate ?? setup.closing_date }) }
   const defaultDocuments = buildDocumentOrder(data).map((entry, index) => ({ ...entry, wordSection: index + 1 }))
-  const initaoOrder = [1, 9, 2, 3, 4, 5, 6, 7, 8, 13, 12, 14, 15, 17, 18, 16, 10, 11, 19, 20, 21, 22]
-  const documents = omnibusVariant === 'initao_lgu'
-    ? initaoOrder.map(number => defaultDocuments[number - 1])
+  const initaoOrder = [1, 'legal', 9, 2, 3, 4, 5, 6, 'technical', 7, 8, 13, 12, 14, 15, 17, 18, 16, 'financial', 10, 11, 19, 20, 21, 22]
+  const dividerNames = { legal: 'LEGAL DOCUMENTS (A-D)', technical: 'TECHNICAL DOCUMENTS (E-I)', financial: 'FINANCIAL DOCUMENTS (J-K)' }
+  const dividerPages = { legal: 0, technical: 1, financial: 2 }
+  const divider = key => ({
+    name: 'TECHNICAL COMPONENT ENVELOPE - ' + dividerNames[key] + '.pdf',
+    wordSection: 'initaoDivider',
+    generate: () => generateInitaoDividerPreview(dividerPages[key]),
+  })
+  const orderedDocuments = omnibusVariant === 'initao_lgu'
+    ? initaoOrder.map(item => typeof item === 'number' ? defaultDocuments[item - 1] : divider(item))
     : defaultDocuments
 
-  if (documents.length !== 22) {
+  const documents = [tabbing, ...orderedDocuments]
+
+  if (documents.length !== (omnibusVariant === 'initao_lgu' ? 26 : 23)) {
     throw new Error(
-      'The bid package must contain 22 sections.'
+      'The bid package must contain 23 sections, or 26 with Initao dividers.'
     )
   }
 
@@ -997,7 +1011,7 @@ export async function generateFullBidPackagePdf(options = {}) {
         onProgress({ completed: index + 1, total: documents.length, message: document.name })
 
         console.info(
-          `[${index + 1}/22] ` +
+          `[${index + 1}/${documents.length}] ` +
           `${document.name} - ` +
           `${addedPages} pages added`
         )
@@ -1009,7 +1023,7 @@ export async function generateFullBidPackagePdf(options = {}) {
         )
 
         throw new Error(
-          `Document ${index + 1}/22 - ` +
+          `Document ${index + 1}/${documents.length} - ` +
           `${document.name}: ` +
           (error.message || String(error)),
           { cause: error }

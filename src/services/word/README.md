@@ -1,6 +1,6 @@
 # Native Word bid-package export
 
-The export follows the existing getBidPackageDocuments list: exactly 22 ordered sections. Every template section has a registered native builder. A missing builder causes an export error; templates cannot fall back to page images.
+The export follows the existing getBidPackageDocuments list: 22 ordered sections for Default, or 25 for Initao including its three component dividers. Every template section has a registered native builder. A missing builder causes an export error; templates cannot fall back to page images.
 
 ## Editable sections
 
@@ -59,3 +59,7 @@ Word can reflow edited text and tables, so line wrapping and pagination can diff
 Run npm run build and npm run lint after changes.
 
 Initao uses its own 22-document order from getBidPackageDocuments. Entries retain wordSection as a stable generator key; sectionNumber follows the actual export position for bookmarks and progress. Default ordering is unchanged.
+
+Initao divider pages are copied individually from TECHNICAL COMPONENT ENVELOPE.pdf: Legal before PhilGEPS, Technical before Ongoing Contracts, Financial before Audited Financial Statements. Word dividers use native editable text.
+
+Both packages start with the edited nine-page TABBING.pdf, before TOC (Default: 23 sections; Initao: 26). DO NOT OPEN BEFORE uses the project closing_date in Asia/Manila, independent of Document Setup date. Tabbing Word content is editable and includes the letterhead logo. Stable wordSection keys preserve existing generator mappings.

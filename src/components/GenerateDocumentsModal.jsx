@@ -5,6 +5,7 @@ import '../styles/generate-documents.css'
 
 export default function GenerateDocumentsModal({
   busy = false,
+  documentCount = 22,
   progress = {},
   error = '',
   results = {},
@@ -40,7 +41,7 @@ export default function GenerateDocumentsModal({
   const outdated = ready && file.contentKey !== contentKey
   const completed = Math.max(
     0,
-    Math.min(Number(progress.completed) || 0, Number(progress.total) || 22),
+    Math.min(Number(progress.completed) || 0, Number(progress.total) || documentCount),
   )
   function download() {
     if (!canDownload || busy || outdated) return
@@ -74,7 +75,7 @@ export default function GenerateDocumentsModal({
               Preview your complete bid package before downloading.
             </p>
           </div>
-          <span className="bid-export-count">22 Documents</span>
+          <span className="bid-export-count">{documentCount} Documents</span>
           <button
             type="button"
             className="bid-export-close-icon"
@@ -168,7 +169,7 @@ export default function GenerateDocumentsModal({
             <progress
               aria-label="Document preparation"
               value={progress.total ? completed : undefined}
-              max={progress.total || 22}
+              max={progress.total || documentCount}
             />
           </div>
         )}
@@ -185,7 +186,7 @@ export default function GenerateDocumentsModal({
               hidden={format !== value}
               inert={format !== value}
             >
-              <DocumentPreview
+              <DocumentPreview documentCount={documentCount}
                 key={results[value]?.url || 'empty'}
                 file={results[value] || null}
                 format={value}
