@@ -240,3 +240,29 @@
   word-break: normal;
   overflow-wrap: normal;
 }
+
+.bid-export-word-mount p.docx_warranty {
+  font-family: 'Times New Roman', serif;
+  font-size: 10pt;
+}
+.bid-export-word-mount p.docx_warrantybody {
+  font-family: 'Times New Roman', serif;
+  font-size: 13pt;
+}
+.bid-export-word-mount p.docx_warranty,
+.bid-export-word-mount p.docx_warranty span,
+.bid-export-word-mount p.docx_warrantybody,
+.bid-export-word-mount p.docx_warrantybody span {
+  -webkit-hyphens: none;
+  hyphens: none;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.bid-export-word-mount p.docx_warrantylogo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 0;
+  margin: 0 !important;
+  line-height: 0 !important;
+}

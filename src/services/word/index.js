@@ -163,6 +163,23 @@ export async function generateFullBidPackageWord(
 
     styles: {
       paragraphStyles: [{
+        id: 'Warranty',
+        name: 'Product Warranty Certificate',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 20 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
+        id: 'WarrantyBody',
+        name: 'Product Warranty Body',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 26 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
+        id: 'WarrantyLogo',
+        name: 'Product Warranty Logo',
+        basedOn: 'Normal',
+        paragraph: { spacing: { after: 0 } },
+      }, {
         id: 'AfterSalesBody',
         name: 'After-Sales Body',
         basedOn: 'Normal',
