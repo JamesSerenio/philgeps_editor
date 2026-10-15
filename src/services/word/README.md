@@ -1,26 +1,26 @@
 # Native Word bid-package export
 
-The export follows the existing getBidPackageDocuments list: exactly 21 ordered sections. Every template section has a registered native builder. A missing builder causes an export error; templates cannot fall back to page images.
+The export follows the existing getBidPackageDocuments list: 22 ordered sections for Default, or 25 for Initao including its three component dividers. Every template section has a registered native builder. A missing builder causes an export error; templates cannot fall back to page images.
 
 ## Editable sections
 
 - 1: tableOfContentsWord.js
-- 6: ongoingContractsWord.js
-- 7: slccWord.js (current CCTV/Streetlight selection)
-- 10: nfccWord.js
-- 11: technicalWord.js
-- 12: bidSecurityWord.js (With Table/Without Table)
-- 13: scheduleWord.js
-- 14: manpowerWord.js
-- 15: omnibusWord.js (OLD/INITAO)
-- 16: afterSalesWord.js (existing builder preserved)
-- 17: warrantyWord.js
-- 18: bidFormWord.js (existing builder preserved)
-- 19: secretarysCertificateWord.js
-- 20: priceScheduleWord.js
-- 21: summaryWord.js
+- 7: ongoingContractsWord.js
+- 8: slccWord.js (current CCTV/Streetlight selection)
+- 11: nfccWord.js
+- 12: technicalWord.js
+- 13: bidSecurityWord.js (With Table/Without Table)
+- 14: scheduleWord.js
+- 15: manpowerWord.js
+- 16: omnibusWord.js (OLD/INITAO)
+- 17: afterSalesWord.js (existing builder preserved)
+- 18: warrantyWord.js
+- 19: bidFormWord.js (existing builder preserved)
+- 20: secretarysCertificateWord.js
+- 21: priceScheduleWord.js
+- 22: summaryWord.js
 
-Sections 2, 3, 4, 5, 8 and 9 use images of the original static PDFs. TAX pages fit A4 without changing aspect ratio. No original assets are modified. The existing After-Sales logo remains a logo image; its surrounding text and signature table remain native.
+Sections 2, 3, 4, 5, 6, 9 and 10 use images of the original static PDFs. TAX pages fit A4 without changing aspect ratio. No original assets are modified. The existing After-Sales logo remains a logo image; its surrounding text and signature table remain native.
 
 ## Reference layout
 
@@ -35,7 +35,7 @@ Word can reflow edited text and tables, so line wrapping and pagination can diff
 ## Validation performed
 
 - Actual live Word and PDF downloads, with project-title filenames.
-- All 21 ordered bookmarks in the final DOCX.
+- All 22 ordered bookmarks in the final DOCX.
 - Final DOCX opened normally in installed Microsoft Word; text in all 15 native template sections and a table cell were edited and undone without saving those test edits.
 - Both SLCC, Bid Security and Omnibus variant sets generated native Word files and opened in Word.
 - 50 long specification lines tested: Technical and Delivery tables paginated to 6 pages, Price Schedule to 12 pages and Summary to 5 pages in Word.
@@ -57,3 +57,9 @@ Word can reflow edited text and tables, so line wrapping and pagination can diff
 7. Generate PDF and confirm its original layout and order.
 
 Run npm run build and npm run lint after changes.
+
+Initao uses its own 22-document order from getBidPackageDocuments. Entries retain wordSection as a stable generator key; sectionNumber follows the actual export position for bookmarks and progress. Default ordering is unchanged.
+
+Initao divider pages are copied individually from TECHNICAL COMPONENT ENVELOPE.pdf: Legal before PhilGEPS, Technical before Ongoing Contracts, Financial before Audited Financial Statements. Word dividers use native editable text.
+
+Both packages start with the edited nine-page TABBING.pdf, before TOC (Default: 23 sections; Initao: 26). DO NOT OPEN BEFORE uses the project closing_date in Asia/Manila, independent of Document Setup date. Tabbing Word content is editable and includes the letterhead logo. Stable wordSection keys preserve existing generator mappings.

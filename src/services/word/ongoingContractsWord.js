@@ -100,7 +100,7 @@ function p(content = '', options = {}) {
   const children = []
 
   if (bookmark) {
-    children.push(sectionMarker(6))
+    children.push(sectionMarker(typeof bookmark === 'number' ? bookmark : 7))
   }
 
   lines.forEach((line, index) => {
@@ -211,7 +211,7 @@ function noBorderTable(
 // PROJECT INFORMATION
 // ============================================
 
-function identityTable(setup) {
+function identityTable(setup, sectionNumber = 7) {
   const widths = [
     PT(232),
     PT(25),
@@ -247,7 +247,7 @@ function identityTable(setup) {
           openCell(
             p(label, {
               size: 11,
-              bookmark: index === 0,
+              bookmark: index === 0 ? sectionNumber : false,
             }),
             widths[0],
             { left: 6 }
@@ -857,7 +857,7 @@ export function ongoingContractsWord(
 
   const children = [
     // Project information
-    identityTable(setup),
+    identityTable(setup, options.sectionNumber),
 
     spacer(9),
 

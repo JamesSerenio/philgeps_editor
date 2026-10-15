@@ -33,7 +33,7 @@ export async function afterSalesWord(options = {}) {
     name: 'After Sales.pdf',
     generate: () => generateAfterSalesPreview(setup),
   }
-  return templateWord({ ...options, document }, 16, {
+  return templateWord({ ...options, document }, 17, {
     tables: false,
     paragraphStyle(line) {
       return Math.round(Math.max(...line.parts.map(part => part.size)) * 2) === 26 ? 'AfterSalesBody' : 'AfterSales'

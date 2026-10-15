@@ -321,7 +321,7 @@ function signature(setup) {
     false,
   )
 }
-export async function technicalWord({ setup = {}, technical = [] }) {
+export async function technicalWord({ setup = {}, technical = [], sectionNumber = 12 }) {
   const metrics = await PDFDocument.create()
   const regular = await metrics.embedFont(StandardFonts.TimesRoman)
   const bold = await metrics.embedFont(StandardFonts.TimesRomanBold)
@@ -447,7 +447,7 @@ export async function technicalWord({ setup = {}, technical = [] }) {
           line: 20,
           after: 22,
           children: [
-            sectionMarker(11),
+            sectionMarker(sectionNumber),
             run('TECHNICAL SPECIFICATIONS', 14, true),
           ],
         }),

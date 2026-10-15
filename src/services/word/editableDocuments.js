@@ -1,3 +1,5 @@
+import { tabbingWord } from './tabbingWord'
+import { initaoDividerWord } from './initaoDividerWord'
 import { tableOfContentsWord } from './tableOfContentsWord'
 import { ongoingContractsWord } from './ongoingContractsWord'
 import { slccWord } from './slccWord'
@@ -15,21 +17,23 @@ import { priceScheduleWord } from './priceScheduleWord'
 import { summaryWord } from './summaryWord'
 
 export const editableDocuments = {
+  tabbing: tabbingWord,
+  initaoDivider: initaoDividerWord,
   1: tableOfContentsWord,
-  6: ongoingContractsWord,
-  7: slccWord,
-  10: nfccWord,
-  11: technicalWord,
-  12: bidSecurityWord,
-  13: scheduleWord,
-  14: manpowerWord,
-  15: omnibusWord,
-  16: afterSalesWord,
-  17: warrantyWord,
-  18: bidFormWord,
-  19: secretarysCertificateWord,
-  20: priceScheduleWord,
-  21: summaryWord,
+  7: ongoingContractsWord,
+  8: slccWord,
+  11: nfccWord,
+  12: technicalWord,
+  13: bidSecurityWord,
+  14: scheduleWord,
+  15: manpowerWord,
+  16: omnibusWord,
+  17: afterSalesWord,
+  18: warrantyWord,
+  19: bidFormWord,
+  20: secretarysCertificateWord,
+  21: priceScheduleWord,
+  22: summaryWord,
 }
 
 export { tableOfContentsWord }

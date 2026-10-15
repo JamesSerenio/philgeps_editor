@@ -10,7 +10,7 @@ export function priceScheduleWord(options = {}) {
       priceValues: options.priceValues ?? {},
     }),
   }
-  return templateWord({ ...options, document }, 20, {
+  return templateWord({ ...options, document }, 21, {
     tables: true,
     headerRows: 1,
     paragraphStyle: 'PriceSchedule',

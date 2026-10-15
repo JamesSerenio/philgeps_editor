@@ -6,7 +6,7 @@ export function secretarysCertificateWord(options = {}) {
     name: 'SECRETARYS_CERTIFICATE.pdf',
     generate: () => generateSecretaryCertificatePreview(options.setup),
   }
-  return templateWord({ ...options, document }, 19, {
+  return templateWord({ ...options, document }, 20, {
     tables: false,
     paragraphStyle: 'SecretarysCertificate',
     exactLineSpacing: true,

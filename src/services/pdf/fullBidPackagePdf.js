@@ -1,3 +1,6 @@
+import { generateTabbingPreview } from './tabbingPdf'
+import { getDeadline } from '../../lib/projectFormatters'
+import { generateInitaoDividerPreview } from './initaoDividersPdf'
 
 import {
   PDFDocument,
@@ -489,6 +492,7 @@ function createDocumentData({
   omnibusVariant,
 }) {
   const common = {
+    tableOfContentsVariant: omnibusVariant,
     ...setup,
 
     items: technical,
@@ -560,7 +564,7 @@ function createDocumentData({
 }
 
 // =====================================================
-// EXACT 21-DOCUMENT ORDER
+// EXACT 22-DOCUMENT ORDER
 // =====================================================
 
 function buildDocumentOrder({
@@ -573,7 +577,7 @@ function buildDocumentOrder({
   return [
     // 01
     generatedDocument(
-      'TABLE OF CONTENTS.pdf',
+      common.tableOfContentsVariant === 'initao_lgu' ? 'TABLE OF CONTENTS-INITAO.pdf' : 'TABLE OF CONTENTS.pdf',
       [
         [
           pdfService,
@@ -589,22 +593,27 @@ function buildDocumentOrder({
     ),
 
     // 03
+    staticDocument(
+      'Mayor\u2019s Permit  Municipal License (CY 2026).pdf'
+    ),
+
+    // 04
     // AUTOMATIC A4 CONVERSION
     staticDocument(
       'TAX_template.pdf'
     ),
 
-    // 04
+    // 05
     staticDocument(
       'Certificate of Registration (COR).pdf'
     ),
 
-    // 05
+    // 06
     staticDocument(
       'Latest Income and Business Tax Returns.pdf'
     ),
 
-    // 06
+    // 07
     generatedDocument(
       'Statement of Ongoing Government and Private Contracts,.pdf',
       [
@@ -616,7 +625,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 07
+    // 08
     generatedDocument(
       slccData.slccVariant === 'cctv'
         ? 'SLCC_table_cctv.pdf'
@@ -634,17 +643,17 @@ function buildDocumentOrder({
       slccData
     ),
 
-    // 08
+    // 09
     staticDocument(
       'PhilGEPS Platinum Certificate.pdf'
     ),
 
-    // 09
+    // 10
     staticDocument(
       'Audited Financial Statements.pdf'
     ),
 
-    // 10
+    // 11
     generatedDocument(
       'NFCC_Template.pdf',
       [
@@ -656,7 +665,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 11
+    // 12
     generatedDocument(
       'Technical Specifications.pdf',
       [
@@ -672,7 +681,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 12
+    // 13
     generatedDocument(
       bidSecurityData.bidSecurityVariant ===
       'with_table'
@@ -687,7 +696,7 @@ function buildDocumentOrder({
       bidSecurityData
     ),
 
-    // 13
+    // 14
     generatedDocument(
       'Production Delivery Schedule.pdf',
       [
@@ -703,7 +712,7 @@ function buildDocumentOrder({
       scheduleData
     ),
 
-    // 14
+    // 15
     generatedDocument(
       'Manpower Requirements.pdf',
       [
@@ -715,7 +724,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 15
+    // 16
     generatedDocument(
       omnibusData.omnibusVariant ===
       'initao_lgu'
@@ -730,7 +739,7 @@ function buildDocumentOrder({
       omnibusData
     ),
 
-    // 16
+    // 17
     generatedDocument(
       'After Sales.pdf',
       [
@@ -742,7 +751,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 17
+    // 18
     generatedDocument(
       'Warranty.pdf',
       [
@@ -754,7 +763,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 18
+    // 19
     generatedDocument(
       'BID_FORM_CLEAN_TEMPLATE.pdf',
       [
@@ -766,7 +775,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 19
+    // 20
     generatedDocument(
       "SECRETARY'S CERTIFICATE.pdf",
       [
@@ -778,7 +787,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 20
+    // 21
     generatedDocument(
       'PRICE SCHEDULE FOR GOODS.pdf',
       [
@@ -790,7 +799,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 21
+    // 22
     generatedDocument(
       'SUMMARY OF BID PRICES.pdf',
       [
@@ -810,6 +819,7 @@ function buildDocumentOrder({
 
 export function getBidPackageDocuments({
   setup = {},
+  project = {},
 
   technical = [],
   schedule = [],
@@ -873,12 +883,26 @@ export function getBidPackageDocuments({
   // BUILD DOCUMENT ORDER
   // ---------------------------------------------------
 
-  const documents =
-    buildDocumentOrder(data)
+  // Keep generator identity independent of its position in either template order.
+  const tabbing = { name: 'TABBING.pdf', wordSection: 'tabbing', generate: () => generateTabbingPreview({ ...setup, closingDate: getDeadline(project) ?? setup.closingDate ?? setup.closing_date }) }
+  const defaultDocuments = buildDocumentOrder(data).map((entry, index) => ({ ...entry, wordSection: index + 1 }))
+  const initaoOrder = [1, 'legal', 9, 2, 3, 4, 5, 6, 'technical', 7, 8, 13, 12, 14, 15, 17, 18, 16, 'financial', 10, 11, 19, 20, 21, 22]
+  const dividerNames = { legal: 'LEGAL DOCUMENTS (A-D)', technical: 'TECHNICAL DOCUMENTS (E-I)', financial: 'FINANCIAL DOCUMENTS (J-K)' }
+  const dividerPages = { legal: 0, technical: 1, financial: 2 }
+  const divider = key => ({
+    name: 'TECHNICAL COMPONENT ENVELOPE - ' + dividerNames[key] + '.pdf',
+    wordSection: 'initaoDivider',
+    generate: () => generateInitaoDividerPreview(dividerPages[key]),
+  })
+  const orderedDocuments = omnibusVariant === 'initao_lgu'
+    ? initaoOrder.map(item => typeof item === 'number' ? defaultDocuments[item - 1] : divider(item))
+    : defaultDocuments
 
-  if (documents.length !== 21) {
+  const documents = [tabbing, ...orderedDocuments]
+
+  if (documents.length !== (omnibusVariant === 'initao_lgu' ? 26 : 23)) {
     throw new Error(
-      'The bid package must contain 21 sections.'
+      'The bid package must contain 23 sections, or 26 with Initao dividers.'
     )
   }
 
@@ -987,7 +1011,7 @@ export async function generateFullBidPackagePdf(options = {}) {
         onProgress({ completed: index + 1, total: documents.length, message: document.name })
 
         console.info(
-          `[${index + 1}/21] ` +
+          `[${index + 1}/${documents.length}] ` +
           `${document.name} - ` +
           `${addedPages} pages added`
         )
@@ -999,7 +1023,7 @@ export async function generateFullBidPackagePdf(options = {}) {
         )
 
         throw new Error(
-          `Document ${index + 1}/21 - ` +
+          `Document ${index + 1}/${documents.length} - ` +
           `${document.name}: ` +
           (error.message || String(error)),
           { cause: error }

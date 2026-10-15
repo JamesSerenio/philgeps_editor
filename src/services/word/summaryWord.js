@@ -10,7 +10,7 @@ export function summaryWord(options = {}) {
       priceValues: options.priceValues ?? {},
     }),
   }
-  return templateWord({ ...options, document }, 21, {
+  return templateWord({ ...options, document }, 22, {
     tables: true,
     headerRows: 1,
     paragraphStyle: 'SummaryPrices',

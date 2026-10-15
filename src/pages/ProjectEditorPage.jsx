@@ -18,6 +18,7 @@ import {
 
 import {
   generateFullBidPackagePdf,
+  getBidPackageDocuments,
 } from '../services/pdf/fullBidPackagePdf'
 
 import {
@@ -753,7 +754,7 @@ function ProjectEditorContent({ id }) {
                 : undefined,
 
           templateVariant:
-            activeDocument === 'omnibus'
+            (activeDocument === 'omnibus' || activeDocument === 'contents')
               ? (
                   omnibus?.templateVariant === 'initao_lgu'
                     ? 'initao_lgu'
@@ -1184,7 +1185,8 @@ function ProjectEditorContent({ id }) {
 
 
 
-const exportContentKey = JSON.stringify({ setup, technical, schedule: scheduleItems, bidSecurity, omnibus, priceValues })
+const exportDocumentCount = getBidPackageDocuments({ setup: setup ?? { referenceNumber: id }, omnibus, bidSecurity }).length
+const exportContentKey = JSON.stringify({ closingDate: project?.closing_date ?? project?.closingDate, setup, technical, schedule: scheduleItems, bidSecurity, omnibus, priceValues })
 
 async function handleGenerateAll(format = 'pdf') {
   if (exportBusyRef.current || !setup) return
@@ -1344,10 +1346,11 @@ async function handleGenerateAll(format = 'pdf') {
     }
 
     // ==========================================
-    // 6. PREPARE ALL 21 DOCUMENTS
+    // 6. PREPARE THE SELECTED DOCUMENT PACKAGE
     // ==========================================
 
     const exportData = {
+      project,
       setup: {
         ...setup,
 
@@ -1373,7 +1376,7 @@ async function handleGenerateAll(format = 'pdf') {
 
     setExportProgress({
       completed: 0,
-      total: 21,
+      total: getBidPackageDocuments(exportData).length,
       message: 'Preparing document package...'
     })
 
@@ -1459,8 +1462,8 @@ async function handleGenerateAll(format = 'pdf') {
     setExportResults(previous => ({ ...previous, [format]: { url, blob, filename, format, contentKey: exportContentKey } }))
 
     setExportProgress({
-      completed: 21,
-      total: 21,
+      completed: getBidPackageDocuments(exportData).length,
+      total: getBidPackageDocuments(exportData).length,
       message: 'Ready for preview and download.'
     })
 
@@ -1681,7 +1684,7 @@ async function handleGenerateAll(format = 'pdf') {
 
   return (
     <div ref={editorShellRef} className={`pdf-editor-shell${panelOpen ? ' panel-open' : ''}`}>
-      {generateModalOpen && <GenerateDocumentsModal busy={generatingAll} progress={exportProgress} error={generateAllError} results={exportResults} contentKey={exportContentKey} onGenerate={handleGenerateAll} onClose={() => setGenerateModalOpen(false)} />}
+      {generateModalOpen && <GenerateDocumentsModal documentCount={exportDocumentCount} busy={generatingAll} progress={exportProgress} error={generateAllError} results={exportResults} contentKey={exportContentKey} onGenerate={handleGenerateAll} onClose={() => setGenerateModalOpen(false)} />}
       <header className="pdf-editor-topbar">
         <button
           className="button-secondary editor-back"
@@ -1801,6 +1804,8 @@ async function handleGenerateAll(format = 'pdf') {
           <DocumentSetup
             value={setup}
             onChange={changeSetup}
+            templateVariant={omnibus?.templateVariant === 'initao_lgu' ? 'initao_lgu' : 'old_default'}
+            onTemplateChange={nextVariant => changeOmnibus({ ...omnibus, templateVariant: nextVariant })}
           />
         </ProjectSidebar>
 

@@ -21,7 +21,7 @@ export async function warrantyWord(options = {}) {
     name: 'Warranty.pdf',
     generate: () => generateProductWarrantyPreview(setup),
   }
-  return templateWord({ ...options, document }, 17, {
+  return templateWord({ ...options, document }, 18, {
     tables: false,
     paragraphStyle(line) {
       return Math.round(

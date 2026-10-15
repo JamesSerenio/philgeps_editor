@@ -14,7 +14,7 @@ export function scheduleWord(options) {
       )
       .map((line) => ({ ...line, used: false })),
   )
-  return templateWord(options, 13, {
+  return templateWord(options, 14, {
     tables: true,
     headerRows: 1,
     paragraphStyle: 'ScheduleRequirements',

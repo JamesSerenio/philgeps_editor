@@ -58,14 +58,14 @@ export async function generateFullBidPackageWord(
       })
 
       const editable =
-        editableDocuments[number]
+        editableDocuments[entry.wordSection ?? number]
 
       // ====================================
       // EDITABLE WORD OR ORIGINAL PDF IMAGE
       // ====================================
 
       const parts = editable
-        ? await editable({ ...options, document: entry })
+        ? await editable({ ...options, document: entry, sectionNumber: number, documentCount: total })
         : await (async () => {
             if (!entry.path?.startsWith('/pdf/static/')) {
               throw new Error('Editable Word generator is required for this template; image fallback is prohibited.')
@@ -159,10 +159,27 @@ export async function generateFullBidPackageWord(
     description:
       'Bid sections in original order; ' +
       'all 15 template sections use native ' +
-      'editable Word text and tables; six static certificate sections retain page images.',
+      'editable Word text and tables; seven static certificate sections retain page images.',
 
     styles: {
       paragraphStyles: [{
+        id: 'Tabbing',
+        name: 'Tabbing Cover',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 20 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
+        id: 'TabbingLogo',
+        name: 'Tabbing Logo',
+        basedOn: 'Normal',
+        paragraph: { spacing: { before: 0, after: 0 } },
+      }, {
+        id: 'InitaoDivider',
+        name: 'Initao Component Divider',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 20 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
         id: 'SummaryPrices',
         name: 'Summary of Bid Prices',
         basedOn: 'Normal',
