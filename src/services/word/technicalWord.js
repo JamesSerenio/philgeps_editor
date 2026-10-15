@@ -487,9 +487,9 @@ export async function technicalWord({ setup = {}, technical = [] }) {
       children.push(para('', { size: 1, line: 7 }))
       const rich = statement.flatMap((line, i) =>
         line.map((word, j) =>
-          run((j ? ' ' : '') + word.text, 9.65, word.bold, {
-            break: i && j === 0 ? 1 : undefined,
-          }),
+          // Keep a continuous paragraph: forced line breaks prevent browsers
+          // from justifying the right edge of each preceding line.
+          run((i || j ? ' ' : '') + word.text, 9.65, word.bold),
         ),
       )
       children.push(

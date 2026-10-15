@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 export default function useDocumentZoom(scrollRef, containerRef) {
   const fitRef = useRef(true)
+  const fitModeRef = useRef('reading')
   const [zoom, setZoom] = useState(1)
   const preservePosition = useCallback(
     (change) => {
@@ -52,7 +53,10 @@ export default function useDocumentZoom(scrollRef, containerRef) {
       const scales = Array.from(pages, (page) => {
         const scale = Math.max(
           0.1,
-          Math.min(1, (width - 32) / page.offsetWidth),
+          Math.min(
+            fitModeRef.current === 'width' ? 2 : 1.125,
+            (width - 32) / page.offsetWidth,
+          ),
         )
         page.style.setProperty('--bid-export-page-zoom', scale)
         return scale
@@ -63,6 +67,7 @@ export default function useDocumentZoom(scrollRef, containerRef) {
   }, [scrollRef, containerRef, preservePosition])
   const fit = useCallback(() => {
     fitRef.current = true
+    fitModeRef.current = 'width'
     fitPages()
   }, [fitPages])
   useEffect(() => {

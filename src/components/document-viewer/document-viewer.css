@@ -145,3 +145,33 @@
   font-family: 'Times New Roman', serif;
   font-size: 10pt;
 }
+
+/* Keep preview text free of application text effects at reading zoom. */
+.bid-export-word-mount .docx-wrapper {
+  color: #000;
+  text-shadow: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Keep complete words in the technical statement, as in the PDF. */
+.bid-export-word-mount p.docx_technicalspecifications,
+.bid-export-word-mount p.docx_technicalspecifications span {
+  -webkit-hyphens: none;
+  hyphens: none;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.bid-export-word-mount p.docx_bidsecurity {
+  font-family: 'Times New Roman', serif;
+  font-size: 10pt;
+}
+.bid-export-word-mount p.docx_bidsecurity,
+.bid-export-word-mount p.docx_bidsecurity span {
+  -webkit-hyphens: none;
+  hyphens: none;
+  word-break: normal;
+  overflow-wrap: normal;
+}

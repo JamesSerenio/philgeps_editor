@@ -148,6 +148,7 @@ export async function generateFullBidPackageWord(
   })
 
   const wordDocument = new Document({
+    hyphenation: { autoHyphenation: false },
     creator:
       'PhilGEPS Bid Docs Editor',
 
@@ -162,6 +163,12 @@ export async function generateFullBidPackageWord(
 
     styles: {
       paragraphStyles: [{
+        id: 'BidSecurity',
+        name: 'Bid Securing Declaration',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 20 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
         id: 'TechnicalSpecifications',
         name: 'Technical Specifications',
         basedOn: 'Normal',

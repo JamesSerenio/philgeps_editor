@@ -18,19 +18,24 @@ function tableRegions(lines) {
     return {left:xs[0],right:xs.at(-1),top:ys[0],bottom:ys.at(-1),xs,ys,horizontal,vertical}
   }).filter(Boolean).sort((a,b)=>a.top-b.top)
 }
-function runs(line) {
+function runs(line, gapThreshold = 18, positionedGaps = false) {
   const result=[];let end,previous
   for(const part of line.parts){
-    if(end!=null&&part.x-end>18)result.push(new TextRun({children:[new Tab()]}))
+    if(end!=null&&part.x-end>gapThreshold) {
+      // Explicit styled spaces preserve PDF gaps in Word and docx-preview,
+      // whose normal renderer does not resolve custom tab stops.
+      const gap = part.x-end
+      result.push(positionedGaps ? new TextRun({text:' '.repeat(Math.max(1,Math.round(gap/(part.size*(part.font==='Arial'?.278:.25))))),font:part.font,size:Math.round(part.size*2),bold:part.bold,italics:part.italics}) : new TextRun({children:[new Tab()]}))
+    }
     else if(end!=null&&!/^[\s,.;:!?)]/.test(part.str)&&!/[\s(]$/.test(previous.str)&&(part.x-end>part.size*.15||part.bold!==previous.bold||part.italics!==previous.italics))result.push(new TextRun({text:' ',size:Math.round(part.size*2),font:part.font}))
     result.push(new TextRun({text:part.str,font:part.font,size:Math.round(part.size*2),bold:part.bold,italics:part.italics,underline:part.underline?{}:undefined,color:part.color}))
     end=part.x+part.width;previous=part
   }
   return result
 }
-function lineParagraph(line, origin, before = 0) {
+function lineParagraph(line, origin, before = 0, policy = {}) {
   const size=Math.max(...line.parts.map(p=>p.size))
-  return new Paragraph({ children:runs(line), tabStops:line.parts.slice(1).filter((part,i)=>part.x-(line.parts[i].x+line.parts[i].width)>18).map(part=>({type:TabStopType.LEFT,position:twips(part.x-origin)})), indent:{left:twips(Math.max(0,line.parts[0].x-origin))}, spacing:{before:twips(Math.max(0,before)),after:0,line:twips(size*1.04),lineRule:LineRuleType.EXACT}, keepTogether:true })
+  return new Paragraph({ style:policy.paragraphStyle, children:runs(line,policy.positionedGaps ? size * .5 : 18,policy.positionedGaps), tabStops:line.parts.slice(1).filter((part,i)=>part.x-(line.parts[i].x+line.parts[i].width)>(policy.positionedGaps ? size * .5 : 18)).map(part=>({type:TabStopType.LEFT,position:twips(part.x-origin)})), indent:{left:twips(Math.max(0,line.parts[0].x-origin))}, spacing:{before:twips(Math.max(0,before)),after:0,line:twips(policy.exactLineSpacing ? line.bottom-line.top : size*1.04),lineRule:LineRuleType.EXACT}, keepTogether:true })
 }
 function buildTable(region, fragments, headerRows, pageLeft) {
   const {xs,ys}=region,rows=[]
@@ -54,17 +59,38 @@ function buildTable(region, fragments, headerRows, pageLeft) {
   return new Table({indent:{size:twips(Math.max(0,region.left-pageLeft)),type:WidthType.DXA},width:{size:twips(region.right-region.left),type:WidthType.DXA},columnWidths:xs.slice(1).map((x,i)=>twips(x-xs[i])),layout:TableLayoutType.FIXED,borders:{top:none,bottom:none,left:none,right:none,insideHorizontal:none,insideVertical:none},rows})
 }
 
+// Preserve isolated PDF fill-in rules as editable underlined Word spaces.
+function restoreBlankRules(page) {
+  const text = [...page.fragments]
+  for (const rule of page.lines) {
+    if (Math.abs(rule.y1-rule.y2) > .1 || rule.x2-rule.x1 < 8) continue
+    const center = (rule.x1+rule.x2)/2
+    const grid = page.lines.some(other => Math.abs(other.x1-other.x2)<.1 && (Math.abs(other.x1-rule.x1)<1.5 || Math.abs(other.x1-rule.x2)<1.5) && other.y1<=rule.y1+1 && other.y2>=rule.y1-1)
+    if (grid) continue
+    const nearby = text.filter(part => Math.abs(part.y-rule.y1)<5)
+    // Existing text underlines (names or underscore glyphs) are already retained.
+    if (nearby.some(part => part.x<=center && part.x+part.width>=center)) continue
+    const anchor = nearby.sort((a,b)=>Math.abs(a.y-rule.y1)-Math.abs(b.y-rule.y1))[0]
+    if (!anchor) continue
+    const size = anchor.size
+    const spaceWidth = size * (anchor.font==='Arial' ? .278 : .25)
+    const width = rule.x2-rule.x1
+    page.fragments.push({str:' '.repeat(Math.max(1,Math.round(width/spaceWidth))),x:rule.x1,y:anchor.y,top:anchor.top,bottom:anchor.bottom,width,size,font:anchor.font,bold:false,italics:false,underline:true,color:'000000'})
+  }
+}
+
 // Converts the generated reference into native tables and individually editable styled runs.
 // Page images are deliberately not supported here.
 export async function pdfTextToWord(source, name, number, onPage = () => {}, policy = {}) {
   const pages=await readPdfLayout(source,name),sections=[]
   for(let index=0;index<pages.length;index++){
     const page=pages[index]
+    if(policy.preserveBlankLines)restoreBlankRules(page)
     if(policy.preparePage)policy.preparePage(page,index)
     const regions=policy.tables===false?[]:tableRegions(page.lines)
     const left=Math.max(12,Math.min(...page.fragments.map(p=>p.x),...regions.map(r=>r.left)))
     const right=Math.max(...page.fragments.map(p=>p.x+p.width),...regions.map(r=>r.right))
-    const marginRight=Math.max(12,page.width-right-3)
+    const marginRight=Math.max(12,page.width-right-(policy.rightAllowance??3))
     const firstTop=Math.min(...page.fragments.map(p=>p.top),...regions.map(r=>r.top))
     const top=Math.max(12,firstTop-2)
     const inTable=part=>regions.some(r=>part.x>=r.left-1&&part.x<r.right+1&&part.y>r.top&&part.y<r.bottom+1)
@@ -74,7 +100,7 @@ export async function pdfTextToWord(source, name, number, onPage = () => {}, pol
     for(const block of blocks){
       const before=Math.max(0,block.top-cursor)
       if(block.region){if(before>0)children.push(new Paragraph({spacing:{before:0,after:0,line:twips(before),lineRule:LineRuleType.EXACT},children:[]}));children.push(buildTable(block.region,page.fragments,policy.headerRows??1,left))}
-      else {const para=lineParagraph(block.line,left,before);children.push(para)}
+      else {const para=lineParagraph(block.line,left,before,policy);children.push(para)}
       cursor=block.bottom
     }
     if(!children.length)throw new Error(name+': empty editable page')
