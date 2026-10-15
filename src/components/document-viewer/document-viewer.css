@@ -187,3 +187,24 @@
   word-break: normal;
   overflow-wrap: normal;
 }
+
+.bid-export-word-mount p.docx_manpower {
+  font-family: 'Times New Roman', serif;
+  font-size: 10pt;
+}
+.bid-export-word-mount p.docx_manpower,
+.bid-export-word-mount p.docx_manpower span {
+  -webkit-hyphens: none;
+  hyphens: none;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+/* Keep the page-anchored logo out of paragraph flow in docx-preview. */
+.bid-export-word-mount p.docx_manpowerlogo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 0;
+  margin: 0 !important;
+  line-height: 0 !important;
+}

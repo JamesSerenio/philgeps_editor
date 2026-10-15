@@ -97,6 +97,7 @@ export async function pdfTextToWord(source, name, number, onPage = () => {}, pol
     const lines=collectPdfLines(page.fragments.filter(p=>!inTable(p)))
     const blocks=[...lines.map(line=>({top:line.top,bottom:line.bottom,line})),...regions.map(region=>({top:region.top,bottom:region.bottom,region}))].sort((a,b)=>a.top-b.top)
     const children=index===0?[new Paragraph({children:[sectionMarker(number)],spacing:{before:0,after:0,line:1,lineRule:LineRuleType.EXACT}})]:[];let cursor=top
+    if(policy.pageChildren)children.unshift(...policy.pageChildren(page,index))
     for(const block of blocks){
       const before=Math.max(0,block.top-cursor)
       if(block.region){if(before>0)children.push(new Paragraph({spacing:{before:0,after:0,line:twips(before),lineRule:LineRuleType.EXACT},children:[]}));children.push(buildTable(block.region,page.fragments,policy.headerRows??1,left,policy))}

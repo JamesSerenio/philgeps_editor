@@ -163,6 +163,17 @@ export async function generateFullBidPackageWord(
 
     styles: {
       paragraphStyles: [{
+        id: 'Manpower',
+        name: 'List of Manpower',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 20 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
+        id: 'ManpowerLogo',
+        name: 'Manpower Logo',
+        basedOn: 'Normal',
+        paragraph: { spacing: { after: 0 } },
+      }, {
         id: 'ScheduleRequirements',
         name: 'Schedule of Requirements',
         basedOn: 'Normal',
