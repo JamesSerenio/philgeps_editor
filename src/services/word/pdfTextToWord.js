@@ -35,7 +35,7 @@ function runs(line, gapThreshold = 18, positionedGaps = false) {
 }
 function lineParagraph(line, origin, before = 0, policy = {}) {
   const size=Math.max(...line.parts.map(p=>p.size))
-  return new Paragraph({ style:policy.paragraphStyle, children:runs(line,policy.positionedGaps ? size * .5 : 18,policy.positionedGaps), tabStops:line.parts.slice(1).filter((part,i)=>part.x-(line.parts[i].x+line.parts[i].width)>(policy.positionedGaps ? size * .5 : 18)).map(part=>({type:TabStopType.LEFT,position:twips(part.x-origin)})), indent:{left:twips(Math.max(0,line.parts[0].x-origin))}, spacing:{before:twips(Math.max(0,before)),after:0,line:twips(policy.exactLineSpacing ? line.bottom-line.top : size*1.04),lineRule:LineRuleType.EXACT}, keepTogether:true })
+  return new Paragraph({ style:typeof policy.paragraphStyle==='function'?policy.paragraphStyle(line):policy.paragraphStyle, children:runs(line,policy.positionedGaps ? size * .5 : 18,policy.positionedGaps), tabStops:line.parts.slice(1).filter((part,i)=>part.x-(line.parts[i].x+line.parts[i].width)>(policy.positionedGaps ? size * .5 : 18)).map(part=>({type:TabStopType.LEFT,position:twips(part.x-origin)})), indent:{left:twips(Math.max(0,line.parts[0].x-origin))}, spacing:{before:twips(Math.max(0,before)),after:0,line:twips(policy.exactLineSpacing ? line.bottom-line.top : size*1.04),lineRule:LineRuleType.EXACT}, keepTogether:true })
 }
 function buildTable(region, fragments, headerRows, pageLeft, policy = {}) {
   const {xs,ys}=region,rows=[]

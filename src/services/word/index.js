@@ -163,6 +163,23 @@ export async function generateFullBidPackageWord(
 
     styles: {
       paragraphStyles: [{
+        id: 'AfterSalesBody',
+        name: 'After-Sales Body',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 26 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
+        id: 'AfterSales',
+        name: 'After-Sales Service Certificate',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 26 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
+        id: 'AfterSalesLogo',
+        name: 'After-Sales Logo',
+        basedOn: 'Normal',
+        paragraph: { spacing: { after: 0 } },
+      }, {
         id: 'Manpower',
         name: 'List of Manpower',
         basedOn: 'Normal',

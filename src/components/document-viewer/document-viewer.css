@@ -208,3 +208,35 @@
   margin: 0 !important;
   line-height: 0 !important;
 }
+
+.bid-export-word-mount p.docx_aftersales {
+  font-family: 'Times New Roman', serif;
+  font-size: 10pt;
+}
+.bid-export-word-mount p.docx_aftersales,
+.bid-export-word-mount p.docx_aftersales span {
+  -webkit-hyphens: none;
+  hyphens: none;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.bid-export-word-mount p.docx_aftersaleslogo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 0;
+  margin: 0 !important;
+  line-height: 0 !important;
+}
+
+.bid-export-word-mount p.docx_aftersalesbody {
+  font-family: 'Times New Roman', serif;
+  font-size: 13pt;
+}
+.bid-export-word-mount p.docx_aftersalesbody,
+.bid-export-word-mount p.docx_aftersalesbody span {
+  -webkit-hyphens: none;
+  hyphens: none;
+  word-break: normal;
+  overflow-wrap: normal;
+}
