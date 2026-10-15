@@ -1,7 +1,7 @@
 import { templateWord } from './templateWord'
 
 export function omnibusWord(options) {
-  return templateWord(options, 15, {
+  return templateWord(options, 16, {
     tables: false,
     preparePage(page) {
       // The PDF overlay can move this short suffix onto the next reference line

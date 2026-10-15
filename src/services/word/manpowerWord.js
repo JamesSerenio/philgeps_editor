@@ -6,7 +6,7 @@ export async function manpowerWord(options) {
   if (!response.ok)
     throw new Error('Unable to load the original Manpower letterhead logo.')
   const logo = new Uint8Array(await response.arrayBuffer())
-  return templateWord(options, 14, {
+  return templateWord(options, 15, {
     tables: true,
     headerRows: 1,
     paragraphStyle: 'Manpower',

@@ -28,5 +28,5 @@ export function bidSecurityWord(options) {
         })
       },
     })
-  return templateWord(options, 12, policy)
+  return templateWord(options, 13, policy)
 }

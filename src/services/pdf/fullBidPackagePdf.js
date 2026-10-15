@@ -561,7 +561,7 @@ function createDocumentData({
 }
 
 // =====================================================
-// EXACT 21-DOCUMENT ORDER
+// EXACT 22-DOCUMENT ORDER
 // =====================================================
 
 function buildDocumentOrder({
@@ -590,22 +590,27 @@ function buildDocumentOrder({
     ),
 
     // 03
+    staticDocument(
+      'Mayor\u2019s Permit  Municipal License (CY 2026).pdf'
+    ),
+
+    // 04
     // AUTOMATIC A4 CONVERSION
     staticDocument(
       'TAX_template.pdf'
     ),
 
-    // 04
+    // 05
     staticDocument(
       'Certificate of Registration (COR).pdf'
     ),
 
-    // 05
+    // 06
     staticDocument(
       'Latest Income and Business Tax Returns.pdf'
     ),
 
-    // 06
+    // 07
     generatedDocument(
       'Statement of Ongoing Government and Private Contracts,.pdf',
       [
@@ -617,7 +622,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 07
+    // 08
     generatedDocument(
       slccData.slccVariant === 'cctv'
         ? 'SLCC_table_cctv.pdf'
@@ -635,17 +640,17 @@ function buildDocumentOrder({
       slccData
     ),
 
-    // 08
+    // 09
     staticDocument(
       'PhilGEPS Platinum Certificate.pdf'
     ),
 
-    // 09
+    // 10
     staticDocument(
       'Audited Financial Statements.pdf'
     ),
 
-    // 10
+    // 11
     generatedDocument(
       'NFCC_Template.pdf',
       [
@@ -657,7 +662,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 11
+    // 12
     generatedDocument(
       'Technical Specifications.pdf',
       [
@@ -673,7 +678,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 12
+    // 13
     generatedDocument(
       bidSecurityData.bidSecurityVariant ===
       'with_table'
@@ -688,7 +693,7 @@ function buildDocumentOrder({
       bidSecurityData
     ),
 
-    // 13
+    // 14
     generatedDocument(
       'Production Delivery Schedule.pdf',
       [
@@ -704,7 +709,7 @@ function buildDocumentOrder({
       scheduleData
     ),
 
-    // 14
+    // 15
     generatedDocument(
       'Manpower Requirements.pdf',
       [
@@ -716,7 +721,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 15
+    // 16
     generatedDocument(
       omnibusData.omnibusVariant ===
       'initao_lgu'
@@ -731,7 +736,7 @@ function buildDocumentOrder({
       omnibusData
     ),
 
-    // 16
+    // 17
     generatedDocument(
       'After Sales.pdf',
       [
@@ -743,7 +748,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 17
+    // 18
     generatedDocument(
       'Warranty.pdf',
       [
@@ -755,7 +760,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 18
+    // 19
     generatedDocument(
       'BID_FORM_CLEAN_TEMPLATE.pdf',
       [
@@ -767,7 +772,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 19
+    // 20
     generatedDocument(
       "SECRETARY'S CERTIFICATE.pdf",
       [
@@ -779,7 +784,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 20
+    // 21
     generatedDocument(
       'PRICE SCHEDULE FOR GOODS.pdf',
       [
@@ -791,7 +796,7 @@ function buildDocumentOrder({
       common
     ),
 
-    // 21
+    // 22
     generatedDocument(
       'SUMMARY OF BID PRICES.pdf',
       [
@@ -874,12 +879,16 @@ export function getBidPackageDocuments({
   // BUILD DOCUMENT ORDER
   // ---------------------------------------------------
 
-  const documents =
-    buildDocumentOrder(data)
+  // Keep generator identity independent of its position in either template order.
+  const defaultDocuments = buildDocumentOrder(data).map((entry, index) => ({ ...entry, wordSection: index + 1 }))
+  const initaoOrder = [1, 9, 2, 3, 4, 5, 6, 7, 8, 13, 12, 14, 15, 17, 18, 16, 10, 11, 19, 20, 21, 22]
+  const documents = omnibusVariant === 'initao_lgu'
+    ? initaoOrder.map(number => defaultDocuments[number - 1])
+    : defaultDocuments
 
-  if (documents.length !== 21) {
+  if (documents.length !== 22) {
     throw new Error(
-      'The bid package must contain 21 sections.'
+      'The bid package must contain 22 sections.'
     )
   }
 
@@ -988,7 +997,7 @@ export async function generateFullBidPackagePdf(options = {}) {
         onProgress({ completed: index + 1, total: documents.length, message: document.name })
 
         console.info(
-          `[${index + 1}/21] ` +
+          `[${index + 1}/22] ` +
           `${document.name} - ` +
           `${addedPages} pages added`
         )
@@ -1000,7 +1009,7 @@ export async function generateFullBidPackagePdf(options = {}) {
         )
 
         throw new Error(
-          `Document ${index + 1}/21 - ` +
+          `Document ${index + 1}/22 - ` +
           `${document.name}: ` +
           (error.message || String(error)),
           { cause: error }

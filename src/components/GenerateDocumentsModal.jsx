@@ -40,7 +40,7 @@ export default function GenerateDocumentsModal({
   const outdated = ready && file.contentKey !== contentKey
   const completed = Math.max(
     0,
-    Math.min(Number(progress.completed) || 0, Number(progress.total) || 21),
+    Math.min(Number(progress.completed) || 0, Number(progress.total) || 22),
   )
   function download() {
     if (!canDownload || busy || outdated) return
@@ -74,7 +74,7 @@ export default function GenerateDocumentsModal({
               Preview your complete bid package before downloading.
             </p>
           </div>
-          <span className="bid-export-count">21 Documents</span>
+          <span className="bid-export-count">22 Documents</span>
           <button
             type="button"
             className="bid-export-close-icon"
@@ -168,7 +168,7 @@ export default function GenerateDocumentsModal({
             <progress
               aria-label="Document preparation"
               value={progress.total ? completed : undefined}
-              max={progress.total || 21}
+              max={progress.total || 22}
             />
           </div>
         )}

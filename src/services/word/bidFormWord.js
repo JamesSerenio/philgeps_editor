@@ -33,7 +33,7 @@ export async function bidFormWord(options = {}) {
     name: 'BID_FORM_CLEAN_TEMPLATE.pdf',
     generate: () => generateBidFormPreview(data),
   }
-  return templateWord({ ...options, document }, 18, {
+  return templateWord({ ...options, document }, 19, {
     tables: false,
     paragraphStyle: 'BidForm',
     exactLineSpacing: true,

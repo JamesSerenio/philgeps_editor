@@ -1344,7 +1344,7 @@ async function handleGenerateAll(format = 'pdf') {
     }
 
     // ==========================================
-    // 6. PREPARE ALL 21 DOCUMENTS
+    // 6. PREPARE ALL 22 DOCUMENTS
     // ==========================================
 
     const exportData = {
@@ -1373,7 +1373,7 @@ async function handleGenerateAll(format = 'pdf') {
 
     setExportProgress({
       completed: 0,
-      total: 21,
+      total: 22,
       message: 'Preparing document package...'
     })
 
@@ -1459,8 +1459,8 @@ async function handleGenerateAll(format = 'pdf') {
     setExportResults(previous => ({ ...previous, [format]: { url, blob, filename, format, contentKey: exportContentKey } }))
 
     setExportProgress({
-      completed: 21,
-      total: 21,
+      completed: 22,
+      total: 22,
       message: 'Ready for preview and download.'
     })
 

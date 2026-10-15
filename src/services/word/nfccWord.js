@@ -135,7 +135,7 @@ function paragraph(content = '', options = {}) {
   const children = []
 
   if (bookmark) {
-    children.push(sectionMarker(10))
+    children.push(sectionMarker(typeof bookmark === 'number' ? bookmark : 11))
   }
 
   String(content ?? '')
@@ -623,7 +623,7 @@ export function nfccWord(options = {}) {
       align: AlignmentType.CENTER,
       line: 16,
       after: 12,
-      bookmark: true,
+      bookmark: options.sectionNumber ?? 11,
 
       border: {
         bottom: {
