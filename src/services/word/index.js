@@ -163,6 +163,12 @@ export async function generateFullBidPackageWord(
 
     styles: {
       paragraphStyles: [{
+        id: 'PriceSchedule',
+        name: 'Price Schedule for Goods',
+        basedOn: 'Normal',
+        run: { font: 'Times New Roman', size: 15 },
+        paragraph: { spacing: { after: 0 } },
+      }, {
         id: 'SecretarysCertificate',
         name: 'Secretary Certificate',
         basedOn: 'Normal',
