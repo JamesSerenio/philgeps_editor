@@ -1801,6 +1801,8 @@ async function handleGenerateAll(format = 'pdf') {
           <DocumentSetup
             value={setup}
             onChange={changeSetup}
+            templateVariant={omnibus?.templateVariant === 'initao_lgu' ? 'initao_lgu' : 'old_default'}
+            onTemplateChange={nextVariant => changeOmnibus({ ...omnibus, templateVariant: nextVariant })}
           />
         </ProjectSidebar>
 

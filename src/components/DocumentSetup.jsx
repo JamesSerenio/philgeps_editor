@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import TemplateSelector from './TemplateSelector'
 
 import {
   bidders,
@@ -9,6 +10,8 @@ import {
 export default function DocumentSetup({
   value,
   onChange,
+  templateVariant = 'old_default',
+  onTemplateChange,
 }) {
   const dateInputRef = useRef(null)
 
@@ -73,7 +76,10 @@ export default function DocumentSetup({
 
   return (
     <section className="document-setup">
-      <h2>Document Setup</h2>
+      <div className="document-setup-heading">
+        <h2>Document Setup</h2>
+        {onTemplateChange && <TemplateSelector value={templateVariant} onChange={onTemplateChange} />}
+      </div>
 
       <h3>Project Information</h3>
 
