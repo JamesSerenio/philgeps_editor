@@ -175,3 +175,15 @@
   word-break: normal;
   overflow-wrap: normal;
 }
+
+.bid-export-word-mount p.docx_schedulerequirements {
+  font-family: 'Times New Roman', serif;
+  font-size: 9.5pt;
+}
+.bid-export-word-mount p.docx_schedulerequirements,
+.bid-export-word-mount p.docx_schedulerequirements span {
+  -webkit-hyphens: none;
+  hyphens: none;
+  word-break: normal;
+  overflow-wrap: normal;
+}

@@ -37,7 +37,7 @@ function lineParagraph(line, origin, before = 0, policy = {}) {
   const size=Math.max(...line.parts.map(p=>p.size))
   return new Paragraph({ style:policy.paragraphStyle, children:runs(line,policy.positionedGaps ? size * .5 : 18,policy.positionedGaps), tabStops:line.parts.slice(1).filter((part,i)=>part.x-(line.parts[i].x+line.parts[i].width)>(policy.positionedGaps ? size * .5 : 18)).map(part=>({type:TabStopType.LEFT,position:twips(part.x-origin)})), indent:{left:twips(Math.max(0,line.parts[0].x-origin))}, spacing:{before:twips(Math.max(0,before)),after:0,line:twips(policy.exactLineSpacing ? line.bottom-line.top : size*1.04),lineRule:LineRuleType.EXACT}, keepTogether:true })
 }
-function buildTable(region, fragments, headerRows, pageLeft) {
+function buildTable(region, fragments, headerRows, pageLeft, policy = {}) {
   const {xs,ys}=region,rows=[]
   const hasV=(x,y)=>region.vertical.some(l=>Math.abs(l.x1-x)<1.5&&l.y1<=y+1&&l.y2>=y-1)
   const hasH=(y,x)=>region.horizontal.some(l=>Math.abs(l.y1-y)<1.5&&l.x1<=x+1&&l.x2>=x-1)
@@ -49,12 +49,12 @@ function buildTable(region, fragments, headerRows, pageLeft) {
       let lastRow=r+1
       while(lastRow<ys.length-1&&!hasH(ys[lastRow],center))lastRow++
       const contents=merge?[]:collectPdfLines(fragments.filter(p=>p.x>=xs[c]-1&&p.x<xs[end]-1&&p.y>ys[r]&&p.y<=ys[lastRow]+1))
-      const children=contents.length?contents.map((line,i)=>lineParagraph(line,xs[c]+2,i?Math.max(0,line.top-contents[i-1].bottom):0)):[new Paragraph({spacing:{before:0,after:0,line:20,lineRule:LineRuleType.EXACT},children:[]})]
+      const children=contents.length?contents.map((line,i)=>lineParagraph(line,xs[c]+(policy.tableExactGeometry?0:2),i?Math.max(0,line.top-contents[i-1].bottom):policy.tableExactGeometry?Math.max(0,line.top-ys[r]):0,policy)):[new Paragraph({spacing:{before:0,after:0,line:20,lineRule:LineRuleType.EXACT},children:[]})]
       const startsMerge=!hasH(ys[r+1],center)&&r<ys.length-2
-      cells.push(new TableCell({columnSpan:end-c,verticalMerge:merge?VerticalMergeType.CONTINUE:startsMerge?VerticalMergeType.RESTART:undefined,width:{size:twips(xs[end]-xs[c]),type:WidthType.DXA},margins:{top:20,bottom:20,left:40,right:40},borders:{top:hasH(ys[r],center)?border:none,bottom:hasH(ys[r+1],center)?border:none,left:hasV(xs[c],(ys[r]+ys[r+1])/2)?border:none,right:hasV(xs[end],(ys[r]+ys[r+1])/2)?border:none},children}))
+      cells.push(new TableCell({columnSpan:end-c,verticalMerge:merge?VerticalMergeType.CONTINUE:startsMerge?VerticalMergeType.RESTART:undefined,width:{size:twips(xs[end]-xs[c]),type:WidthType.DXA},margins:policy.tableExactGeometry?{top:0,bottom:0,left:0,right:0}:{top:20,bottom:20,left:40,right:40},borders:{top:hasH(ys[r],center)?border:none,bottom:hasH(ys[r+1],center)?border:none,left:hasV(xs[c],(ys[r]+ys[r+1])/2)?border:none,right:hasV(xs[end],(ys[r]+ys[r+1])/2)?border:none},children}))
       continued.set(key,startsMerge||merge);c=end
     }
-    rows.push(new TableRow({tableHeader:r<headerRows,height:{value:twips(ys[r+1]-ys[r]),rule:HeightRule.ATLEAST},children:cells}))
+    rows.push(new TableRow({tableHeader:r<headerRows,height:{value:twips(ys[r+1]-ys[r]),rule:policy.tableExactGeometry?HeightRule.EXACT:HeightRule.ATLEAST},children:cells}))
   }
   return new Table({indent:{size:twips(Math.max(0,region.left-pageLeft)),type:WidthType.DXA},width:{size:twips(region.right-region.left),type:WidthType.DXA},columnWidths:xs.slice(1).map((x,i)=>twips(x-xs[i])),layout:TableLayoutType.FIXED,borders:{top:none,bottom:none,left:none,right:none,insideHorizontal:none,insideVertical:none},rows})
 }
@@ -99,7 +99,7 @@ export async function pdfTextToWord(source, name, number, onPage = () => {}, pol
     const children=index===0?[new Paragraph({children:[sectionMarker(number)],spacing:{before:0,after:0,line:1,lineRule:LineRuleType.EXACT}})]:[];let cursor=top
     for(const block of blocks){
       const before=Math.max(0,block.top-cursor)
-      if(block.region){if(before>0)children.push(new Paragraph({spacing:{before:0,after:0,line:twips(before),lineRule:LineRuleType.EXACT},children:[]}));children.push(buildTable(block.region,page.fragments,policy.headerRows??1,left))}
+      if(block.region){if(before>0)children.push(new Paragraph({spacing:{before:0,after:0,line:twips(before),lineRule:LineRuleType.EXACT},children:[]}));children.push(buildTable(block.region,page.fragments,policy.headerRows??1,left,policy))}
       else {const para=lineParagraph(block.line,left,before,policy);children.push(para)}
       cursor=block.bottom
     }
