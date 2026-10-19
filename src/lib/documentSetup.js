@@ -1,4 +1,5 @@
 import { bidderCompanies } from './bidderCompanies'
+import { getDefaultBidderAddress } from './bidderAddresses'
 export const representatives = [
   {
     name: 'JHO ANN Q. CLEOPAS',
@@ -18,7 +19,10 @@ export const representatives = [
 // BIDDER / COMPANY OPTIONS
 // ============================================================
 
-export const bidders = bidderCompanies
+export const bidders = bidderCompanies.map(bidder => ({
+  ...bidder,
+  address: getDefaultBidderAddress(bidder.id) || bidder.address,
+}))
 
 // ============================================================
 // DATE FORMAT
@@ -148,7 +152,9 @@ export function createDocumentSetup(
       prior('bidderName'),
 
     businessAddress:
-      prior('companyAddress'),
+      bid.businessAddress ?? bid.companyAddress ??
+      omnibus.businessAddress ?? omnibus.companyAddress ??
+      getDefaultBidderAddress(prior('bidderName')),
 
     submittedBy:
       prior('authorizedRepresentative'),

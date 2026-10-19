@@ -1,0 +1,29 @@
+{
+  "writes": 3,
+  "errors": [],
+  "selection": true,
+  "customSave": true,
+  "remoteReload": true,
+  "pendingDraftRecovery": true,
+  "noStaleAddresses": true,
+  "outputs": [
+    {
+      "company": "BUILTECH SOLUTIONS",
+      "document": "Omnibus Sworn Statement.pdf",
+      "pdfMatch": true,
+      "wordMatch": true
+    },
+    {
+      "company": "WDC BUILDERS & SUPPLIES",
+      "document": "Omnibus Sworn Statement.pdf",
+      "pdfMatch": true,
+      "wordMatch": true
+    },
+    {
+      "company": "MIKATA CORPORATION",
+      "document": "Manpower Requirements.pdf",
+      "pdfMatch": true,
+      "wordMatch": true
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import TemplateSelector from './TemplateSelector'
+import { changeBidderAddress, selectBidder } from '../lib/bidderAddresses'
 
 import {
   bidders,
@@ -36,21 +37,7 @@ export default function DocumentSetup({
   }
 
   function handleBidderChange(event) {
-    const bidderName = event.target.value
-
-    const selectedBidder =
-      bidders.find(
-        (bidder) =>
-          bidder.name === bidderName,
-      )
-
-    onChange({
-      ...value,
-      bidderName,
-      bidderId: selectedBidder?.id,
-      businessAddress:
-        selectedBidder?.address || '',
-    })
+    onChange(selectBidder(value, event.target.value))
   }
 
   function handleRepresentativeChange(
@@ -168,11 +155,7 @@ export default function DocumentSetup({
             value.businessAddress || ''
           }
           onChange={(event) =>
-            onChange({
-              ...value,
-              businessAddress:
-                event.target.value,
-            })
+            onChange(changeBidderAddress(value, event.target.value))
           }
         />
       </label>

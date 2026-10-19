@@ -1,5 +1,5 @@
 import { applyBidderLetterhead } from './bidderLetterhead'
-import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
+import { getTemplatePath, fetchAsset, getBidderCompany } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { formatLongDate } from '../../lib/documentSetup'
 
@@ -250,6 +250,14 @@ export async function generateManpowerPreview(project) {
   })
 
   // =========================================================
+  if (getBidderCompany(project).id === 'mikata') {
+    const officeFont = await pdfDoc.embedFont(StandardFonts.HelveticaBoldOblique)
+    const businessAddress = cleanValue(project.businessAddress ?? project.companyAddress)
+    page.drawRectangle({ x: 150, y: page.getHeight() - 113, width: 412, height: 38, color: white })
+    drawFitText({ text: project.bidderName, x: 151, y: page.getHeight() - 96, font: bold, size: 22, maxWidth: 410 })
+    drawFitText({ text: businessAddress ? 'CDO Office: ' + businessAddress : '',
+      x: 151, y: page.getHeight() - 110, font: officeFont, size: 10, maxWidth: 410 })
+  }
   await applyBidderLetterhead(pdfDoc, page, project, {
     box: { x: 30, y: page.getHeight() - 155, width: 540, height: 99 },
     logo: { x: 36.25, y: page.getHeight() - 64.001 - 83.479, width: 106.77, height: 83.479 },
