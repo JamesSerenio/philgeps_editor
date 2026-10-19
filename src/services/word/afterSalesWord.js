@@ -1,3 +1,4 @@
+import { getBidderLogo, fitBidderLogo } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
 import {
@@ -25,10 +26,7 @@ export async function afterSalesWord(options = {}) {
     )
   }
   serviceYearsText(setup.servicePeriodYears ?? 1)
-  const response = await fetch('/images/manpower-letterhead-logo.png')
-  if (!response.ok)
-    throw new Error('Unable to load the certificate letterhead logo.')
-  const logo = new Uint8Array(await response.arrayBuffer())
+  const logo = await getBidderLogo(setup)
   const document = options.document ?? {
     name: 'After Sales.pdf',
     generate: () => generateAfterSalesPreview(setup),
@@ -60,12 +58,8 @@ export async function afterSalesWord(options = {}) {
           },
           children: [
             new ImageRun({
-              type: 'png',
-              data: logo,
-              transformation: {
-                width: (108 * 96) / 72,
-                height: (84 * 96) / 72,
-              },
+              type: logo.type, data: logo.data,
+              transformation: fitBidderLogo(logo, (108 * 96) / 72, (84 * 96) / 72),
               floating: {
                 horizontalPosition: {
                   relative: 'page',
@@ -81,7 +75,7 @@ export async function afterSalesWord(options = {}) {
               altText: {
                 name: 'After-Sales letterhead logo',
                 title: 'Company letterhead logo',
-                description: 'Original Mikata logo used in the certificate PDF',
+                description: 'Selected company logo used in the certificate PDF',
               },
             }),
           ],

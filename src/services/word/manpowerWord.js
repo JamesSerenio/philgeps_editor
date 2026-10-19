@@ -1,11 +1,9 @@
+import { getBidderLogo, fitBidderLogo } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
 
 export async function manpowerWord(options) {
-  const response = await fetch('/images/manpower-letterhead-logo.png')
-  if (!response.ok)
-    throw new Error('Unable to load the original Manpower letterhead logo.')
-  const logo = new Uint8Array(await response.arrayBuffer())
+  const logo = await getBidderLogo(options.setup)
   return templateWord(options, 15, {
     tables: true,
     headerRows: 1,
@@ -27,12 +25,8 @@ export async function manpowerWord(options) {
           },
           children: [
             new ImageRun({
-              type: 'png',
-              data: logo,
-              transformation: {
-                width: (106.77 * 96) / 72,
-                height: (83.479 * 96) / 72,
-              },
+              type: logo.type, data: logo.data,
+              transformation: fitBidderLogo(logo, (106.77 * 96) / 72, (83.479 * 96) / 72),
               floating: {
                 horizontalPosition: {
                   relative: 'page',
@@ -47,7 +41,7 @@ export async function manpowerWord(options) {
               },
               altText: {
                 name: 'Manpower letterhead logo',
-                title: 'Mikata letterhead logo',
+                title: 'Company letterhead logo',
                 description: 'Original logo from the Manpower Requirements PDF',
               },
             }),

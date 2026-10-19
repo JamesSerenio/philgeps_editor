@@ -1,10 +1,10 @@
+import { applyBidderLetterhead } from './bidderLetterhead'
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { formatLongDate } from '../../lib/documentSetup'
 
 export async function generateManpowerPreview(project) {
-  const response = await fetch(
-    '/pdf/templates/Manpower Requirements.pdf'
-  )
+  const response = await fetchAsset(getTemplatePath("Manpower Requirements.pdf", project))
 
   if (!response.ok) {
     throw new Error(
@@ -250,6 +250,12 @@ export async function generateManpowerPreview(project) {
   })
 
   // =========================================================
+  await applyBidderLetterhead(pdfDoc, page, project, {
+    box: { x: 30, y: page.getHeight() - 155, width: 540, height: 99 },
+    logo: { x: 36.25, y: page.getHeight() - 64.001 - 83.479, width: 106.77, height: 83.479 },
+    text: { x: 151, y: page.getHeight() - 96, addressY: page.getHeight() - 110, width: 410 },
+  })
+
   // SAVE
   // =========================================================
 

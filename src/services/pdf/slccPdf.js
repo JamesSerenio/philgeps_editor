@@ -1,3 +1,4 @@
+import { getBidderCompany, getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
@@ -924,6 +925,12 @@ export async function generateSlccPreview(
     data.slccVariant === 'cctv'
       ? 'cctv'
       : 'streetlight'
+
+  if (getBidderCompany(data).id !== 'mikata') {
+    // Historical contract values belong to the selected company, never to Mikata.
+    const response = await fetchAsset(getTemplatePath('SLCC_table_' + variant + '.pdf', data))
+    return URL.createObjectURL(await response.blob())
+  }
 
   const selectedType = getSlccContractType(
     data,

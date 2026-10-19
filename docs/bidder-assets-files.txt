@@ -1,0 +1,111 @@
+MODIFIED BY THIS IMPLEMENTATION
+package.json
+src/components/DocumentSetup.jsx
+src/lib/documentSetup.js
+src/lib/pdfTemplates.js
+src/pages/ProjectEditorPage.jsx
+src/services/pdf/afterSalesPdf.js
+src/services/pdf/bidFormPdf.js
+src/services/pdf/bidSecurityPdf.js
+src/services/pdf/fullBidPackagePdf.js
+src/services/pdf/initaoDividersPdf.js
+src/services/pdf/manpowerPdf.js
+src/services/pdf/nfccPdf.js
+src/services/pdf/omnibusPdf.js
+src/services/pdf/ongoingContractsPdf.js
+src/services/pdf/previewSources.js
+src/services/pdf/slccPdf.js
+src/services/pdf/tabbingPdf.js
+src/services/pdf/tableOfContentsPdf.js
+src/services/pdf/warrantyPdf.js
+src/services/word/afterSalesWord.js
+src/services/word/index.js
+src/services/word/manpowerWord.js
+src/services/word/nfccWord.js
+src/services/word/ongoingContractsWord.js
+src/services/word/tabbingWord.js
+src/services/word/warrantyWord.js
+
+CREATED / COPIED BY THIS IMPLEMENTATION
+docs/bidder-assets-files.txt
+docs/bidder-assets-validation.json
+docs/bidder-assets.md
+public/images/BUILTECH_SOLUTIONS/.gitkeep
+public/images/FJQ_CONSTRUCTION/.gitkeep
+public/images/GOLDEN_M/.gitkeep
+public/images/MAGNUS/.gitkeep
+public/images/MANOTECH/.gitkeep
+public/images/MEGA_PLUTO/.gitkeep
+public/images/MIGOY_BUGOY/.gitkeep
+public/images/MIKATA_CORPORATION/.gitkeep
+public/images/MIKATA_CORPORATION/MIKATA CORPORATION - logo.png
+public/images/R_AND_L_BUILDERS/.gitkeep
+public/images/WDC_BUILDERS/.gitkeep
+public/pdf/reference/BUILTECH_SOLUTIONS/.gitkeep
+public/pdf/reference/FJQ_CONSTRUCTION/.gitkeep
+public/pdf/reference/GOLDEN_M/.gitkeep
+public/pdf/reference/MAGNUS/.gitkeep
+public/pdf/reference/MANOTECH/.gitkeep
+public/pdf/reference/MEGA_PLUTO/.gitkeep
+public/pdf/reference/MIGOY_BUGOY/.gitkeep
+public/pdf/reference/MIKATA_CORPORATION/.gitkeep
+public/pdf/reference/R_AND_L_BUILDERS/.gitkeep
+public/pdf/reference/WDC_BUILDERS/.gitkeep
+public/pdf/static/BUILTECH_SOLUTIONS/.gitkeep
+public/pdf/static/FJQ_CONSTRUCTION/.gitkeep
+public/pdf/static/GOLDEN_M/.gitkeep
+public/pdf/static/MAGNUS/.gitkeep
+public/pdf/static/MANOTECH/.gitkeep
+public/pdf/static/MEGA_PLUTO/.gitkeep
+public/pdf/static/MIGOY_BUGOY/.gitkeep
+public/pdf/static/MIKATA_CORPORATION/.gitkeep
+public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - Audited Financial Statements.pdf
+public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - Certificate of Registration (COR).pdf
+public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - Latest Income and Business Tax Returns.pdf
+public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - Mayor’s Permit  Municipal License (CY 2026).pdf
+public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - PhilGEPS Platinum Certificate.pdf
+public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - SEC Registration Certificate.pdf
+public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_CCTV_template.pdf
+public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_Streetlight_template.pdf
+public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - TAX_template.pdf
+public/pdf/static/R_AND_L_BUILDERS/.gitkeep
+public/pdf/static/WDC_BUILDERS/.gitkeep
+public/pdf/templates/BUILTECH_SOLUTIONS/.gitkeep
+public/pdf/templates/FJQ_CONSTRUCTION/.gitkeep
+public/pdf/templates/GOLDEN_M/.gitkeep
+public/pdf/templates/MAGNUS/.gitkeep
+public/pdf/templates/MANOTECH/.gitkeep
+public/pdf/templates/MEGA_PLUTO/.gitkeep
+public/pdf/templates/MIGOY_BUGOY/.gitkeep
+public/pdf/templates/MIKATA_CORPORATION/.gitkeep
+public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TABLE OF CONTENTS-INITAO.pdf
+public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TECHNICAL COMPONENT ENVELOPE.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - After Sales.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - BID_FORM_CLEAN_TEMPLATE.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security with table.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security without table.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Manpower Requirements.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - NFCC_Template.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - New_tab_and_pages_Initao_LGU_template.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement Initao.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - PRICE SCHEDULE FOR GOODS.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Production Delivery Schedule.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SECRETARY’S CERTIFICATE .pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_cctv.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_streetlight.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SUMMARY OF BID PRICES.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Statement of Ongoing Government and Private Contracts,.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABBING.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABLE OF CONTENTS.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Technical Specifications.pdf
+public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Warranty.pdf
+public/pdf/templates/R_AND_L_BUILDERS/.gitkeep
+public/pdf/templates/WDC_BUILDERS/.gitkeep
+scripts/organize-bidder-assets.mjs
+scripts/sync-bidder-assets.mjs
+src/lib/bidderAssetManifest.json
+src/lib/bidderAssets.js
+src/lib/bidderCompanies.js
+src/services/pdf/bidderLetterhead.js
+tests/bidder-assets.test.mjs

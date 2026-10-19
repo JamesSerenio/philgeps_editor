@@ -29,6 +29,7 @@ export async function generateFullBidPackageWord(
 
   const documents =
     getBidPackageDocuments(options)
+  documents.forEach(entry => entry.validate?.())
 
   const sections = []
   const manifest = []

@@ -1,3 +1,4 @@
+import { bidderCompanies } from './bidderCompanies'
 export const representatives = [
   {
     name: 'JHO ANN Q. CLEOPAS',
@@ -17,13 +18,7 @@ export const representatives = [
 // BIDDER / COMPANY OPTIONS
 // ============================================================
 
-export const bidders = [
-  {
-    name: 'MIKATA CORPORATION',
-    address:
-      'ZONE 13, CARMEN, CAGAYAN DE ORO CITY, MISAMIS ORIENTAL, 9000',
-  },
-]
+export const bidders = bidderCompanies
 
 // ============================================================
 // DATE FORMAT
@@ -171,6 +166,7 @@ export function createDocumentSetup(
 
 export function setupProject(setup) {
   return {
+    bidderId: setup.bidderId,
     province:
       setup.province || '',
 

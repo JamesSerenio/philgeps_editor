@@ -1,3 +1,4 @@
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
 export async function generateOmnibusPreview(project) {
@@ -37,14 +38,14 @@ export async function generateOmnibusPreview(project) {
 
   const templatePath =
     variant === 'initao_lgu'
-      ? '/pdf/templates/Omnibus Sworn Statement Initao.pdf'
-      : '/pdf/templates/Omnibus Sworn Statement.pdf'
+      ? getTemplatePath('Omnibus Sworn Statement Initao.pdf', project)
+      : getTemplatePath('Omnibus Sworn Statement.pdf', project)
 
   // =========================================================
   // LOAD PDF
   // =========================================================
 
-  const response = await fetch(
+  const response = await fetchAsset(
     `${templatePath}?variant=${variant}&v=${Date.now()}`,
     {
       cache: 'no-store',

@@ -1,3 +1,4 @@
+import { assetExists, getTemplatePath } from '../lib/bidderAssets'
 import GenerateDocumentsModal from '../components/GenerateDocumentsModal'
 import { exportFilename } from '../lib/exportFilename'
 import DashboardIcon from '../components/DashboardIcon'
@@ -660,6 +661,7 @@ function ProjectEditorContent({ id }) {
       pricingReady
     )
       ? {
+          bidderId: setup.bidderId,
           province:
             setup.province ?? '',
 
@@ -1036,9 +1038,7 @@ function ProjectEditorContent({ id }) {
       )
     : (
         selected?.template
-          ? `/pdf/templates/${encodeURIComponent(
-              selected.template
-            )}`
+          ? (() => { try { const path = getTemplatePath(selected.template, setup, { required: false }); return assetExists(path) ? path : null } catch { return null } })()
           : null
       )
 

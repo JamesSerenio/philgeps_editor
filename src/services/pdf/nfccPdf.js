@@ -1,9 +1,10 @@
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { formatLongDate } from '../../lib/documentSetup'
 import { clean } from './pdfHelpers'
 
 export async function generateNfccPreview(project) {
-  const response = await fetch('/pdf/templates/NFCC_Template.pdf')
+  const response = await fetchAsset(getTemplatePath("NFCC_Template.pdf", project))
 
   if (!response.ok) {
     throw new Error('Unable to load NFCC_Template.pdf')

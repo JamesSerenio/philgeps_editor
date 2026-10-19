@@ -47,6 +47,7 @@ export default function DocumentSetup({
     onChange({
       ...value,
       bidderName,
+      bidderId: selectedBidder?.id,
       businessAddress:
         selectedBidder?.address || '',
     })

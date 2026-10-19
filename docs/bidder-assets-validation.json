@@ -1,0 +1,230 @@
+{
+  "fullBrowser": {
+    "comparisons": [
+      {
+        "generator": "generateTabbingPreview",
+        "unchanged": true,
+        "pages": 9
+      },
+      {
+        "generator": "generateTableOfContentsPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateOngoingContractsPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateNfccPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateBidSecurityPreview",
+        "unchanged": true,
+        "pages": 2
+      },
+      {
+        "generator": "generateManpowerPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateOmnibusPreview",
+        "unchanged": true,
+        "pages": 3
+      },
+      {
+        "generator": "generateAfterSalesPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateProductWarrantyPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateBidFormPreview",
+        "unchanged": true,
+        "pages": 2
+      }
+    ],
+    "statics": [
+      {
+        "file": "SEC Registration Certificate.pdf",
+        "ok": true
+      },
+      {
+        "file": "Mayor’s Permit  Municipal License (CY 2026).pdf",
+        "ok": true
+      },
+      {
+        "file": "TAX_template.pdf",
+        "ok": true
+      },
+      {
+        "file": "Certificate of Registration (COR).pdf",
+        "ok": true
+      },
+      {
+        "file": "Latest Income and Business Tax Returns.pdf",
+        "ok": true
+      },
+      {
+        "file": "PhilGEPS Platinum Certificate.pdf",
+        "ok": true
+      },
+      {
+        "file": "Audited Financial Statements.pdf",
+        "ok": true
+      }
+    ],
+    "packages": [
+      {
+        "variant": "old_default",
+        "sections": 23,
+        "pdfPages": 74,
+        "wordSections": 23,
+        "wordBytes": 13184004,
+        "renderedWordPages": 74,
+        "first": "TABBING.pdf",
+        "second": "TABLE OF CONTENTS.pdf"
+      },
+      {
+        "variant": "initao_lgu",
+        "sections": 26,
+        "pdfPages": 77,
+        "wordSections": 26,
+        "wordBytes": 13185013,
+        "renderedWordPages": null,
+        "first": "TABBING.pdf",
+        "second": "TABLE OF CONTENTS-INITAO.pdf"
+      }
+    ],
+    "variantLoads": [
+      {
+        "name": "TABBING.pdf",
+        "pages": 9
+      },
+      {
+        "name": "TABLE OF CONTENTS-INITAO.pdf",
+        "pages": 1
+      },
+      {
+        "name": "TECHNICAL COMPONENT ENVELOPE - LEGAL DOCUMENTS (A-D).pdf",
+        "pages": 1
+      },
+      {
+        "name": "TECHNICAL COMPONENT ENVELOPE - TECHNICAL DOCUMENTS (E-I).pdf",
+        "pages": 1
+      },
+      {
+        "name": "Statement of Ongoing Government and Private Contracts,.pdf",
+        "pages": 1
+      },
+      {
+        "name": "Warranty.pdf",
+        "pages": 1
+      }
+    ],
+    "failures": [
+      {
+        "id": "magnus",
+        "pdfBlocked": true,
+        "wordBlocked": true,
+        "logoMissing": true,
+        "missing": 13
+      },
+      {
+        "id": "builtech",
+        "pdfBlocked": true,
+        "wordBlocked": true,
+        "logoMissing": true,
+        "missing": 13
+      },
+      {
+        "id": "fjq",
+        "pdfBlocked": true,
+        "wordBlocked": true,
+        "logoMissing": true,
+        "missing": 13
+      },
+      {
+        "id": "golden-m",
+        "pdfBlocked": true,
+        "wordBlocked": true,
+        "logoMissing": true,
+        "missing": 13
+      },
+      {
+        "id": "manotech",
+        "pdfBlocked": true,
+        "wordBlocked": true,
+        "logoMissing": true,
+        "missing": 13
+      },
+      {
+        "id": "r-and-l",
+        "pdfBlocked": true,
+        "wordBlocked": true,
+        "logoMissing": true,
+        "missing": 13
+      },
+      {
+        "id": "migoy-bugoy",
+        "pdfBlocked": true,
+        "wordBlocked": true,
+        "logoMissing": true,
+        "missing": 13
+      },
+      {
+        "id": "wdc",
+        "pdfBlocked": true,
+        "wordBlocked": true,
+        "logoMissing": true,
+        "missing": 13
+      },
+      {
+        "id": "mega-pluto",
+        "pdfBlocked": true,
+        "wordBlocked": true,
+        "logoMissing": true,
+        "missing": 13
+      }
+    ],
+    "browserErrors": [],
+    "httpErrors": []
+  },
+  "focusedBrowser": {
+    "variants": [
+      {
+        "name": "SLCC_table_cctv.pdf",
+        "pages": 1,
+        "wordSections": 1
+      },
+      {
+        "name": "Bid Security with table.pdf",
+        "pages": 2,
+        "wordSections": 2
+      },
+      {
+        "name": "Omnibus Sworn Statement Initao.pdf",
+        "pages": 3,
+        "wordSections": 3
+      }
+    ],
+    "publicAssetsChecked": 69,
+    "registryEntries": 11,
+    "assetErrors": [],
+    "samePreviewDownloads": true,
+    "noRegeneration": true,
+    "mobile": {
+      "bidders": 11,
+      "overflow": false
+    },
+    "browserErrors": []
+  }
+}

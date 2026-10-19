@@ -1,3 +1,4 @@
+import { getStaticDocumentPath } from '../../lib/bidderAssets'
 import { generateTabbingPreview } from './tabbingPdf'
 import { getDeadline } from '../../lib/projectFormatters'
 import { generateInitaoDividerPreview } from './initaoDividersPdf'
@@ -23,7 +24,7 @@ import * as secretarysCertificatePdf from './secretarysCertificatePdf'
 // CONFIGURATION
 // =====================================================
 
-const STATIC_FOLDER = '/pdf/static'
+// Static certificates are resolved per bidder; originals remain available for Mikata.
 
 // A4 paper in PDF points: 210 mm x 297 mm
 const A4_WIDTH = 595.28
@@ -37,11 +38,8 @@ const A4_DOCUMENTS = new Set([
 // Margin for resized document content.
 const A4_MARGIN = 20
 
-function staticFile(filename) {
-  return (
-    `${STATIC_FOLDER}/` +
-    encodeURIComponent(filename)
-  )
+function staticFile(filename, bidder) {
+  return getStaticDocumentPath(bidder, filename, { required: false })
 }
 
 // =====================================================
@@ -214,11 +212,11 @@ function generatedDocument(
 // STATIC PDF
 // =====================================================
 
-function staticDocument(filename) {
-  return {
-    name: filename,
-    path: staticFile(filename),
-  }
+function staticDocument(filename, bidder) {
+  // Constructing the document list must remain safe while Document Setup loads.
+  let path = null
+  try { path = staticFile(filename, bidder) } catch { /* validate reports it during export */ }
+  return { name: filename, path, validate: () => getStaticDocumentPath(bidder, filename) }
 }
 
 // =====================================================
@@ -574,6 +572,7 @@ function buildDocumentOrder({
   bidSecurityData,
   omnibusData,
 }) {
+  const staticForBidder = filename => staticDocument(filename, common)
   return [
     // 01
     generatedDocument(
@@ -588,28 +587,28 @@ function buildDocumentOrder({
     ),
 
     // 02
-    staticDocument(
+    staticForBidder(
       'SEC Registration Certificate.pdf'
     ),
 
     // 03
-    staticDocument(
+    staticForBidder(
       'Mayor\u2019s Permit  Municipal License (CY 2026).pdf'
     ),
 
     // 04
     // AUTOMATIC A4 CONVERSION
-    staticDocument(
+    staticForBidder(
       'TAX_template.pdf'
     ),
 
     // 05
-    staticDocument(
+    staticForBidder(
       'Certificate of Registration (COR).pdf'
     ),
 
     // 06
-    staticDocument(
+    staticForBidder(
       'Latest Income and Business Tax Returns.pdf'
     ),
 
@@ -644,12 +643,12 @@ function buildDocumentOrder({
     ),
 
     // 09
-    staticDocument(
+    staticForBidder(
       'PhilGEPS Platinum Certificate.pdf'
     ),
 
     // 10
-    staticDocument(
+    staticForBidder(
       'Audited Financial Statements.pdf'
     ),
 
@@ -892,7 +891,7 @@ export function getBidPackageDocuments({
   const divider = key => ({
     name: 'TECHNICAL COMPONENT ENVELOPE - ' + dividerNames[key] + '.pdf',
     wordSection: 'initaoDivider',
-    generate: () => generateInitaoDividerPreview(dividerPages[key]),
+    generate: () => generateInitaoDividerPreview(dividerPages[key], setup),
   })
   const orderedDocuments = omnibusVariant === 'initao_lgu'
     ? initaoOrder.map(item => typeof item === 'number' ? defaultDocuments[item - 1] : divider(item))
@@ -911,6 +910,7 @@ export function getBidPackageDocuments({
 
 export async function generateFullBidPackagePdf(options = {}) {
   const documents = getBidPackageDocuments(options)
+  documents.forEach(entry => entry.validate?.())
   const setup = options.setup ?? {}
   const onProgress = options.onProgress ?? (() => {})
   // ---------------------------------------------------
