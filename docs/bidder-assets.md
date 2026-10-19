@@ -1,3 +1,11 @@
+# Current template location
+
+All 22 template PDFs now live under public/pdf/templates/MIKATA_CORPORATION, each with the MIKATA CORPORATION - filename prefix. The two Initao PDFs remain in its INITAO subfolder. The 17 former shared originals were moved, not duplicated, and their content hashes verified unchanged. No loose PDFs remain directly under templates or templates/INITAO. Generic layouts can still be resolved for other bidders from this canonical location, while company-private history, financials and staff files still require their own company assets. The asset manifest and integrity tests reflect these final locations. Older cleanup notes below are historical and superseded by this location correction.
+
+# Template cleanup update
+
+Removed another 17 byte-identical generic template duplicates from the Mikata folder (4,568,051 bytes). The resolver now uses the retained shared originals through its existing fallback. All 22 distinct template PDFs remain available, including Default/Initao and both security/SLCC variants. The manifest contains 31 assets. Company-private templates remain in their company folders. The organization script no longer recreates generic duplicates. See template-pdf-cleanup.json for removed and retained paths. Earlier counts below are historical.
+
 # Cleanup update — 2026-10-20
 
 At the user's subsequent request, 25 unused PDF/image files were deleted (90,308,615 bytes, about 86.1 MiB). These include superseded legacy static/private templates, obsolete static SLCC PDFs, misplaced duplicate images/PDFs, a duplicate reference PDF, and starter artwork. Active company assets, generic shared templates, the shared reference PDF, and favicon remain. The manifest now contains 48 assets. Current Mikata uses 30 verified company assets; their SHA-256 hashes are tracked in tests/fixtures/mikata-assets.sha256.json. See unused-assets-cleanup.json for every removed path and its recovery-copy location outside the project.

@@ -67,6 +67,11 @@ export function getTemplatePath(filename, value, { required = true } = {}) {
   const company = getBidderCompany(value)
   let path = encodeAssetUrl(expectedBidderAssetPath(company.id, 'templates', filename))
   if (!assetExists(path) && (company.id === 'mikata' || !companyOnlyTemplates.has(filename))) path = sharedAssetPath('templates', filename)
+  // Generic layouts live with the original Mikata templates. Other bidders
+  // may reuse layouts, but must supply their own history, staff and financials.
+  if (!assetExists(path) && !companyOnlyTemplates.has(filename)) {
+    path = encodeAssetUrl(expectedBidderAssetPath('mikata', 'templates', filename))
+  }
   return required ? requireAsset(path, company.name + ' template: ' + filename) : path
 }
 export function getReferencePath(filename, value) {
