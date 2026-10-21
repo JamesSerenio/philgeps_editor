@@ -1,9 +1,10 @@
 import { StandardFonts, rgb } from 'pdf-lib'
 import { getBidderCompany } from '../../lib/bidderAssets'
 import { generateSlccPreview } from './slccPdf'
+import { nfccDefaults } from '../../lib/nfccDefaults'
 
 // Only applicant-entered Builtech data is placed in the cleared private tables.
-// Financial/staff values stay blank when missing. Ongoing-contract NONE rows
+// NFCC uses the requested Mikata starting amounts; staff stays blank when missing. Ongoing-contract NONE rows
 // retain the original template formatting; Mikata history is never used.
 export async function fillBuiltechTable(document, setup, kind) {
   if (getBidderCompany(setup).id !== 'builtech') return
@@ -20,13 +21,29 @@ export async function fillBuiltechTable(document, setup, kind) {
   if (kind === 'nfcc') {
     const finance = setup.financials ?? {}
     const names = ['currentAssets', 'currentLiabilities', 'outstandingContracts']
-    if (names.every(key => String(finance[key] ?? '').trim())) {
-      const numbers = names.map(key => Number(String(finance[key]).replace(/,/g, '')))
+    {
+      const numbers = names.map(key => Number(String(String(finance[key] ?? '').trim() ? finance[key] : nfccDefaults[key]).replace(/,/g, '')))
       if (numbers.some(value => !Number.isFinite(value) || value < 0)) throw new Error('BUILTECH NFCC: enter valid non-negative financial amounts.')
       const [assets, liabilities, outstanding] = numbers
       const working = assets - liabilities
-      const amounts = [assets, liabilities, working, working * 15, outstanding, working * 15 - outstanding]
-      amounts.forEach((amount, index) => text(amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 408, [431,451,472,492,520,567][index], 123, 12))
+      const amounts = [assets, liabilities, working, working * 15, outstanding]
+      // Rebuild the entire amount column so its borders and typography match
+      // the reference, without seams where the template was redacted.
+      const amountFont = await document.embedFont(StandardFonts.Helvetica)
+      const headerFont = await document.embedFont(StandardFonts.HelveticaBold)
+      page.drawRectangle({ x: 301.01, y: 288.53, width: 220.61, height: 150.38, color: rgb(1, 1, 1) })
+      for (const y of [438.67, 424.39, 403.99, 383.59, 363.19, 342.77, 288.77]) {
+        page.drawLine({ start: { x: 54.48, y }, end: { x: 521.38, y }, thickness: .7, color: rgb(0, 0, 0) })
+      }
+      for (const x of [54.48, 300.77, 521.38]) {
+        page.drawLine({ start: { x, y: 288.77 }, end: { x, y: 438.67 }, thickness: .7, color: rgb(0, 0, 0) })
+      }
+      page.drawText('Amount', { x: 392.23, y: 429.07, size: 9.96, font: headerFont, color: rgb(0, 0, 0) })
+      amounts.forEach((amount, index) => {
+        const value = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        const size = 15.96
+        page.drawText(value, { x: 515.81 - amountFont.widthOfTextAtSize(value, size), y: [409.15, 388.73, 368.33, 347.93, 320.57][index], size, font: amountFont, color: rgb(0, 0, 0) })
+      })
     }
   }
   if (kind === 'manpower') {

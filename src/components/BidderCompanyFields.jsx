@@ -1,3 +1,5 @@
+import { nfccDefaults } from '../lib/nfccDefaults'
+
 export default function BidderCompanyFields({ value, onChange }) {
   if (value.bidderId !== 'builtech' && value.bidderName !== 'BUILTECH SOLUTIONS') return null
   const fields = [
@@ -14,7 +16,7 @@ export default function BidderCompanyFields({ value, onChange }) {
     <h3>BUILTECH NFCC</h3>
     {['currentAssets', 'currentLiabilities', 'outstandingContracts'].map(key => <label key={key}>
       {{ currentAssets: 'Current Assets', currentLiabilities: 'Current Liabilities', outstandingContracts: 'Outstanding Contracts' }[key]}
-      <input aria-label={key} type="number" min="0" step="0.01" value={value.financials?.[key] ?? ''}
+      <input aria-label={key} type="number" min="0" step="0.01" value={value.financials?.[key] === '' ? nfccDefaults[key] : value.financials?.[key] ?? nfccDefaults[key]}
         onChange={event => onChange({ ...value, financials: { ...value.financials, [key]: event.target.value } })} />
     </label>)}
     <label>Manpower — one Name | Position per line (up to five)
