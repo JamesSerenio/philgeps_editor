@@ -77,7 +77,7 @@ def convert(source,dest,tessdata):
      if updated!=text:
       redactions.append(rect)
       replacements.append((rect,updated,span))
-  for rect in redactions: page.add_redact_annot(rect,fill=(1,1,1))
+  for rect in redactions: page.add_redact_annot(rect,fill=False)
   # Text is removed from content streams; scanned pixels and logo images are
   # removed in their redacted regions. Borders and other vector lines stay.
   page.apply_redactions(images=2,graphics=0,text=0)

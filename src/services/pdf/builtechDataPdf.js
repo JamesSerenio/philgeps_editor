@@ -1,6 +1,6 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
-import { getBidderCompany, getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
-import { formatLongDate } from '../../lib/documentSetup'
+import { StandardFonts, rgb } from 'pdf-lib'
+import { getBidderCompany } from '../../lib/bidderAssets'
+import { generateSlccPreview } from './slccPdf'
 
 // Only applicant-entered Builtech data is placed in the cleared private tables.
 // Financial/staff values stay blank when missing. Ongoing-contract NONE rows
@@ -59,35 +59,5 @@ export async function fillBuiltechTable(document, setup, kind) {
 }
 
 export async function generateBuiltechSlccPreview(setup, variant) {
-  const response = await fetchAsset(getTemplatePath('SLCC_table_' + variant + '.pdf', setup))
-  const document = await PDFDocument.load(await response.arrayBuffer())
-  const page = document.getPage(0), h = page.getHeight()
-  const font = await document.embedFont(StandardFonts.TimesRoman)
-  const bold = await document.embedFont(StandardFonts.TimesRomanBold)
-  const draw = (value,x,top,width,size=11,weight=font) => {
-    let actual=size; const lines=String(value??'').split(/\r?\n/)
-    for (const [index,line] of lines.entries()) {
-      while(actual>5 && weight.widthOfTextAtSize(line,actual)>width)actual-=.2
-      if(line)page.drawText(line,{x,y:h-top-index*12,font:weight,size:actual})
-    }
-  }
-  const clear=(x,top,width,height)=>page.drawRectangle({x,y:h-top-height,width,height,color:rgb(1,1,1)})
-  const cctv=variant==='cctv'
-  clear(28,30,790,54)
-  draw('NAME OF THE PROCURING ENTITY : '+(setup.procuringEntity??''),36,47,765)
-  draw('PROJECT TITLE : '+(setup.projectTitle??''),36,63,765)
-  draw('REFERENCE NUMBER : '+(setup.referenceNumber??''),36,79,765)
-  clear(64,117,750,38)
-  draw('REGISTERED BUSINESS NAME OF BIDDER : '+(setup.bidderName??''),68,133,730,11,bold)
-  draw('BUSINESS ADDRESS : '+(setup.businessAddress??''),68,150,730)
-  const type=setup.slccContractTypes?.[variant]==='private'?'private':'government'
-  const entry=setup.slccEntries?.[variant]?.[type]??{}
-  const fields=[entry.ownerDetails,entry.natureOfWork,entry.description,entry.percentage,entry.awardCompletion,entry.dates]
-  fields.forEach((value,index)=>draw(value,[152,294,376,513,581,696][index],cctv?(type==='private'?337:252):(type==='private'?346:284),[132,65,124,48,103,108][index],9))
-  const top=cctv?410:432
-  clear(cctv?140:285,top-8,430,cctv?76:32)
-  draw(setup.submittedBy, cctv?144:288,top+10,390,11,bold)
-  if(cctv){draw(setup.designation,144,452,390);draw(setup.bidderName,144,468,390,11,bold);draw(formatLongDate(setup.date),144,484,390)}
-  else draw('Date: '+formatLongDate(setup.date),72,461,470)
-  return URL.createObjectURL(new Blob([await document.save()],{type:'application/pdf'}))
+  return generateSlccPreview({ ...setup, slccVariant: variant })
 }

@@ -102,14 +102,14 @@
     "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SLCC_table_cctv.pdf",
     "pages": 1,
     "ocr": false,
-    "sha256": "7ec9e08849d48292eb79df63894733c246b5c294b28d6eab9fe755a4f8b9cfdf"
+    "sha256": "c7cdbf440e39b64e73c1192e07d766dc2ce704c205972213cf2e6fa800b9c5df"
   },
   {
     "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_streetlight.pdf",
     "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SLCC_table_streetlight.pdf",
     "pages": 1,
     "ocr": false,
-    "sha256": "de7708c090012e93f48bd667bcee94ca032fab5c2b4766211d778eab53a0120c"
+    "sha256": "260c46f15b3abf4b3ebcecd713850a6e45abd117a90bfd1b5232da3f74c50cc4"
   },
   {
     "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Statement of Ongoing Government and Private Contracts,.pdf",
