@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import TemplateSelector from './TemplateSelector'
-import BidderCompanyFields from './BidderCompanyFields'
 import { changeBidderAddress, selectBidder } from '../lib/bidderAddresses'
 
 import {
@@ -271,7 +270,6 @@ export default function DocumentSetup({
           readOnly
         />
       </label>
-      <BidderCompanyFields value={value} onChange={onChange} />
     </section>
   )
 }

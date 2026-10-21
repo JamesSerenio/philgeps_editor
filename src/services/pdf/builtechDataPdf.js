@@ -39,8 +39,11 @@ export async function fillBuiltechTable(document, setup, kind) {
   }
   if (kind === 'ongoing') {
     for (const [row, type] of ['government','private'].entries()) {
-      String(setup.ongoingEntries?.[type] ?? '').split('|').slice(0,6).forEach((cell, index) =>
-        text(cell, [145,250,355,458,557,660][index], 376 + row * 16.5, 94, 8))
+      const saved = String(setup.ongoingEntries?.[type] ?? '').trim()
+      const cells = saved ? saved.split('|').slice(0,6) : Array(6).fill('NONE')
+      const positions = saved ? [145,250,355,458,557,660] : [174,277,381,484,586,691]
+      cells.forEach((cell, index) =>
+        text(cell, positions[index], 376 + row * 16.5, 94, saved ? 8 : 11))
     }
   }
 }
