@@ -9,6 +9,9 @@ SOURCE = ROOT / 'public/pdf/templates/MIKATA_CORPORATION'
 DEST = ROOT / 'public/pdf/templates/BUILTECH_SOLUTIONS'
 LOGO = ROOT / 'public/images/BUILTECH_SOLUTIONS/BUILTECH_SOLUTIONS-logo.png'
 ADDRESS = 'M. Vega St., Abarlos Compound, Consolacion, Cagayan de Oro City'
+HEADER_ADDRESS = 'M. Vega St., Abalos Comp., Consolacion, Cagayan de Oro City'
+ILIGAN = 'Jamille St., Maria Cristina Subd., Brgy. San Miguel, Iligan City'
+CONTACT = 'Mobile No.: 0917 772 7893 / 0916 107 9932  Email: Builtechcorporation@gmail.com'
 COMPANY = re.compile(r'(?:MIKATA\s*)+(?:PRIME\s*)*(?:CORPORATION\s*)+', re.I)
 PEOPLE = re.compile(r'JHO\s+ANN\s+Q[.,]?\s*CLEOPAS|CARLOS\s+RAFAEL\s+A[.]?\s*JAMILO|MARLJONE\s+BLAIRE\s+B[.]?\s*TINGTING|ALYSSA\s+LYNN\s+TALINGTING|PATRICK\s+CARLO\s+P[.]?\s*DEDEL', re.I)
 HEADERS = {
@@ -71,7 +74,6 @@ def convert(source,dest,tessdata):
      if re.search(r'L-?25|San Agustin|SITIO PULI|ZONE\s+13|LOT 27 BLOCK|HOMES CARMEN|Address:\s*Carmen',updated,re.I):
       updated=('Office: ' if 'office' in updated.lower() else 'Address: ' if 'Address:' in updated else '')+ADDRESS
      if re.search(r'Tankulan|Manolo Fortich|Camaman.an',updated,re.I): updated='________________'
-     if name.startswith('Statement of Ongoing') and text.strip()=='NONE': updated=''
      if updated!=text:
       redactions.append(rect)
       replacements.append((rect,updated,span))
@@ -82,11 +84,16 @@ def convert(source,dest,tessdata):
   for rect,text,span in replacements: insert(page,rect,text,span)
   if header:
    _,logo,x,title_y,address_y=header
-   page.insert_image(fitz.Rect(logo),filename=str(LOGO),keep_proportion=True)
-   page.insert_text((x,title_y),'BUILTECH SOLUTIONS',fontname='tibo',fontsize=22)
-   size=9
-   while fitz.get_text_length('Office: '+ADDRESS,fontname='hebi',fontsize=size)>page.rect.width-x-22: size-=.2
-   page.insert_text((x,address_y),'Office: '+ADDRESS,fontname='hebi',fontsize=size)
+   left,top=logo[0],logo[1]
+   page.insert_image(fitz.Rect(left,top,left+170,top+72),filename=str(LOGO),keep_proportion=True)
+   registration='PCAB Registered No. 46156'
+   reg_width=fitz.get_text_length(registration,fontname='hebi',fontsize=8.5)
+   page.insert_text((left+(170-reg_width)/2,top+82),registration,fontname='hebi',fontsize=8.5)
+   x=left+180
+   for offset,text in [(42,'CDO Office: '+HEADER_ADDRESS),(57,'Iligan Office: '+ILIGAN),(72,CONTACT)]:
+    size=9
+    while fitz.get_text_length(text,fontname='hebi',fontsize=size)>page.rect.width-x-24: size-=.25
+    page.insert_text((x,top+offset),text,fontname='hebi',fontsize=size)
  # Catch broken/duplicated original words in the already-overlaid Initao source.
  for page in doc:
   for variant in ['MIKATA PRIME CORPORATION','Mikata Prime Corporation','MIKATA CORPORATION','MIKATA']:

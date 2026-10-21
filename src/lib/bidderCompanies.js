@@ -2,7 +2,7 @@
 export const bidderCompanies = [
   { id: 'mikata', name: 'MIKATA CORPORATION', folder: 'MIKATA_CORPORATION', aliases: ['MIKATA PRIME CORPORATION', 'MIKATA'], address: 'ZONE 13, CARMEN, CAGAYAN DE ORO CITY, MISAMIS ORIENTAL, 9000', phone: '0917 129 2972 / 0926 253 0301', email: 'MikataPrime@gmail.com' },
   { id: 'magnus', name: 'MAGNUS ELECTRONICS AND ELECTRICAL SUPPLIES TRADING', folder: 'MAGNUS', aliases: ['MAGNUS'] },
-  { id: 'builtech', name: 'BUILTECH SOLUTIONS', folder: 'BUILTECH_SOLUTIONS', aliases: ['BUILTECH'], logoFilename: 'BUILTECH_SOLUTIONS-logo.png' },
+  { id: 'builtech', name: 'BUILTECH SOLUTIONS', folder: 'BUILTECH_SOLUTIONS', aliases: ['BUILTECH'], logoFilename: 'BUILTECH_SOLUTIONS-logo.png', headerAddress: 'M. Vega St., Abalos Comp., Consolacion, Cagayan de Oro City', additionalOffice: 'Jamille St., Maria Cristina Subd., Brgy. San Miguel, Iligan City', phone: '0917 772 7893 / 0916 107 9932', email: 'Builtechcorporation@gmail.com', pcabRegistration: '46156' },
   { id: 'fjq', name: 'FJQ CONSTRUCTION', folder: 'FJQ_CONSTRUCTION', aliases: ['FJQ'] },
   { id: 'golden-m', name: 'GOLDEN M ELECTRICAL AND INDUSTRIAL SUPPLIES AND TRADING', folder: 'GOLDEN_M', aliases: ['GOLDEN M'] },
   { id: 'manotech', name: 'MANOTECH', folder: 'MANOTECH', aliases: [] },

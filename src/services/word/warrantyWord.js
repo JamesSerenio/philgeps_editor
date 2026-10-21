@@ -1,4 +1,4 @@
-import { getBidderLogo, fitBidderLogo } from '../../lib/bidderAssets'
+import { getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
 import {
@@ -12,6 +12,7 @@ export async function warrantyWord(options = {}) {
   const setup = options.setup ?? {}
   formatWarrantyYears(setup.productWarrantyYears ?? 2)
   const logo = await getBidderLogo(setup)
+  const layout = letterheadLogoLayout(logo, { x: 25.5, top: 22.652, width: 110.24, height: 83.448 })
   const document = options.document ?? {
     name: 'Warranty.pdf',
     generate: () => generateProductWarrantyPreview(setup),
@@ -55,15 +56,15 @@ export async function warrantyWord(options = {}) {
           children: [
             new ImageRun({
               type: logo.type, data: logo.data,
-              transformation: fitBidderLogo(logo, (110.24 * 96) / 72, (83.448 * 96) / 72),
+              transformation: { width: layout.width * 96 / 72, height: layout.height * 96 / 72 },
               floating: {
                 horizontalPosition: {
                   relative: 'page',
-                  offset: Math.round(25.5 * 12700),
+                  offset: Math.round(layout.x * 12700),
                 },
                 verticalPosition: {
                   relative: 'page',
-                  offset: Math.round(22.652 * 12700),
+                  offset: Math.round(layout.top * 12700),
                 },
                 wrap: { type: TextWrappingType.NONE },
                 allowOverlap: true,

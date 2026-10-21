@@ -1,4 +1,4 @@
-import { getBidderLogo, fitBidderLogo } from '../../lib/bidderAssets'
+import { getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
 import {
@@ -27,6 +27,7 @@ export async function afterSalesWord(options = {}) {
   }
   serviceYearsText(setup.servicePeriodYears ?? 1)
   const logo = await getBidderLogo(setup)
+  const layout = letterheadLogoLayout(logo, { x: 27, top: 26, width: 108, height: 84 })
   const document = options.document ?? {
     name: 'After Sales.pdf',
     generate: () => generateAfterSalesPreview(setup),
@@ -59,15 +60,15 @@ export async function afterSalesWord(options = {}) {
           children: [
             new ImageRun({
               type: logo.type, data: logo.data,
-              transformation: fitBidderLogo(logo, (108 * 96) / 72, (84 * 96) / 72),
+              transformation: { width: layout.width * 96 / 72, height: layout.height * 96 / 72 },
               floating: {
                 horizontalPosition: {
                   relative: 'page',
-                  offset: Math.round(27 * 12700),
+                  offset: Math.round(layout.x * 12700),
                 },
                 verticalPosition: {
                   relative: 'page',
-                  offset: Math.round(26 * 12700),
+                  offset: Math.round(layout.top * 12700),
                 },
                 wrap: { type: TextWrappingType.NONE },
                 allowOverlap: true,

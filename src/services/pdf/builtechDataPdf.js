@@ -3,7 +3,8 @@ import { getBidderCompany, getTemplatePath, fetchAsset } from '../../lib/bidderA
 import { formatLongDate } from '../../lib/documentSetup'
 
 // Only applicant-entered Builtech data is placed in the cleared private tables.
-// A missing value stays blank; Mikata history and financial examples are never used.
+// Financial/staff values stay blank when missing. Ongoing-contract NONE rows
+// retain the original template formatting; Mikata history is never used.
 export async function fillBuiltechTable(document, setup, kind) {
   if (getBidderCompany(setup).id !== 'builtech') return
   const page = document.getPage(0), height = page.getHeight()
@@ -40,10 +41,19 @@ export async function fillBuiltechTable(document, setup, kind) {
   if (kind === 'ongoing') {
     for (const [row, type] of ['government','private'].entries()) {
       const saved = String(setup.ongoingEntries?.[type] ?? '').trim()
-      const cells = saved ? saved.split('|').slice(0,6) : Array(6).fill('NONE')
-      const positions = saved ? [145,250,355,458,557,660] : [174,277,381,484,586,691]
+      if (!saved) continue
+      const cells = saved.split('|').slice(0,6)
+      const positions = [145,250,355,458,557,660]
+      const edges = [139.83,243.73,346.43,449.3,551.85,656.28,759.88]
+      const rowTop = [362.25,378.75][row]
+      const rowBottom = [378.25,394.85][row]
+      for (let index = 0; index < 6; index++) page.drawRectangle({
+        x: edges[index] + .5, y: height - rowBottom + .5,
+        width: edges[index + 1] - edges[index] - 1, height: rowBottom - rowTop - 1,
+        color: rgb(1,1,1),
+      })
       cells.forEach((cell, index) =>
-        text(cell, positions[index], 376 + row * 16.5, 94, saved ? 8 : 11))
+        text(cell, positions[index], 376 + row * 16.5, 94, 8))
     }
   }
 }

@@ -131,3 +131,13 @@ export function fitBidderLogo(logo, width, height) {
   const ratio = Math.min(width / logo.width, height / logo.height)
   return { width: logo.width * ratio, height: logo.height * ratio }
 }
+
+export function letterheadLogoLayout(logo, slot) {
+  const box = logo.companyId === 'builtech' ? { ...slot, width: 170, height: 72 } : slot
+  const fitted = fitBidderLogo(logo, box.width, box.height)
+  return {
+    ...fitted,
+    x: box.x + (logo.companyId === 'builtech' ? (box.width - fitted.width) / 2 : 0),
+    top: box.top + (logo.companyId === 'builtech' ? (box.height - fitted.height) / 2 : 0),
+  }
+}

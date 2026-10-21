@@ -18,7 +18,7 @@
     "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - After Sales.pdf",
     "pages": 1,
     "ocr": false,
-    "sha256": "c546a77c70a29279ffb63bfcab05cfe2dec297d177b6eb603b4c05f82ebb1fa8"
+    "sha256": "4ca138148c5c2c65ed3c112f721a5edd27a01a4895965dcafefeb4f15c290840"
   },
   {
     "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security with table.pdf",
@@ -46,7 +46,7 @@
     "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Manpower Requirements.pdf",
     "pages": 1,
     "ocr": false,
-    "sha256": "82d2cfe6b57d3a67767b1f97881bf4bc53c3436a5217741441e593b52e5a2be9"
+    "sha256": "52f266ccc02b990b5b329d56de6bb926b843e1baf2332d7b13897a2ecd6cd697"
   },
   {
     "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - New_tab_and_pages_Initao_LGU_template.pdf",
@@ -116,7 +116,7 @@
     "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Statement of Ongoing Government and Private Contracts,.pdf",
     "pages": 1,
     "ocr": false,
-    "sha256": "3c33a0f89264bbaea7239bdf9a86bf17070de7750d097b39f29a2c97ea5d3857"
+    "sha256": "e773316bc848963e35d00c0f02e444cd8f5417668a704e0a61c377e098ce00ef"
   },
   {
     "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SUMMARY OF BID PRICES.pdf",
@@ -130,7 +130,7 @@
     "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - TABBING.pdf",
     "pages": 9,
     "ocr": false,
-    "sha256": "cf1f14e2a206405ae0471f5b09a101f6fc0af39ae300331ae028d20c5898ac9a"
+    "sha256": "652d8c0530b15d10dc9cc2baddaced366bc43b692f189c95da5f634352e59e04"
   },
   {
     "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABLE OF CONTENTS.pdf",
@@ -151,6 +151,6 @@
     "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Warranty.pdf",
     "pages": 1,
     "ocr": false,
-    "sha256": "7ded70a20c021a6c5e8dc1f85e0c031c2afeb4e40adcc81166e66a8c6449b168"
+    "sha256": "cf76c5168840e4055571370d71854c3d59cb264af401041229901f0a624a2099"
   }
 ]
