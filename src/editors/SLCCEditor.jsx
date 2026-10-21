@@ -1,4 +1,5 @@
 
+import { getBidderCompany } from '../lib/bidderAssets'
 // =====================================================
 // DEFAULT VALUES FOR BOTH SLCC TEMPLATES
 // =====================================================
@@ -86,7 +87,7 @@ export default function SLCCEditor({
 
   // Get original default values.
   const defaults =
-    DEFAULT_ENTRIES[variant][contractType]
+    getBidderCompany(value).id === 'builtech' ? {} : DEFAULT_ENTRIES[variant][contractType]
 
   // Get saved values from Supabase state.
   const savedEntry =
@@ -336,6 +337,11 @@ export default function SLCCEditor({
       {/* CURRENT SELECTION INFORMATION */}
       {/* ============================================= */}
 
+      {getBidderCompany(value).id === 'builtech' && ['percentage', 'awardCompletion', 'dates'].map(field => (
+        <label key={field}>{ { percentage: 'Completion percentage', awardCompletion: 'Award amount / completion / duration', dates: 'Award / effectivity / completion dates' }[field] }
+          <textarea value={entry[field] ?? ''} onChange={event => updateField(field, event.target.value)} rows={3} style={inputStyle} />
+        </label>
+      ))}
       <div
         style={{
           padding: '10px',
@@ -375,7 +381,9 @@ export default function SLCCEditor({
             color: '#4b5563',
           }}
         >
-          {contractType === 'government'
+          {getBidderCompany(value).id === 'builtech'
+            ? 'Only the selected Builtech contract details are filled. Unprovided contract data remains blank.'
+            : contractType === 'government'
             ? 'GOVERNMENT details are editable. All PRIVATE row values will show NONE.'
             : 'PRIVATE details are editable. All GOVERNMENT row values will show NONE.'}
         </p>

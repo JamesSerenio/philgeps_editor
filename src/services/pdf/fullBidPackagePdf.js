@@ -492,6 +492,7 @@ function createDocumentData({
   const common = {
     tableOfContentsVariant: omnibusVariant,
     ...setup,
+    companyAddress: setup?.businessAddress ?? setup?.companyAddress ?? '',
 
     items: technical,
     technical,
@@ -546,15 +547,15 @@ function createDocumentData({
     },
 
     bidSecurityData: {
-      ...common,
       ...bidSecurity,
+      ...common,
       templateVariant: bidSecurityVariant,
       bidSecurityVariant,
     },
 
     omnibusData: {
-      ...common,
       ...omnibus,
+      ...common,
       templateVariant: omnibusVariant,
       omnibusVariant,
     },

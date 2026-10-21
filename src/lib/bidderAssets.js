@@ -4,6 +4,10 @@ import { bidderCompanies, getBidderCompany } from './bidderCompanies'
 export { bidderCompanies, getBidderCompany }
 const available = new Set(manifest)
 const imageExtensions = ['png', 'jpg', 'jpeg']
+const logoCandidates = company => [
+  ...(company.logoFilename ? [encodeAssetUrl('/images/' + company.folder + '/' + company.logoFilename)] : []),
+  ...imageExtensions.map(ext => encodeAssetUrl('/images/' + company.folder + '/' + company.name + ' - logo.' + ext)),
+]
 // These originals contain company history/financials/staff, so another bidder
 // must supply its own file. They are never shared as another company's data.
 const companyOnlyTemplates = new Set([
@@ -36,7 +40,7 @@ export function sharedAssetPath(kind, filename) {
 export function getBidderPaths(value) {
   const company = getBidderCompany(value)
   return { ...company,
-    logoPath: imageExtensions.map(ext => encodeAssetUrl('/images/' + company.folder + '/' + company.name + ' - logo.' + ext)).find(assetExists) ?? encodeAssetUrl('/images/' + company.folder + '/' + company.name + ' - logo.png'),
+    logoPath: logoCandidates(company).find(assetExists) ?? encodeAssetUrl('/images/' + company.folder + '/' + company.name + ' - logo.png'),
     staticFolder: '/pdf/static/' + company.folder,
     templateFolder: '/pdf/templates/' + company.folder,
     referenceFolder: '/pdf/reference/' + company.folder,
@@ -81,7 +85,7 @@ export function getReferencePath(filename, value) {
 export function getLogoPath(value) {
   const company = getBidderCompany(value)
   const stem = '/images/' + company.folder + '/' + company.name + ' - logo.'
-  const found = imageExtensions.map(ext => encodeAssetUrl(stem + ext)).find(assetExists)
+  const found = logoCandidates(company).find(assetExists)
   return found ?? requireAsset(encodeAssetUrl(stem + 'png'), company.name + ' logo')
 }
 export async function fetchAsset(path, options) {

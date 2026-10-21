@@ -1,4 +1,5 @@
 import { getBidderCompany, getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
+import { generateBuiltechSlccPreview } from './builtechDataPdf'
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
@@ -927,6 +928,7 @@ export async function generateSlccPreview(
       : 'streetlight'
 
   if (getBidderCompany(data).id !== 'mikata') {
+    if (getBidderCompany(data).id === 'builtech') return generateBuiltechSlccPreview(data, variant)
     // Historical contract values belong to the selected company, never to Mikata.
     const response = await fetchAsset(getTemplatePath('SLCC_table_' + variant + '.pdf', data))
     return URL.createObjectURL(await response.blob())

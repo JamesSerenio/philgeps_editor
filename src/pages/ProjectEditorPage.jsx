@@ -661,6 +661,7 @@ function ProjectEditorContent({ id }) {
       pricingReady
     )
       ? {
+          ...setup,
           bidderId: setup.bidderId,
           province:
             setup.province ?? '',

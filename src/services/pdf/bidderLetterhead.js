@@ -23,6 +23,6 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
   const text = geometry.text
   draw(setup.bidderName || company.name, bold, text.x, text.y, text.size ?? 22, text.width)
   draw(setup.businessAddress || setup.companyAddress, italic, text.x, text.addressY, 10, text.width)
-  draw(company.phone, italic, text.x, text.phoneY ?? text.addressY - 12, 9, text.width)
-  draw(company.email, italic, text.x, text.emailY ?? text.addressY - 23, 9, text.width)
+  draw(setup.phone ?? company.phone, italic, text.x, text.phoneY ?? text.addressY - 12, 9, text.width)
+  draw(setup.email ?? company.email, italic, text.x, text.emailY ?? text.addressY - 23, 9, text.width)
 }

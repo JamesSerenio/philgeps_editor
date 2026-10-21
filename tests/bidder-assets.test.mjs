@@ -27,15 +27,16 @@ test('company folders exist and active company/shared files retain their verifie
 
 test('all inventoried company and shared asset paths still exist after cleanup', () => {
   const manifest = JSON.parse(fs.readFileSync('src/lib/bidderAssetManifest.json', 'utf8'))
-  const templates = [...new Set(manifest.filter(file => file.startsWith('/pdf/templates/')).map(file => file.replace('/pdf/templates/', '').replace('MIKATA_CORPORATION/', '').replace('MIKATA CORPORATION - ', '')))]
+  const templates = [...new Set(manifest.filter(file => file.startsWith('/pdf/templates/MIKATA_CORPORATION/')).map(file => file.replace('/pdf/templates/MIKATA_CORPORATION/', '').replace('MIKATA CORPORATION - ', '')))]
   assert.equal(templates.length, 22)
   for (const file of manifest.filter(file => file.startsWith('/pdf/templates/'))) {
-    assert.ok(file.startsWith('/pdf/templates/MIKATA_CORPORATION/'), file)
-    assert.ok(path.posix.basename(file).startsWith('MIKATA CORPORATION - '), file)
+    const company = bidderCompanies.find(bidder => file.startsWith('/pdf/templates/' + bidder.folder + '/'))
+    assert.ok(company, file)
+    assert.ok(path.posix.basename(file).startsWith(company.name + ' - '), file)
   }
   for (const company of bidderCompanies) {
     for (const filename of templates) {
-      if (company.id !== 'mikata' && ['NFCC_Template.pdf', 'Manpower Requirements.pdf', 'Statement of Ongoing Government and Private Contracts,.pdf', 'SLCC_table_cctv.pdf', 'SLCC_table_streetlight.pdf'].includes(filename)) continue
+      if (!['mikata', 'builtech'].includes(company.id) && ['NFCC_Template.pdf', 'Manpower Requirements.pdf', 'Statement of Ongoing Government and Private Contracts,.pdf', 'SLCC_table_cctv.pdf', 'SLCC_table_streetlight.pdf'].includes(filename)) continue
       const resolved = getTemplatePath(filename, company.id)
       assert.ok(fs.existsSync('public' + decodeURIComponent(resolved)), resolved)
     }
@@ -54,6 +55,11 @@ test('missing bidder certificates never fall back to Mikata or shared legal orig
 })
 test('only generic templates may use shared fallback; history and staff require company files', () => {
   for (const company of bidderCompanies.slice(1)) {
+    if (company.id === 'builtech') {
+      assert.ok(getTemplatePath('TABBING.pdf', company.id).includes('/BUILTECH_SOLUTIONS/'))
+      assert.ok(getLogoPath(company.id).endsWith('BUILTECH_SOLUTIONS-logo.png'))
+      continue
+    }
     assert.equal(getTemplatePath('TABBING.pdf', company.id), '/pdf/templates/MIKATA_CORPORATION/MIKATA%20CORPORATION%20-%20TABBING.pdf')
     assert.equal(getTemplatePath('INITAO/TABLE OF CONTENTS-INITAO.pdf', company.id), '/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA%20CORPORATION%20-%20TABLE%20OF%20CONTENTS-INITAO.pdf')
     for (const file of ['NFCC_Template.pdf', 'Manpower Requirements.pdf', 'Statement of Ongoing Government and Private Contracts,.pdf', 'SLCC_table_cctv.pdf']) assert.throws(() => getTemplatePath(file, company.id), /Expected file: public\/pdf\/templates\//)

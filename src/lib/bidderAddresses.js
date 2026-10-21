@@ -1,4 +1,5 @@
 import { bidderCompanies } from './bidderCompanies.js'
+import { selectBidderProfile } from './bidderProfiles.js'
 
 // Additional offices are retained for reference; only the primary/main office
 // is automatically placed in Document Setup and generated documents.
@@ -50,7 +51,7 @@ export function changeBidderAddress(setup, businessAddress) {
   const addresses = savedAddresses(setup)
   const key = bidderKey(setup)
   if (key) addresses[key] = businessAddress
-  return { ...setup, businessAddress, bidderBusinessAddresses: addresses }
+  return { ...setup, businessAddress, companyAddress: businessAddress, bidderBusinessAddresses: addresses }
 }
 
 export function selectBidder(setup, bidderName) {
@@ -65,9 +66,11 @@ export function selectBidder(setup, bidderName) {
     : getDefaultBidderAddress(bidderName)
   return {
     ...setup,
+    ...selectBidderProfile(setup, previousKey, key),
     bidderName,
     bidderId: company?.id,
     businessAddress,
+    companyAddress: businessAddress,
     bidderBusinessAddresses: addresses,
   }
 }

@@ -1,4 +1,5 @@
 import { applyBidderLetterhead } from './bidderLetterhead'
+import { fillBuiltechTable } from './builtechDataPdf'
 import { getTemplatePath, fetchAsset, getBidderCompany } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { formatLongDate } from '../../lib/documentSetup'
@@ -267,6 +268,7 @@ export async function generateManpowerPreview(project) {
   // SAVE
   // =========================================================
 
+  await fillBuiltechTable(pdfDoc, project, 'manpower')
   const bytes = await pdfDoc.save()
 
   return URL.createObjectURL(

@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import TemplateSelector from './TemplateSelector'
+import BidderCompanyFields from './BidderCompanyFields'
 import { changeBidderAddress, selectBidder } from '../lib/bidderAddresses'
 
 import {
@@ -241,6 +242,8 @@ export default function DocumentSetup({
           <option value="">
             Select Submitted By
           </option>
+          {value.submittedBy && !representatives.some(person => person.name === value.submittedBy) &&
+            <option value={value.submittedBy}>{value.submittedBy}</option>}
 
           <option value="JHO ANN Q. CLEOPAS">
             JHO ANN Q. CLEOPAS
@@ -268,6 +271,7 @@ export default function DocumentSetup({
           readOnly
         />
       </label>
+      <BidderCompanyFields value={value} onChange={onChange} />
     </section>
   )
 }

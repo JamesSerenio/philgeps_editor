@@ -1,4 +1,4 @@
-
+import { getBidderCompany } from '../../lib/bidderAssets'
 import {
   PDFDocument,
   StandardFonts,
@@ -212,12 +212,12 @@ export async function generateSecretaryCertificatePreview(
 
   const secretary = clean(
     setup.corporateSecretaryName ||
-    'ALYSSA LYNN TALINGTING'
+    (getBidderCompany(setup).id === 'builtech' ? '' : 'ALYSSA LYNN TALINGTING')
   )
 
   const president = clean(
     setup.companyPresidentName ||
-    'PATRICK CARLO P. DEDEL'
+    (getBidderCompany(setup).id === 'builtech' ? '' : 'PATRICK CARLO P. DEDEL')
   )
 
   if (
@@ -225,10 +225,10 @@ export async function generateSecretaryCertificatePreview(
     !project ||
     !representative ||
     !address ||
-    !entity
+    !entity || (getBidderCompany(setup).id === 'builtech' && (!secretary || !president))
   ) {
     throw new Error(
-      'Please complete Document Setup first.'
+      'Please complete Document Setup, Corporate Secretary and Company President / Proprietor first.'
     )
   }
 

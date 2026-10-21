@@ -172,6 +172,7 @@ export function createDocumentSetup(
 
 export function setupProject(setup) {
   return {
+    ...setup,
     bidderId: setup.bidderId,
     province:
       setup.province || '',

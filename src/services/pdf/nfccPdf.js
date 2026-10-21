@@ -1,4 +1,5 @@
 import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
+import { fillBuiltechTable } from './builtechDataPdf'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { formatLongDate } from '../../lib/documentSetup'
 import { clean } from './pdfHelpers'
@@ -562,6 +563,7 @@ export async function generateNfccPreview(project) {
   // SAVE
   // =========================================================
 
+  await fillBuiltechTable(pdfDoc, project, 'nfcc')
   const bytes =
     await pdfDoc.save()
 

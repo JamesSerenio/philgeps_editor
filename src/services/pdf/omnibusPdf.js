@@ -1,4 +1,4 @@
-import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
+import { getTemplatePath, fetchAsset, getBidderCompany } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
 export async function generateOmnibusPreview(project) {
@@ -165,7 +165,11 @@ export async function generateOmnibusPreview(project) {
   }
 
   const representative =
-    representativeProfiles[
+    getBidderCompany(project).id === 'builtech' ? {
+      displayName: submittedBy,
+      civilStatus: clean(project.civilStatus),
+      residence: clean(project.representativeResidence),
+    } : representativeProfiles[
       normalizeName(submittedBy)
     ] || {
       displayName:
@@ -544,7 +548,7 @@ function replaceInlineCompany({
 
         {
           text:
-            'Filipino',
+            getBidderCompany(project).id === 'builtech' ? clean(project.nationality) : 'Filipino',
           font: boldItalic,
         },
 
