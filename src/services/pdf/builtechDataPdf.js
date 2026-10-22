@@ -2,11 +2,13 @@ import { StandardFonts, rgb } from 'pdf-lib'
 import { getBidderCompany } from '../../lib/bidderAssets'
 import { generateSlccPreview } from './slccPdf'
 import { nfccDefaults } from '../../lib/nfccDefaults'
+import { fillManotechTable } from './manotechDataPdf'
 
 // Only applicant-entered Builtech data is placed in the cleared private tables.
 // NFCC uses the requested Mikata starting amounts; staff stays blank when missing. Ongoing-contract NONE rows
 // retain the original template formatting; Mikata history is never used.
 export async function fillBuiltechTable(document, setup, kind) {
+  if (getBidderCompany(setup).id === 'manotech') return fillManotechTable(document, setup, kind)
   if (getBidderCompany(setup).id !== 'builtech') return
   const page = document.getPage(0), height = page.getHeight()
   const font = await document.embedFont(StandardFonts.TimesRoman)

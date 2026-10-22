@@ -68,7 +68,7 @@ export async function generateFullBidPackageWord(
       const parts = editable
         ? await editable({ ...options, document: entry, sectionNumber: number, documentCount: total })
         : await (async () => {
-            if (!entry.path?.startsWith('/pdf/static/')) {
+            if (!entry.path?.startsWith('/pdf/static/') && !entry.path?.startsWith('data:application/pdf;base64,')) {
               throw new Error('Editable Word generator is required for this template; image fallback is prohibited.')
             }
             source = entry.path

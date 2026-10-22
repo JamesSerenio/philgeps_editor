@@ -5,7 +5,7 @@ export const bidderCompanies = [
   { id: 'builtech', name: 'BUILTECH SOLUTIONS', folder: 'BUILTECH_SOLUTIONS', aliases: ['BUILTECH'], logoFilename: 'BUILTECH_SOLUTIONS-logo.png', headerAddress: 'M. Vega St., Abalos Comp., Consolacion, Cagayan de Oro City', additionalOffice: 'Jamille St., Maria Cristina Subd., Brgy. San Miguel, Iligan City', phone: '0917 772 7893 / 0916 107 9932', email: 'Builtechcorporation@gmail.com', pcabRegistration: '46156' },
   { id: 'fjq', name: 'FJQ CONSTRUCTION', folder: 'FJQ_CONSTRUCTION', aliases: ['FJQ'] },
   { id: 'golden-m', name: 'GOLDEN M ELECTRICAL AND INDUSTRIAL SUPPLIES AND TRADING', folder: 'GOLDEN_M', aliases: ['GOLDEN M'] },
-  { id: 'manotech', name: 'MANOTECH', folder: 'MANOTECH', aliases: [] },
+  { id: 'manotech', name: 'MANOTECH', folder: 'MANOTECH', aliases: [], logoFilename: 'MANOTECH-logo.png', address: 'Purok 4, Poblacion, Linamon, Lanao del Norte' },
   { id: 'r-and-l', name: 'R&L BUILDERS AND CONSTRUCTION SUPPLY', folder: 'R_AND_L_BUILDERS', aliases: ['R&L BUILDERS', 'R AND L BUILDERS'] },
   { id: 'migoy-bugoy', name: 'MIGOY BUGOY ENTERPRISES', folder: 'MIGOY_BUGOY', aliases: ['MIGOY BUGOY'] },
   { id: 'wdc', name: 'WDC BUILDERS & SUPPLIES', folder: 'WDC_BUILDERS', aliases: ['WDC BUILDERS', 'WDC'] },

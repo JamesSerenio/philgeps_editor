@@ -62,6 +62,8 @@ export function requireAsset(path, label = 'asset') {
 }
 export function getStaticDocumentPath(value, filename, { required = true } = {}) {
   const company = getBidderCompany(value)
+  const uploaded = typeof value === 'object' && value?.certificateUploads?.[filename]
+  if (uploaded?.bidderId === company.id && /^data:application\/pdf;base64,[A-Za-z0-9+/=]+$/.test(uploaded.dataUrl)) return uploaded.dataUrl
   let path = encodeAssetUrl(expectedBidderAssetPath(company.id, 'static', filename))
   // Only Mikata may use its unchanged legacy originals.
   if (!assetExists(path) && company.id === 'mikata' && assetExists(sharedAssetPath('static', filename))) path = sharedAssetPath('static', filename)
@@ -117,7 +119,7 @@ export async function getBidderLogo(value) {
 export function getMissingBidderAssets(value) {
   const company = getBidderCompany(value), missing = []
   for (const filename of staticDocumentNames) {
-    try { getStaticDocumentPath(company.id, filename) } catch (error) { missing.push(error.message) }
+    try { getStaticDocumentPath(value, filename) } catch (error) { missing.push(error.message) }
   }
   try { getLogoPath(company.id) } catch (error) { missing.push(error.message) }
   for (const filename of companyOnlyTemplates) {

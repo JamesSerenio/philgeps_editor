@@ -6,7 +6,7 @@ import { sectionMarker } from './wordHelpers'
 GlobalWorkerOptions.workerSrc = workerUrl
 
 export async function pdfPageImages(source, name, number, onPage = () => {}) {
-  if (typeof source !== 'string' || !source.startsWith('/pdf/static/')) {
+  if (typeof source !== 'string' || (!source.startsWith('/pdf/static/') && !source.startsWith('data:application/pdf;base64,'))) {
     throw new Error('Page images are allowed only for documents in public/pdf/static.')
   }
   const response = await fetch(source)

@@ -170,7 +170,8 @@ export async function generateOmnibusPreview(project) {
     },
   }
 
-  const selectedProfile = representativeProfiles[normalizeName(submittedBy)]
+  const selectedProfile = getBidderCompany(project).id === 'manotech'
+    ? undefined : representativeProfiles[normalizeName(submittedBy)]
   const representative = {
     displayName: selectedProfile?.displayName || titleCase(submittedBy),
     civilStatus: clean(project.civilStatus) || selectedProfile?.civilStatus || '________',
@@ -457,7 +458,7 @@ function replaceInlineCompany({
     226.4: 'is aware of and has undertaken the following responsibilities',
     364.4: 'did not give or pay directly or indirectly, any commission,',
   }[top]
-  if (getBidderCompany(project).id === 'builtech' && suffix) {
+  if (['builtech', 'manotech'].includes(getBidderCompany(project).id) && suffix) {
     eraseTop(page, x - 1, top - .8, 544 - x, 13.5)
     const size = 11.4
     const y = page.getHeight() - top - INLINE_SIZE + 1.5 + yOffset
@@ -671,7 +672,7 @@ function replaceInlineCompany({
       68,
       236,
       480,
-      79
+      getBidderCompany(project).id === 'manotech' ? 96 : 79
     )
 
     drawRichWrapped({
