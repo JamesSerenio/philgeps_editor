@@ -11,6 +11,23 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
   const bold = await document.embedFont(StandardFonts.TimesRomanBold)
   const italic = await document.embedFont(StandardFonts.HelveticaBoldOblique)
   page.drawRectangle({ ...geometry.box, color: rgb(1, 1, 1) })
+  if (company.id === 'manotech') {
+    const slot = geometry.logo
+    const layout = letterheadLogoLayout(logo, { ...slot, top: page.getHeight() - slot.y - slot.height })
+    page.drawImage(image, { x: layout.x, y: page.getHeight() - layout.top - layout.height,
+      width: layout.width, height: layout.height })
+    page.drawLine({ start: { x: layout.separatorX, y: page.getHeight() - layout.separatorTop },
+      end: { x: layout.separatorX, y: page.getHeight() - layout.separatorTop - layout.separatorHeight },
+      thickness: .7, color: rgb(.4, .4, .4) })
+    const font = await document.embedFont(StandardFonts.HelveticaBold)
+    const address = String(setup.businessAddress ?? setup.companyAddress ?? company.address ?? '').trim().toUpperCase()
+    const x = layout.separatorX + 12, available = page.getWidth() - x - 24
+    let size = 11
+    while (size > 6 && font.widthOfTextAtSize(address, size) > available) size -= .1
+    if (address) page.drawText(address, { x, y: page.getHeight() - layout.separatorTop - layout.separatorHeight / 2 - size * .35,
+      size, font, color: rgb(0, 0, 0) })
+    return
+  }
   const slot = geometry.logo, ratio = Math.min(slot.width / image.width, slot.height / image.height)
   const width = image.width * ratio, height = image.height * ratio
   page.drawImage(image, { x: slot.x + (slot.width - width) / 2, y: slot.y + (slot.height - height) / 2, width, height })

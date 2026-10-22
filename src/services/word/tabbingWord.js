@@ -1,6 +1,7 @@
 import { getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
+import { manotechLetterheadRule } from './manotechLetterhead'
 
 export async function tabbingWord(options) {
   const logo = await getBidderLogo(options.setup)
@@ -14,7 +15,7 @@ export async function tabbingWord(options) {
     pageChildren() {
       return [new Paragraph({ style: 'TabbingLogo',
         spacing: { before: 0, after: 0, line: 1, lineRule: LineRuleType.EXACT },
-        children: [new ImageRun({ type: logo.type, data: logo.data,
+        children: [...manotechLetterheadRule(logo, layout), new ImageRun({ type: logo.type, data: logo.data,
           transformation: { width: layout.width * 96 / 72, height: layout.height * 96 / 72 },
           floating: {
             horizontalPosition: { relative: 'page', offset: Math.round(layout.x * 12700) },

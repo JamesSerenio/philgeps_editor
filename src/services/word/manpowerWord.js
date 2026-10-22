@@ -1,6 +1,7 @@
 import { getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
+import { manotechLetterheadRule } from './manotechLetterhead'
 
 export async function manpowerWord(options) {
   const logo = await getBidderLogo(options.setup)
@@ -25,6 +26,7 @@ export async function manpowerWord(options) {
             lineRule: LineRuleType.EXACT,
           },
           children: [
+            ...manotechLetterheadRule(logo, layout),
             new ImageRun({
               type: logo.type, data: logo.data,
               transformation: { width: layout.width * 96 / 72, height: layout.height * 96 / 72 },

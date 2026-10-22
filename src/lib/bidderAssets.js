@@ -135,6 +135,12 @@ export function fitBidderLogo(logo, width, height) {
 }
 
 export function letterheadLogoLayout(logo, slot) {
+  if (logo.companyId === 'manotech') {
+    const fitted = fitBidderLogo(logo, 190, slot.height)
+    return { ...fitted, x: slot.x, top: slot.top + (slot.height - fitted.height) / 2,
+      separatorX: slot.x + 200, separatorTop: slot.top + 5,
+      separatorHeight: Math.min(72, slot.height - 10) }
+  }
   const box = logo.companyId === 'builtech' ? { ...slot, width: 170, height: 72 } : slot
   const fitted = fitBidderLogo(logo, box.width, box.height)
   return {
