@@ -1,0 +1,178 @@
+[
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TABLE OF CONTENTS-INITAO.pdf",
+    "output": "public/pdf/templates/MANOTECH/INITAO/MANOTECH - TABLE OF CONTENTS-INITAO.pdf",
+    "sourceSha256": "75321c3dec945583ba4b3cdd9a540f3bb2e6d5d1925656dc9187e349a65112ad",
+    "sha256": "82afc0f96e5759e247c378f1241e991a2b885cbcadc68388057f8857e16850a0",
+    "pages": 1,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TECHNICAL COMPONENT ENVELOPE.pdf",
+    "output": "public/pdf/templates/MANOTECH/INITAO/MANOTECH - TECHNICAL COMPONENT ENVELOPE.pdf",
+    "sourceSha256": "6dc53a9b6ee3e8cfd44d5083955cb3911c6825db5a508803e5a25cb0e529de72",
+    "sha256": "bb5fc8882dd15201fc652370d4f192a7a4cd39ec994048279c2c4c52181619db",
+    "pages": 3,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - After Sales.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - After Sales.pdf",
+    "sourceSha256": "9bdc0379e812c453f2cdd9d1ce0f04972cbae2fd4a6a1e3e4b71032779534746",
+    "sha256": "11a7333acd88f3dccc74ec2fffa7f28dead5361c3fd8f3af7d09dd18037f6b10",
+    "pages": 1,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security with table.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - Bid Security with table.pdf",
+    "sourceSha256": "215b5affbc006b22272fbcabadcd91d7f257ae162abc1d590e54b01a4caeb729",
+    "sha256": "0b7295393f20022fdc110a6a20359a9d4d32003aa03bc157cfb0c034bcf49f9c",
+    "pages": 2,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security without table.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - Bid Security without table.pdf",
+    "sourceSha256": "6a2679637dbdeddc6cdbef0bc22f55ee91fe91c313d7ab2fb8d8c1c791ea7bc2",
+    "sha256": "51e800f7f988f590bd31027ecce5cc6bac74ccd6aa94f91c2852206899b0896b",
+    "pages": 2,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - BID_FORM_CLEAN_TEMPLATE.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - BID_FORM_CLEAN_TEMPLATE.pdf",
+    "sourceSha256": "5553895863dc0a29cc0fa73ea3bb00f0600a346b570efb0492647bcb98e19a78",
+    "sha256": "51169ac3a69bdb6030c5c69000fb2428335e1c6d41666a8b6bd7fb79ff6287e7",
+    "pages": 2,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Manpower Requirements.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - Manpower Requirements.pdf",
+    "sourceSha256": "7a8459e14cc504d57b2fb5aa30645cf1efcbfda9bce78403d1041eee067b425a",
+    "sha256": "c9cf7c52879d05157e12b64070071b856178f109436d13281f398e7d5dc24359",
+    "pages": 1,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - New_tab_and_pages_Initao_LGU_template.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - New_tab_and_pages_Initao_LGU_template.pdf",
+    "sourceSha256": "6e40cf4b959614c2ec3d8334b323afca6a05166c223a942ec73b2d84118c5a90",
+    "sha256": "f0a77e225ba270ad286b1399a59fd3b0b38473b45b4e276e723ed7686bf972ea",
+    "pages": 6,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - NFCC_Template.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - NFCC_Template.pdf",
+    "sourceSha256": "52803962106803098b58f6d7bc72b8d88312f5e0cbbe59b357e05eb66d9235a4",
+    "sha256": "522ae6936b2af075110345bfc1d52fe806b6870b986a64bfeaf7f7fca75c95fc",
+    "pages": 1,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement Initao.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - Omnibus Sworn Statement Initao.pdf",
+    "sourceSha256": "f08f229f972779c73ebaea68f64c107751662ab82bd0760434cb04f9e62eaffa",
+    "sha256": "92b0be96104002ba99f8ba0075217e076e91e14959326032ee2b0d480ae68ea5",
+    "pages": 3,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - Omnibus Sworn Statement.pdf",
+    "sourceSha256": "3772a1a5dbfb9c4dec73d0ef16e1c67491a0fb5f78e6ca39cc6c32db248210ff",
+    "sha256": "279f7b79eb3512ffa9b4062d6f0986b6ba46847c332ed0688050064ba197e14a",
+    "pages": 3,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - PRICE SCHEDULE FOR GOODS.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - PRICE SCHEDULE FOR GOODS.pdf",
+    "sourceSha256": "6a50e6963d1a82179920b66cd1639f92ad3c7645fb84a02cc21046fa8355c993",
+    "sha256": "ea5150ef8871723feaebb4876fca6f6fc8c540599774d2514f09a542f92ed2ad",
+    "pages": 1,
+    "ocr": true
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Production Delivery Schedule.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - Production Delivery Schedule.pdf",
+    "sourceSha256": "91ce60dbe3085e5d720f598df6cf78cf5e746572966f628256d0ff8d8dc821aa",
+    "sha256": "84c916153ce5771bcb6a720877e6b319626b8007171ba4b84bfc1cee9fe6f763",
+    "pages": 1,
+    "ocr": true
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SECRETARY\u2019S CERTIFICATE .pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - SECRETARY\u2019S CERTIFICATE .pdf",
+    "sourceSha256": "6cbaadf770c98fd786b134f8a1f468a3b4ec0fd7d16cd1bd8bf75657b7610339",
+    "sha256": "faab411afa6927be53c6d246be1822dcb6ab0df2603809dc0500695c9f97396a",
+    "pages": 2,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_cctv.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - SLCC_table_cctv.pdf",
+    "sourceSha256": "4819f6bb1ede31fdeaa6b8db48059b47a1daa5fce4724a4f12757edc7108278e",
+    "sha256": "38a35c807b4c3e3c709a47436d8f14e9b201b101947f178a0a08ec1b54bdb792",
+    "pages": 1,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_streetlight.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - SLCC_table_streetlight.pdf",
+    "sourceSha256": "b70cfe2d9123d5549687abf2d0f0ad09235e193b1c915e520cca2db104e52acc",
+    "sha256": "ee8aac5269b4ba9dd046e1322f7ab25f7a14244e57600b2de097daa2b887084e",
+    "pages": 1,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Statement of Ongoing Government and Private Contracts,.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - Statement of Ongoing Government and Private Contracts,.pdf",
+    "sourceSha256": "dd2c2f6d83adb14717a5c501dee7cf5f698ec0eb0f3e91b664d5ad259f48871c",
+    "sha256": "b15279bfce8d8649ba13f09ba0b5c00004ff44c9caceff7746503ef91a9ef137",
+    "pages": 1,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SUMMARY OF BID PRICES.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - SUMMARY OF BID PRICES.pdf",
+    "sourceSha256": "4510b9957c19b6e913c75521d2d69f21321da1e5b9a56ad1735db2c7270b9371",
+    "sha256": "d9976351316b64958076ddc86ef38f28f37645f01b7434a9dd475a1dd3a86b9d",
+    "pages": 1,
+    "ocr": true
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABBING.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - TABBING.pdf",
+    "sourceSha256": "18f988be99cf230a3af0045b47512d2d4f9e0db7ae6fe63568354ef5820b13db",
+    "sha256": "83130133cdf038ad87c147034ff8dd1a66a8825004b43cd1d4f690739311d043",
+    "pages": 9,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABLE OF CONTENTS.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - TABLE OF CONTENTS.pdf",
+    "sourceSha256": "0a29c8711dd4b8ce52156ec28695a0742cf3ebb6c5d355c6eb637b9e6d825ea3",
+    "sha256": "321a1429a72fbee58d37ef6bd5e95d3267b5da02eba2c0796907b075a94170b8",
+    "pages": 1,
+    "ocr": false
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Technical Specifications.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - Technical Specifications.pdf",
+    "sourceSha256": "c0ab0caae5db24af54963503c63fc1eded6893236ff9a739cd6f3e6a00847908",
+    "sha256": "35f6aba30b396d05c07565409d11b40727cfc262d7ad51add78bf3bfec13c176",
+    "pages": 1,
+    "ocr": true
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Warranty.pdf",
+    "output": "public/pdf/templates/MANOTECH/MANOTECH - Warranty.pdf",
+    "sourceSha256": "b50096f129444223d36061c92bb506fb3ea5bf7baca0fe67ad5c998c3c5c4d80",
+    "sha256": "4d40faa7b564c0b006bafd87c299fea0a1a6188a06a32751e0477cea65d7145d",
+    "pages": 1,
+    "ocr": false
+  }
+]

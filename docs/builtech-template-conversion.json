@@ -1,0 +1,156 @@
+[
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TABLE OF CONTENTS-INITAO.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/INITAO/BUILTECH SOLUTIONS - TABLE OF CONTENTS-INITAO.pdf",
+    "pages": 1,
+    "ocr": false,
+    "sha256": "ca8582396e35d5270abd30c021040124e8c2685e919108d3adc97fd6cdc969e6"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TECHNICAL COMPONENT ENVELOPE.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/INITAO/BUILTECH SOLUTIONS - TECHNICAL COMPONENT ENVELOPE.pdf",
+    "pages": 3,
+    "ocr": false,
+    "sha256": "68e7d75ea215bdcbaa8d6bae93c1eaf331c650232c64c8284f622fa9fb79641e"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - After Sales.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - After Sales.pdf",
+    "pages": 1,
+    "ocr": false,
+    "sha256": "4ca138148c5c2c65ed3c112f721a5edd27a01a4895965dcafefeb4f15c290840"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security with table.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Bid Security with table.pdf",
+    "pages": 2,
+    "ocr": false,
+    "sha256": "998b2e4f69b36c146ec53843bc365cb2ff28b0bf4572c0e2996e9dc9e9ff47b8"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security without table.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Bid Security without table.pdf",
+    "pages": 2,
+    "ocr": false,
+    "sha256": "d4044405324f131d25a7ebaff86b6d3a3b663fd4b35496de0309eda1947fb751"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - BID_FORM_CLEAN_TEMPLATE.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - BID_FORM_CLEAN_TEMPLATE.pdf",
+    "pages": 2,
+    "ocr": false,
+    "sha256": "bfa6578bdbde4be0961c7d26c8778bacc1ef6ca8d725c04cd3c48434c7f4f768"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Manpower Requirements.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Manpower Requirements.pdf",
+    "pages": 1,
+    "ocr": false,
+    "sha256": "52f266ccc02b990b5b329d56de6bb926b843e1baf2332d7b13897a2ecd6cd697"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - New_tab_and_pages_Initao_LGU_template.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - New_tab_and_pages_Initao_LGU_template.pdf",
+    "pages": 6,
+    "ocr": true,
+    "sha256": "f8894ac3601d9d9a803a6f3522682cc84b1b789e3dda6c749ddd883beb0522ad"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - NFCC_Template.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - NFCC_Template.pdf",
+    "pages": 1,
+    "ocr": false,
+    "sha256": "5ee13b970ad3dd8d1d71a862804e72d14e150acd5d645a82cee9ad6dbda53fdf"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement Initao.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Omnibus Sworn Statement Initao.pdf",
+    "pages": 3,
+    "ocr": false,
+    "sha256": "32951613faf7052c121a1234dea21b46d74bfa52c940fd001058de54321e8720"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Omnibus Sworn Statement.pdf",
+    "pages": 3,
+    "ocr": false,
+    "sha256": "64a0e725a5047a8ddc455c19d0ef81a7d68ce6b02c86b973a99e31881bc6f32d"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - PRICE SCHEDULE FOR GOODS.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - PRICE SCHEDULE FOR GOODS.pdf",
+    "pages": 1,
+    "ocr": true,
+    "sha256": "d1c3cf1c59e501f0a3dbdd8350155c4ffcd77524bd192d0b36ea1509249e9d91"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Production Delivery Schedule.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Production Delivery Schedule.pdf",
+    "pages": 1,
+    "ocr": true,
+    "sha256": "98ec68d762f72c086259e28358b11de3d0738d48398e50bcf594817be774ff8e"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SECRETARY\u2019S CERTIFICATE .pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SECRETARY\u2019S CERTIFICATE .pdf",
+    "pages": 2,
+    "ocr": false,
+    "sha256": "7221e4b57e14d23a72033444de6838e9ed1265a92effcf22733803ef7fce8294"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_cctv.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SLCC_table_cctv.pdf",
+    "pages": 1,
+    "ocr": false,
+    "sha256": "c7cdbf440e39b64e73c1192e07d766dc2ce704c205972213cf2e6fa800b9c5df"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_streetlight.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SLCC_table_streetlight.pdf",
+    "pages": 1,
+    "ocr": false,
+    "sha256": "260c46f15b3abf4b3ebcecd713850a6e45abd117a90bfd1b5232da3f74c50cc4"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Statement of Ongoing Government and Private Contracts,.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Statement of Ongoing Government and Private Contracts,.pdf",
+    "pages": 1,
+    "ocr": false,
+    "sha256": "e773316bc848963e35d00c0f02e444cd8f5417668a704e0a61c377e098ce00ef"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SUMMARY OF BID PRICES.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SUMMARY OF BID PRICES.pdf",
+    "pages": 1,
+    "ocr": true,
+    "sha256": "fc751be6fe36bdc1361098d1b422b1ec427d41006fc965bfa02e375e1e4414c3"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABBING.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - TABBING.pdf",
+    "pages": 9,
+    "ocr": false,
+    "sha256": "652d8c0530b15d10dc9cc2baddaced366bc43b692f189c95da5f634352e59e04"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABLE OF CONTENTS.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - TABLE OF CONTENTS.pdf",
+    "pages": 1,
+    "ocr": false,
+    "sha256": "23408498fd9fe26fabc2ae6c38394a6fd4389b660b2b94a71fa90b88febba090"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Technical Specifications.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Technical Specifications.pdf",
+    "pages": 1,
+    "ocr": true,
+    "sha256": "6c4d93d4f4c521eba7cb01c1b1392329ee1b85168f44c5cd5ee0eaa85069ef4c"
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Warranty.pdf",
+    "output": "public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Warranty.pdf",
+    "pages": 1,
+    "ocr": false,
+    "sha256": "cf76c5168840e4055571370d71854c3d59cb264af401041229901f0a624a2099"
+  }
+]

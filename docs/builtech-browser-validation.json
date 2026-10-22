@@ -1,0 +1,306 @@
+{
+  "documents": [
+    {
+      "variant": "old_default",
+      "name": "TABBING.pdf",
+      "pages": 9,
+      "wordSections": 9,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "TABLE OF CONTENTS.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "Statement of Ongoing Government and Private Contracts,.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "SLCC_table_streetlight.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "NFCC_Template.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "Technical Specifications.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "Bid Security without table.pdf",
+      "pages": 2,
+      "wordSections": 2,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "Production Delivery Schedule.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "Manpower Requirements.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "Omnibus Sworn Statement.pdf",
+      "pages": 3,
+      "wordSections": 3,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "After Sales.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "Warranty.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "BID_FORM_CLEAN_TEMPLATE.pdf",
+      "pages": 2,
+      "wordSections": 2,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "SECRETARY'S CERTIFICATE.pdf",
+      "pages": 2,
+      "wordSections": 2,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "PRICE SCHEDULE FOR GOODS.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "old_default",
+      "name": "SUMMARY OF BID PRICES.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "TABBING.pdf",
+      "pages": 9,
+      "wordSections": 9,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "TABLE OF CONTENTS-INITAO.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "TECHNICAL COMPONENT ENVELOPE - LEGAL DOCUMENTS (A-D).pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "TECHNICAL COMPONENT ENVELOPE - TECHNICAL DOCUMENTS (E-I).pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "Statement of Ongoing Government and Private Contracts,.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "SLCC_table_cctv.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "Bid Security with table.pdf",
+      "pages": 2,
+      "wordSections": 2,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "Technical Specifications.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "Production Delivery Schedule.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "Manpower Requirements.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "After Sales.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "Warranty.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "Omnibus Sworn Statement Initao.pdf",
+      "pages": 3,
+      "wordSections": 3,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "TECHNICAL COMPONENT ENVELOPE - FINANCIAL DOCUMENTS (J-K).pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "NFCC_Template.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "BID_FORM_CLEAN_TEMPLATE.pdf",
+      "pages": 2,
+      "wordSections": 2,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "SECRETARY'S CERTIFICATE.pdf",
+      "pages": 2,
+      "wordSections": 2,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "PRICE SCHEDULE FOR GOODS.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    },
+    {
+      "variant": "initao_lgu",
+      "name": "SUMMARY OF BID PRICES.pdf",
+      "pages": 1,
+      "wordSections": 1,
+      "pdfNoOldIdentity": true,
+      "wordNoOldIdentity": true
+    }
+  ],
+  "variants": [
+    {
+      "variant": "old_default",
+      "sections": 23
+    },
+    {
+      "variant": "initao_lgu",
+      "sections": 26
+    }
+  ],
+  "missingOfficial": [
+    {
+      "format": "pdf",
+      "blocked": true
+    },
+    {
+      "format": "word",
+      "blocked": true
+    }
+  ],
+  "logo": "/images/BUILTECH_SOLUTIONS/BUILTECH_SOLUTIONS-logo.png",
+  "browserErrors": []
+}

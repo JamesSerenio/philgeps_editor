@@ -1,3 +1,4 @@
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { formatLongDate } from '../../lib/documentSetup'
 import { clean, titleCase, wrapText } from './pdfHelpers'
@@ -5,9 +6,9 @@ import { clean, titleCase, wrapText } from './pdfHelpers'
 export async function generateTableOfContentsPreview(project = {}) {
   const initao = (project.tableOfContentsVariant ?? project.templateVariant) === 'initao_lgu'
   const path = initao
-    ? '/pdf/templates/INITAO/TABLE OF CONTENTS-INITAO.pdf'
-    : '/pdf/templates/TABLE OF CONTENTS.pdf'
-  const response = await fetch(path)
+    ? getTemplatePath('INITAO/TABLE OF CONTENTS-INITAO.pdf', project)
+    : getTemplatePath('TABLE OF CONTENTS.pdf', project)
+  const response = await fetchAsset(path)
   if (!response.ok) throw new Error('Unable to load ' + path)
   const document = await PDFDocument.load(await response.arrayBuffer())
   const page = document.getPages()[0]
