@@ -36,10 +36,16 @@ export async function generateOmnibusPreview(project) {
   // EXACT TEMPLATE
   // =========================================================
 
+  // Both companies use the same clean form geometry. The converted Builtech
+  // template contains shortened replacement spans and leftover placeholders;
+  // fill the original form directly with the selected company's details.
+  const formSetup = getBidderCompany(project).id === 'builtech'
+    ? { ...project, bidderId: 'mikata' }
+    : project
   const templatePath =
     variant === 'initao_lgu'
-      ? getTemplatePath('Omnibus Sworn Statement Initao.pdf', project)
-      : getTemplatePath('Omnibus Sworn Statement.pdf', project)
+      ? getTemplatePath('Omnibus Sworn Statement Initao.pdf', formSetup)
+      : getTemplatePath('Omnibus Sworn Statement.pdf', formSetup)
 
   // =========================================================
   // LOAD PDF
@@ -167,8 +173,8 @@ export async function generateOmnibusPreview(project) {
   const representative =
     getBidderCompany(project).id === 'builtech' ? {
       displayName: submittedBy,
-      civilStatus: clean(project.civilStatus),
-      residence: clean(project.representativeResidence),
+      civilStatus: clean(project.civilStatus) || '________',
+      residence: clean(project.representativeResidence) || '________________',
     } : representativeProfiles[
       normalizeName(submittedBy)
     ] || {
@@ -507,7 +513,7 @@ function replaceInlineCompany({
       page,
       68,
       138,
-      480,
+      510,
       49
     )
 
@@ -548,7 +554,7 @@ function replaceInlineCompany({
 
         {
           text:
-            getBidderCompany(project).id === 'builtech' ? clean(project.nationality) : 'Filipino',
+            getBidderCompany(project).id === 'builtech' ? clean(project.nationality) || '________' : 'Filipino',
           font: boldItalic,
         },
 
