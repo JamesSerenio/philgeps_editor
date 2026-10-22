@@ -170,8 +170,7 @@ export async function generateOmnibusPreview(project) {
     },
   }
 
-  const selectedProfile = getBidderCompany(project).id === 'manotech'
-    ? undefined : representativeProfiles[normalizeName(submittedBy)]
+  const selectedProfile = representativeProfiles[normalizeName(submittedBy)]
   const representative = {
     displayName: selectedProfile?.displayName || titleCase(submittedBy),
     civilStatus: clean(project.civilStatus) || selectedProfile?.civilStatus || '________',
