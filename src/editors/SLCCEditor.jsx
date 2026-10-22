@@ -337,11 +337,6 @@ export default function SLCCEditor({
       {/* CURRENT SELECTION INFORMATION */}
       {/* ============================================= */}
 
-      {getBidderCompany(value).id === 'builtech' && ['percentage', 'awardCompletion', 'dates'].map(field => (
-        <label key={field}>{ { percentage: 'Completion percentage', awardCompletion: 'Award amount / completion / duration', dates: 'Award / effectivity / completion dates' }[field] }
-          <textarea value={entry[field] ?? ''} onChange={event => updateField(field, event.target.value)} rows={3} style={inputStyle} />
-        </label>
-      ))}
       <div
         style={{
           padding: '10px',
@@ -381,9 +376,7 @@ export default function SLCCEditor({
             color: '#4b5563',
           }}
         >
-          {getBidderCompany(value).id === 'builtech'
-            ? 'Only the selected Builtech contract details are filled. Unprovided contract data remains blank.'
-            : contractType === 'government'
+          {contractType === 'government'
             ? 'GOVERNMENT details are editable. All PRIVATE row values will show NONE.'
             : 'PRIVATE details are editable. All GOVERNMENT row values will show NONE.'}
         </p>
