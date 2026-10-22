@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import TemplateSelector from './TemplateSelector'
-import ManotechCompanyFields from './ManotechCompanyFields'
 import { changeBidderAddress, selectBidder } from '../lib/bidderAddresses'
 
 import {
@@ -16,7 +15,6 @@ export default function DocumentSetup({
   onTemplateChange,
 }) {
   const dateInputRef = useRef(null)
-  const isManotech = value.bidderId === 'manotech' || value.bidderName === 'MANOTECH'
 
   const textFields = [
     ['province', 'Province'],
@@ -235,8 +233,7 @@ export default function DocumentSetup({
       <label>
         Submitted By
 
-        {isManotech ? <input aria-label="Submitted By" type="text"
-          value={value.submittedBy ?? ''} onChange={event => onChange({ ...value, submittedBy: event.target.value })} /> : <select
+        <select
           aria-label="Submitted By"
           value={value.submittedBy ?? ''}
           onChange={handleRepresentativeChange}
@@ -258,7 +255,7 @@ export default function DocumentSetup({
           <option value="MARLJONE BLAIRE B. TINGTING">
             MARLJONE BLAIRE B. TINGTING
           </option>
-        </select>}
+        </select>
       </label>
 
       <label>
@@ -270,11 +267,9 @@ export default function DocumentSetup({
           value={
             value.designation || ''
           }
-          readOnly={!isManotech}
-          onChange={event => onChange({ ...value, designation: event.target.value })}
+          readOnly
         />
       </label>
-      {isManotech && <ManotechCompanyFields value={{ ...value, bidderId: 'manotech' }} onChange={onChange} />}
     </section>
   )
 }

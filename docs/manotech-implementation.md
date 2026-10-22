@@ -1,6 +1,12 @@
 MANOTECH implementation and validation
 ====================================
 
+Update October 23, 2026: at the user's request, the additional Manotech sidebar
+sections are hidden. Document Setup now shows the same fields, representative
+dropdown and automatic designation as Mikata. Existing saved Manotech profile
+data and template/export support are retained. The company-details and upload
+components below remain available in source but are no longer mounted there.
+
 Manotech now uses its own 22 applicant-controlled PDF forms and supplied logo.
 The saved address is retained: Purok 4, Poblacion, Linamon, Lanao del Norte.
 Contact, representative, secretary, president, financial, staff and contract
