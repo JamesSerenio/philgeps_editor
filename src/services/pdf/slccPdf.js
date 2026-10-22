@@ -1,3 +1,4 @@
+import { getBidderCompany, getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
@@ -120,8 +121,8 @@ export function getSlccEntry(
 ) {
   return {
     ...(
-      DEFAULT_ENTRIES[variant]?.[type] ??
-      DEFAULT_ENTRIES.streetlight.government
+      getBidderCompany(data).id === 'builtech' ? {} :
+      DEFAULT_ENTRIES[variant]?.[type] ?? DEFAULT_ENTRIES.streetlight.government
     ),
     ...(
       data.slccEntries?.[variant]?.[type] ?? {}
@@ -925,6 +926,12 @@ export async function generateSlccPreview(
       ? 'cctv'
       : 'streetlight'
 
+  if (!['mikata', 'builtech'].includes(getBidderCompany(data).id)) {
+    // Historical contract values belong to the selected company, never to Mikata.
+    const response = await fetchAsset(getTemplatePath('SLCC_table_' + variant + '.pdf', data))
+    return URL.createObjectURL(await response.blob())
+  }
+
   const selectedType = getSlccContractType(
     data,
     variant
@@ -1075,12 +1082,10 @@ export async function generateSlccPreview(
     171
   )
 
-  const fields = [
-    entry.ownerDetails,
-    entry.natureOfWork,
-    entry.description,
-    ...FINANCIALS[variant],
-  ]
+  const fields = getBidderCompany(data).id === 'builtech'
+    ? [entry.ownerDetails, entry.natureOfWork, entry.description,
+      entry.percentage, entry.awardCompletion, entry.dates].map(value => flat(value) ? value : 'NONE')
+    : [entry.ownerDetails, entry.natureOfWork, entry.description, ...FINANCIALS[variant]]
 
   const tableBottom = drawTable(
     page,

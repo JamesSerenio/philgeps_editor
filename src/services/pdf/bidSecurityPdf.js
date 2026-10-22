@@ -1,3 +1,4 @@
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
 export async function generateBidSecurityPreview(project) {
@@ -10,10 +11,10 @@ export async function generateBidSecurityPreview(project) {
 
   const path =
     variant === 'with_table'
-      ? '/pdf/templates/Bid Security with table.pdf'
-      : '/pdf/templates/Bid Security without table.pdf'
+      ? getTemplatePath('Bid Security with table.pdf', project)
+      : getTemplatePath('Bid Security without table.pdf', project)
 
-  const response = await fetch(path)
+  const response = await fetchAsset(path)
 
   if (!response.ok) {
     throw new Error(`Cannot load PDF: ${path}`)

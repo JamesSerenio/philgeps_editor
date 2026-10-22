@@ -1,3 +1,4 @@
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 
 import {
   PDFDocument,
@@ -9,8 +10,7 @@ import {
   buildBidFormData,
 } from '../../lib/bidFormData'
 
-const templateUrl =
-  '/pdf/templates/BID_FORM_CLEAN_TEMPLATE.pdf'
+const templateFilename = 'BID_FORM_CLEAN_TEMPLATE.pdf'
 
 const BLACK = rgb(0, 0, 0)
 const WHITE = rgb(1, 1, 1)
@@ -490,9 +490,9 @@ function drawAuthorization(
 // LOAD ORIGINAL PDF TEMPLATE
 // =====================================================
 
-async function loadOriginalLayout() {
-  const response = await fetch(
-    templateUrl,
+async function loadOriginalLayout(data) {
+  const response = await fetchAsset(
+    getTemplatePath(templateFilename, data),
     {
       cache: 'no-store',
     },
@@ -578,7 +578,7 @@ export async function generateBidFormPreview(
 
   // Load original 2-page template
   const pdf =
-    await loadOriginalLayout()
+    await loadOriginalLayout(data)
 
   const [
     page1,

@@ -1,3 +1,5 @@
+import { applyBidderLetterhead } from './bidderLetterhead'
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 
 import {
   PDFDocument,
@@ -308,14 +310,9 @@ function drawRichParagraph(
 export async function generateAfterSalesPreview(
   data = {}
 ) {
-  const base =
-    import.meta.env.BASE_URL || '/'
+  const templateUrl = getTemplatePath('After Sales.pdf', data)
 
-  const templateUrl =
-    `${base.replace(/\/?$/, '/')}` +
-    'pdf/templates/After%20Sales.pdf'
-
-  const response = await fetch(
+  const response = await fetchAsset(
     templateUrl,
     {
       cache: 'no-store',
@@ -478,6 +475,12 @@ export async function generateAfterSalesPreview(
       7.2
     )
   }
+
+  await applyBidderLetterhead(pdf, page, data, {
+    box: { x: 24, y: 681, width: 574, height: 90 },
+    logo: { x: 27, y: 682, width: 108, height: 84 },
+    text: { x: 142, y: 736, addressY: 721, width: 440 },
+  })
 
   // FIRST PARAGRAPH
   // The original logo and heading are

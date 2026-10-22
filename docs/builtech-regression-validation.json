@@ -1,0 +1,55 @@
+{
+  "errors": [],
+  "mobileOverflow": false,
+  "profilesSavedAndRestored": true,
+  "mikata": {
+    "comparisons": [
+      {
+        "generator": "generateNfccPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateOngoingContractsPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateManpowerPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateSlccPreview",
+        "unchanged": true,
+        "pages": 1
+      },
+      {
+        "generator": "generateOmnibusPreview",
+        "unchanged": true,
+        "pages": 3
+      },
+      {
+        "generator": "generateSecretaryCertificatePreview",
+        "unchanged": true,
+        "pages": 2
+      }
+    ],
+    "packages": [
+      {
+        "variant": "old_default",
+        "sections": 23,
+        "pdfPages": 65,
+        "wordSections": 23,
+        "wordBytes": 13156958
+      },
+      {
+        "variant": "initao_lgu",
+        "sections": 26,
+        "pdfPages": 68,
+        "wordSections": 26,
+        "wordBytes": 13157816
+      }
+    ]
+  }
+}
