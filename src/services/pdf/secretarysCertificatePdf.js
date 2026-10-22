@@ -1,4 +1,4 @@
-import { getBidderCompany } from '../../lib/bidderAssets'
+import { secretaryDefaults } from '../../lib/secretaryDefaults'
 import {
   PDFDocument,
   StandardFonts,
@@ -211,13 +211,11 @@ export async function generateSecretaryCertificatePreview(
   )
 
   const secretary = clean(
-    setup.corporateSecretaryName ||
-    (getBidderCompany(setup).id === 'builtech' ? '' : 'ALYSSA LYNN TALINGTING')
+    clean(setup.corporateSecretaryName) || secretaryDefaults.corporateSecretaryName
   )
 
   const president = clean(
-    setup.companyPresidentName ||
-    (getBidderCompany(setup).id === 'builtech' ? '' : 'PATRICK CARLO P. DEDEL')
+    clean(setup.companyPresidentName) || secretaryDefaults.companyPresidentName
   )
 
   if (
@@ -225,7 +223,7 @@ export async function generateSecretaryCertificatePreview(
     !project ||
     !representative ||
     !address ||
-    !entity || (getBidderCompany(setup).id === 'builtech' && (!secretary || !president))
+    !entity
   ) {
     throw new Error(
       'Please complete Document Setup, Corporate Secretary and Company President / Proprietor first.'

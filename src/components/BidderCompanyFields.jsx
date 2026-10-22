@@ -1,4 +1,5 @@
 import { nfccDefaults } from '../lib/nfccDefaults'
+import { secretaryDefaults } from '../lib/secretaryDefaults'
 
 export default function BidderCompanyFields({ value, onChange }) {
   if (value.bidderId !== 'builtech' && value.bidderName !== 'BUILTECH SOLUTIONS') return null
@@ -12,7 +13,7 @@ export default function BidderCompanyFields({ value, onChange }) {
   return <>
     <h3>BUILTECH Company Details</h3>
     {fields.map(([key, label]) => <label key={key}>{label}<input aria-label={label} type="text"
-      value={value[key] ?? ''} onChange={event => onChange({ ...value, [key]: event.target.value })} /></label>)}
+      value={value[key] || secretaryDefaults[key] || ''} onChange={event => onChange({ ...value, [key]: event.target.value })} /></label>)}
     <h3>BUILTECH NFCC</h3>
     {['currentAssets', 'currentLiabilities', 'outstandingContracts'].map(key => <label key={key}>
       {{ currentAssets: 'Current Assets', currentLiabilities: 'Current Liabilities', outstandingContracts: 'Outstanding Contracts' }[key]}
