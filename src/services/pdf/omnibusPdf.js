@@ -1,4 +1,6 @@
+import { getTemplatePath, fetchAsset, getBidderCompany } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { drawRAndLOmnibusBody } from './rAndLOmnibusLayout'
 
 export async function generateOmnibusPreview(project) {
   // =========================================================
@@ -35,16 +37,22 @@ export async function generateOmnibusPreview(project) {
   // EXACT TEMPLATE
   // =========================================================
 
+  // Both companies use the same clean form geometry. The converted Builtech
+  // template contains shortened replacement spans and leftover placeholders;
+  // fill the original form directly with the selected company's details.
+  const formSetup = getBidderCompany(project).id === 'builtech'
+    ? { ...project, bidderId: 'mikata' }
+    : project
   const templatePath =
     variant === 'initao_lgu'
-      ? '/pdf/templates/Omnibus Sworn Statement Initao.pdf'
-      : '/pdf/templates/Omnibus Sworn Statement.pdf'
+      ? getTemplatePath('Omnibus Sworn Statement Initao.pdf', formSetup)
+      : getTemplatePath('Omnibus Sworn Statement.pdf', formSetup)
 
   // =========================================================
   // LOAD PDF
   // =========================================================
 
-  const response = await fetch(
+  const response = await fetchAsset(
     `${templatePath}?variant=${variant}&v=${Date.now()}`,
     {
       cache: 'no-store',
@@ -163,15 +171,12 @@ export async function generateOmnibusPreview(project) {
     },
   }
 
-  const representative =
-    representativeProfiles[
-      normalizeName(submittedBy)
-    ] || {
-      displayName:
-        titleCase(submittedBy),
-      civilStatus: '',
-      residence: '',
-    }
+  const selectedProfile = representativeProfiles[normalizeName(submittedBy)]
+  const representative = {
+    displayName: selectedProfile?.displayName || titleCase(submittedBy),
+    civilStatus: clean(project.civilStatus) || selectedProfile?.civilStatus || '________',
+    residence: clean(project.representativeResidence) || selectedProfile?.residence || '________________',
+  }
 
   // =========================================================
   // DATE
@@ -365,6 +370,7 @@ export async function generateOmnibusPreview(project) {
       x = nextX
     }
 
+    let followsCompany = false
     for (const segment of segments) {
       const font =
         segment.font || regular
@@ -376,11 +382,12 @@ export async function generateOmnibusPreview(project) {
 
       for (const word of words) {
         if (/^\s+$/.test(word)) {
-          const width =
+          const width = followsCompany ? 7 :
             font.widthOfTextAtSize(
               ' ',
               size
             )
+          followsCompany = false
 
           if (
             x + width <= maxX
@@ -414,6 +421,7 @@ export async function generateOmnibusPreview(project) {
 
         x += width
       }
+      followsCompany = clean(segment.text).toUpperCase() === bidderInlineName && Boolean(bidderInlineName)
     }
 
     return line + 1
@@ -439,6 +447,26 @@ function replaceInlineCompany({
   yOffset = 0,
 }) {
   if (!bidderInlineName) {
+    return
+  }
+
+  const suffix = {
+    338.3: 'is not “blacklisted” or barred from bidding by the Government',
+    490.2: 'is authorizing the Head of the Procuring Entity or its duly',
+    545.4: 'are not related by consanguinity or affinity up to the third',
+    116.1: 'declares its beneficial ownership information consistent',
+    226.4: 'is aware of and has undertaken the following responsibilities',
+    364.4: 'did not give or pay directly or indirectly, any commission,',
+  }[top]
+  if (['builtech', 'manotech'].includes(getBidderCompany(project).id) && suffix) {
+    eraseTop(page, x - 1, top - .8, 544 - x, 13.5)
+    const size = 11.4
+    const y = page.getHeight() - top - INLINE_SIZE + 1.5 + yOffset
+    page.drawText(bidderInlineName, { x, y, size, font: boldItalic, color: black })
+    const suffixX = x + boldItalic.widthOfTextAtSize(bidderInlineName, size) + 7
+    let suffixSize = BODY_SIZE
+    while (regular.widthOfTextAtSize(suffix, suffixSize) > 543 - suffixX && suffixSize > 10) suffixSize -= .1
+    page.drawText(suffix, { x: suffixX, y, size: suffixSize, font: regular, color: black })
     return
   }
 
@@ -502,7 +530,7 @@ function replaceInlineCompany({
       page,
       68,
       138,
-      480,
+      510,
       49
     )
 
@@ -543,7 +571,7 @@ function replaceInlineCompany({
 
         {
           text:
-            'Filipino',
+            clean(project.nationality) || (selectedProfile ? 'Filipino' : '________'),
           font: boldItalic,
         },
 
@@ -644,7 +672,7 @@ function replaceInlineCompany({
       68,
       236,
       480,
-      79
+      getBidderCompany(project).id === 'manotech' ? 96 : 79
     )
 
     drawRichWrapped({
@@ -900,7 +928,7 @@ function replaceInlineCompany({
 
         {
           text:
-            'National ID',
+            getBidderCompany(project).id === 'r-and-l' ? clean(project.identityDocumentType) || '________________' : 'National ID',
           font: boldItalic,
         },
 
@@ -1003,6 +1031,13 @@ function replaceInlineCompany({
   // GET PAGES
   // =========================================================
 
+  if (getBidderCompany(project).id === 'r-and-l') {
+    await drawRAndLOmnibusBody(pdfDoc, { bidderName, businessAddress, projectTitle, representative,
+      nationality: clean(project.nationality) || (selectedProfile ? 'Filipino' : '________'),
+      municipality, province, day, month, year, fullDate, designation, numbered: variant === 'initao_lgu' })
+    drawJurat(pdfDoc.getPage(pdfDoc.getPageCount() - 1))
+    return URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }))
+  }
   const page1 =
     pdfDoc.getPage(0)
 

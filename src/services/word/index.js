@@ -3,6 +3,8 @@ import {
   Document,
   Packer,
 } from 'docx'
+import { incompleteDocumentText } from '../../lib/incompleteDocument'
+import { heading, paragraph, section } from './wordHelpers'
 
 import {
   getBidPackageDocuments,
@@ -50,6 +52,7 @@ export async function generateFullBidPackageWord(
     let source
 
     try {
+      entry.validate?.()
       onProgress({
         completed: index,
         total,
@@ -67,7 +70,7 @@ export async function generateFullBidPackageWord(
       const parts = editable
         ? await editable({ ...options, document: entry, sectionNumber: number, documentCount: total })
         : await (async () => {
-            if (!entry.path?.startsWith('/pdf/static/')) {
+            if (!entry.path?.startsWith('/pdf/static/') && !entry.path?.startsWith('data:application/pdf;base64,')) {
               throw new Error('Editable Word generator is required for this template; image fallback is prohibited.')
             }
             source = entry.path
@@ -113,19 +116,11 @@ export async function generateFullBidPackageWord(
         message: entry.name,
       })
     } catch (error) {
-      throw new Error(
-        'Document ' +
-        number +
-        '/' +
-        total +
-        ' - ' +
-        entry.name +
-        ': ' +
-        error.message,
-        {
-          cause: error,
-        }
-      )
+      console.warn('Unavailable bid section:', entry.name, error)
+      const [title, ...lines] = incompleteDocumentText(entry.name, number, total)
+      sections.push(section([heading(title, number), ...lines.map(line => paragraph(line))]))
+      manifest.push({ number, name: entry.name, editable: true, imagePages: 0, missing: true })
+      onProgress({ completed: number, total, message: entry.name + ' - placeholder added' })
     } finally {
       if (
         typeof source === 'string' &&

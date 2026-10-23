@@ -1,3 +1,5 @@
+import { getBidderCompany } from '../../lib/bidderAssets'
+import { templateWord } from './templateWord'
 import {
   AlignmentType,
   BorderStyle,
@@ -609,6 +611,9 @@ function signatureTable(setup) {
 // ============================================
 
 export function nfccWord(options = {}) {
+  if (getBidderCompany(options.setup ?? options).id !== 'mikata') {
+    return templateWord(options, options.sectionNumber ?? 11, { tables: true, tableExactGeometry: true, exactLineSpacing: true, positionedGaps: true })
+  }
   const setup = options.setup ?? options
   const finance = financialData(options, setup)
 

@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "assets:organize": "node scripts/organize-bidder-assets.mjs && node scripts/sync-bidder-assets.mjs",
+    "assets:sync": "node scripts/sync-bidder-assets.mjs",
+    "predev": "npm run assets:sync",
+    "prebuild": "npm run assets:sync",
+    "test:bidder-assets": "node --test tests/bidder-assets.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.1",

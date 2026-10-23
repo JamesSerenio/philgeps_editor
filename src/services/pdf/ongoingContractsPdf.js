@@ -1,11 +1,11 @@
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
+import { fillBuiltechTable } from './builtechDataPdf'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { formatLongDate } from '../../lib/documentSetup'
 import { clean, wrapText } from './pdfHelpers'
 
 export async function generateOngoingContractsPreview(project) {
-  const response = await fetch(
-    '/pdf/templates/Statement of Ongoing Government and Private Contracts,.pdf',
-  )
+  const response = await fetchAsset(getTemplatePath("Statement of Ongoing Government and Private Contracts,.pdf", project))
 
   if (!response.ok) {
     throw new Error(
@@ -174,6 +174,7 @@ export async function generateOngoingContractsPreview(project) {
   text(':', footerColonX, 79, 10.5, regular)
   text(date, footerValueX, 79, 10.5, regular)
 
+  await fillBuiltechTable(pdfDoc, project, 'ongoing')
   const bytes = await pdfDoc.save()
   const blob = new Blob([bytes], {
     type: 'application/pdf',

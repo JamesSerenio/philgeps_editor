@@ -1,0 +1,139 @@
+{
+  "date": "2026-10-20",
+  "backup": "C:\\Users\\Admin\\AppData\\Local\\Temp\\philgeps-unused-assets-UXwQau",
+  "activeAssets": 48,
+  "removed": [
+    {
+      "file": "public/images/MIKATA_CORPORATION/INITAO/TABLE OF CONTENTS-INITAO.pdf",
+      "bytes": 135790,
+      "sha256": "75321c3dec945583ba4b3cdd9a540f3bb2e6d5d1925656dc9187e349a65112ad"
+    },
+    {
+      "file": "public/images/MIKATA_CORPORATION/INITAO/TECHNICAL COMPONENT ENVELOPE.pdf",
+      "bytes": 188268,
+      "sha256": "6dc53a9b6ee3e8cfd44d5083955cb3911c6825db5a508803e5a25cb0e529de72"
+    },
+    {
+      "file": "public/images/MIKATA_CORPORATION/manpower-letterhead-logo.png",
+      "bytes": 62633,
+      "sha256": "d93bf2219e8a259434951ea1943002bb3bb3038daf5230d470fb4996778854ae"
+    },
+    {
+      "file": "public/images/manpower-letterhead-logo.png",
+      "bytes": 62633,
+      "sha256": "d93bf2219e8a259434951ea1943002bb3bb3038daf5230d470fb4996778854ae"
+    },
+    {
+      "file": "public/pdf/reference/MIKATA_CORPORATION/cctv2.pdf",
+      "bytes": 46327625,
+      "sha256": "69b7d9f0022cdfcafdd59d9f3f5dd24ff9c3307de0e7b22a7a143337d8b61503"
+    },
+    {
+      "file": "public/pdf/static/Audited Financial Statements.pdf",
+      "bytes": 3985921,
+      "sha256": "58dc6c3321055f48b1efe67fe86e4eb84ed51dedee127b086f5d7197705ffa8d"
+    },
+    {
+      "file": "public/pdf/static/Certificate of Registration (COR).pdf",
+      "bytes": 3554678,
+      "sha256": "2104271739b07a1916d8fd6abba0b116dd51f85a35121c572169aee860286d40"
+    },
+    {
+      "file": "public/pdf/static/Latest Income and Business Tax Returns.pdf",
+      "bytes": 3481577,
+      "sha256": "6541bb2adafcb638a009213045101dec18ff1818371370630a050f86c53f9c2d"
+    },
+    {
+      "file": "public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_CCTV_template.pdf",
+      "bytes": 4709994,
+      "sha256": "5718074754882117eb597152578b2faa1a19052c69fa90ab4880a32843018011"
+    },
+    {
+      "file": "public/pdf/static/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_Streetlight_template.pdf",
+      "bytes": 3424567,
+      "sha256": "4e8b1e57db6fdd06a7a642f70666211f93a6d72c398cade56faaf9dff27880bc"
+    },
+    {
+      "file": "public/pdf/static/Mayor’s Permit  Municipal License (CY 2026).pdf",
+      "bytes": 1936771,
+      "sha256": "de0ea7afa300f721f3bce62f2da2543c1e21258cc9c989e5b857b9ab20a76b7c"
+    },
+    {
+      "file": "public/pdf/static/PhilGEPS Platinum Certificate.pdf",
+      "bytes": 244842,
+      "sha256": "051e8bfb711af83ec0ffea487609388aa5e83328f6c785235b9ed2afc6bb0944"
+    },
+    {
+      "file": "public/pdf/static/SEC Registration Certificate.pdf",
+      "bytes": 12260349,
+      "sha256": "e34d4111772b2d2aff2beb31c7c76c5be1207eae507ed57dc38eef5cd62c1bb9"
+    },
+    {
+      "file": "public/pdf/static/SLCC_CCTV_template.pdf",
+      "bytes": 4709994,
+      "sha256": "5718074754882117eb597152578b2faa1a19052c69fa90ab4880a32843018011"
+    },
+    {
+      "file": "public/pdf/static/SLCC_Streetlight_template.pdf",
+      "bytes": 3424567,
+      "sha256": "4e8b1e57db6fdd06a7a642f70666211f93a6d72c398cade56faaf9dff27880bc"
+    },
+    {
+      "file": "public/pdf/static/TAX_template.pdf",
+      "bytes": 950604,
+      "sha256": "386ffdeae8a26d7a5353ccdfc1feff60ead04f8522f84186c5517a0206e4f37f"
+    },
+    {
+      "file": "public/pdf/templates/Manpower Requirements.pdf",
+      "bytes": 281561,
+      "sha256": "7a8459e14cc504d57b2fb5aa30645cf1efcbfda9bce78403d1041eee067b425a"
+    },
+    {
+      "file": "public/pdf/templates/NFCC_Template.pdf",
+      "bytes": 142971,
+      "sha256": "52803962106803098b58f6d7bc72b8d88312f5e0cbbe59b357e05eb66d9235a4"
+    },
+    {
+      "file": "public/pdf/templates/SLCC_table_cctv.pdf",
+      "bytes": 145119,
+      "sha256": "4819f6bb1ede31fdeaa6b8db48059b47a1daa5fce4724a4f12757edc7108278e"
+    },
+    {
+      "file": "public/pdf/templates/SLCC_table_streetlight.pdf",
+      "bytes": 128922,
+      "sha256": "b70cfe2d9123d5549687abf2d0f0ad09235e193b1c915e520cca2db104e52acc"
+    },
+    {
+      "file": "public/pdf/templates/Statement of Ongoing Government and Private Contracts,.pdf",
+      "bytes": 118306,
+      "sha256": "dd2c2f6d83adb14717a5c501dee7cf5f698ec0eb0f3e91b664d5ad259f48871c"
+    },
+    {
+      "file": "public/icons.svg",
+      "bytes": 5031,
+      "sha256": "b45fa506195cfcdef406ba9f0c77b36ddc1a7c224040926ec70abc2fdea7b93a"
+    },
+    {
+      "file": "src/assets/hero.png",
+      "bytes": 13057,
+      "sha256": "881ffbcaafc212e49addad08846a5b82761355fa20624253af3477ba33262c5c"
+    },
+    {
+      "file": "src/assets/react.svg",
+      "bytes": 4126,
+      "sha256": "35ef61ed53b323ae94a16a8ec659b3d0af3880698791133f23b084085ab1c2e5"
+    },
+    {
+      "file": "src/assets/vite.svg",
+      "bytes": 8709,
+      "sha256": "5be21acd42eb7b896e517f4e0f0f11eb5c5d9e54fbbcebe9453f033008fcca6f"
+    }
+  ],
+  "totalBytes": 90308615,
+  "validation": {
+    "assetTests": "6 passed",
+    "lint": "0 errors; 1 existing warning",
+    "build": "passed; existing chunk-size advisory",
+    "remainingManifestAssets": 48
+  }
+}
