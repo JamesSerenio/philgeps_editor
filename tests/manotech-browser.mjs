@@ -88,7 +88,12 @@ try {
   assert.ok(xml.includes('<w:tbl>'))
   assert.ok(xml.includes('landscape'))
   assert.ok(!/MIKATA|BUILTECH|CLEOPAS|JAMILO|TINGTING|DEDEL|TALINGTING/.test(xml))
-  const logo = fs.readFileSync(company.logo)
+  const logo = company.id === 'r-and-l'
+    ? Buffer.from(await page.evaluate(async id => {
+      const { getBidderLogo } = await import('/src/lib/bidderAssets.js')
+      return Array.from((await getBidderLogo(id)).data)
+    }, company.id))
+    : fs.readFileSync(company.logo)
   let ownLogo = false
   for (const entry of Object.values(zip.files).filter(x => x.name.startsWith('word/media/') && !x.dir)) {
     if ((await entry.async('nodebuffer')).equals(logo)) ownLogo = true

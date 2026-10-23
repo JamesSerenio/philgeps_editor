@@ -76,6 +76,7 @@ export async function generateNfccPreview(project) {
   // LOCAL HELPERS
   // =========================================================
 
+  const headerText = []
   function drawText(
     value,
     x,
@@ -88,13 +89,15 @@ export async function generateNfccPreview(project) {
 
     if (!text) return
 
-    page.drawText(text, {
+    const options = {
       x,
       y,
       size,
       font,
       color,
-    })
+    }
+    page.drawText(text, options)
+    if (y >= 677) headerText.push({ text, options })
   }
 
   function fitFontSize(
@@ -150,13 +153,15 @@ export async function generateNfccPreview(project) {
       minSize,
     )
 
-    page.drawText(text, {
+    const options = {
       x,
       y,
       size: finalSize,
       font,
       color,
-    })
+    }
+    page.drawText(text, options)
+    if (y >= 677) headerText.push({ text, options })
   }
 
   // =========================================================
@@ -351,16 +356,25 @@ export async function generateNfccPreview(project) {
     black,
   )
 
-  drawFitText({
-    value: businessAddress,
-    x: valueX,
-    y: 677,
-    width: valueWidth,
-    size: 9.5,
-    minSize: 6.5,
-    font: bold,
-    color: red,
-  })
+  // Keep the address as readable as the other header values. Wrap even a
+  // single long token instead of squeezing the entire address into one line.
+  const addressLines = []
+  let addressLine = ''
+  for (const word of businessAddress.split(/\s+/).filter(Boolean)) {
+    const next = addressLine ? addressLine + ' ' + word : word
+    if (addressLine && bold.widthOfTextAtSize(next, valueSize) > valueWidth) {
+      addressLines.push(addressLine)
+      addressLine = ''
+    }
+    for (const character of (addressLine ? ' ' : '') + word) {
+      if (bold.widthOfTextAtSize(addressLine + character, valueSize) > valueWidth) {
+        addressLines.push(addressLine)
+        addressLine = ''
+      }
+      addressLine += character
+    }
+  }
+  if (addressLine) addressLines.push(addressLine)
 
   // =========================================================
   // REMOVE OLD SIGNATORY ONLY
@@ -564,6 +578,42 @@ export async function generateNfccPreview(project) {
   // =========================================================
 
   await fillBuiltechTable(pdfDoc, project, 'nfcc')
+  const addressLeading = 14
+  const extraHeight = Math.max(0, addressLines.length - 1) * addressLeading
+  if (extraHeight) {
+    // Translate the complete existing body, table and signature together so
+    // extra address lines never cover the original NFCC paragraph.
+    const bodyHeight = 668
+    // Mask the copied header as well as clipping it. Text extraction for Word
+    // can otherwise read invisible header text outside a PDF form's clip box.
+    const bodyDocument = await PDFDocument.create()
+    const [bodyPage] = await bodyDocument.copyPages(pdfDoc, [0])
+    bodyDocument.addPage(bodyPage)
+    bodyPage.drawRectangle({ x: 0, y: bodyHeight, width: page.getWidth(),
+      height: page.getHeight() - bodyHeight, color: white })
+    const body = await pdfDoc.embedPage(bodyPage, { left: 0, bottom: 0, right: page.getWidth(), top: bodyHeight })
+    await pdfDoc.flush()
+    page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: bodyHeight, color: white })
+    if (extraHeight <= 120) {
+      page.drawPage(body, { x: 0, y: -extraHeight, width: page.getWidth(), height: bodyHeight })
+    } else {
+      const continuation = pdfDoc.addPage([page.getWidth(), page.getHeight()])
+      continuation.drawPage(body, { x: 0, y: continuation.getHeight() - bodyHeight - 36,
+        width: page.getWidth(), height: bodyHeight })
+    }
+    // Draw the header last so editable Word extraction honors the same paint
+    // order as the PDF, including the copied body's invisible header mask.
+    page.drawRectangle({ x: 0, y: bodyHeight, width: page.getWidth(),
+      height: page.getHeight() - bodyHeight, color: white })
+    const title = 'NET FINANCIAL CONTRACTING CAPACITY (NFCC)'
+    drawText(title, (page.getWidth() - bold.widthOfTextAtSize(title, 12)) / 2,
+      page.getHeight() - 45, 12, bold, black)
+    page.drawLine({ start: { x: 18, y: page.getHeight() - 49 },
+      end: { x: page.getWidth() - 18, y: page.getHeight() - 49 }, thickness: 1, color: black })
+    // Use a snapshot: drawText above also recorded the new title.
+    for (const { text, options } of headerText.slice(0, -1)) page.drawText(text, options)
+  }
+  addressLines.forEach((line, index) => drawText(line, valueX, 677 - index * addressLeading, valueSize, bold, red))
   const bytes =
     await pdfDoc.save()
 

@@ -25,9 +25,12 @@ Behavior
 - Isolated profiles, including legacy representative aliases, financial and
   contract history, officer details, identity-document type and legal structure.
   Existing Supabase editor-state JSON round trips retain these values.
-- Clean logo/separator/uppercase-address letterheads with editable address
-  text in Word. The longer address wraps into two lines rather than becoming
-  unreadably small. Other companies' approved letterheads are unchanged.
+- Letterheads follow the latest supplied R&L reference: a wide banner with
+  centered printed address and contact/email lines underneath. Empty source
+  image margins are trimmed during rendering; the source asset stays unchanged.
+  The printed L. R. Borja Extension header address is independent of the saved
+  project business address. Footer text remains editable in Word. Other
+  companies' approved letterheads are unchanged.
 - Complete Manpower and NFCC grids with saved data only. Missing data stays
   blank. NFCC supports the saved multiplier (financials.multiplier,
   nfcc.multiplier or multiplier), otherwise the existing factor 15 applies.
