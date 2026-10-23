@@ -58,12 +58,12 @@ test('R&L profile is independent across switching, legacy aliases and editor-sta
   assert.equal(selectBidder(setup, 'MIKATA CORPORATION').submittedBy, 'Other Person')
 })
 
-test('R&L has no sample SLCC or official-certificate fallback and requires actual officers', async () => {
+test('R&L has no sample SLCC or official-certificate fallback and validates document setup', async () => {
   assert.equal(assets.getMissingBidderAssets('r-and-l').length, 7)
   const { getSlccEntry } = await server.ssrLoadModule('/src/services/pdf/slccPdf.js')
   assert.deepEqual(getSlccEntry({ bidderId: 'r-and-l' }), {})
   const { generateSecretaryCertificatePreview } = await server.ssrLoadModule('/src/services/pdf/secretarysCertificatePdf.js')
-  await assert.rejects(generateSecretaryCertificatePreview({ bidderId: 'r-and-l', date: '2026-10-23' }), /Missing Required Information/)
+  await assert.rejects(generateSecretaryCertificatePreview({ bidderId: 'r-and-l', date: '2026-10-23' }), /Please complete Document Setup/)
   const { getBidPackageDocuments } = await server.ssrLoadModule('/src/services/pdf/fullBidPackagePdf.js')
   for (const omnibusVariant of ['old_default', 'initao_lgu']) {
     const docs = bidderId => getBidPackageDocuments({ setup: { bidderId, referenceNumber: 'TEST' }, omnibusVariant }).map(e => [e.name, e.wordSection])

@@ -48,13 +48,12 @@ Behavior
 Missing information
 -------------------
 
-No R&L officer names or genuine official certificates were supplied.
-Secretary's Certificate displays Missing Required Information until the actual
-Corporate Secretary and President / Proprietor names are saved. It does not
-use Mikata/Manotech officer defaults. An explicitly saved non-corporate legal
-structure is blocked from the corporate certificate layout and requires the
-appropriate authorization form. Unknown secretary nationality and identity
-document type remain blank; they are not copied from another person's records.
+At the user's subsequent request to match Mikata, R&L's Secretary's Certificate
+now uses the same starting names: ALYSSA LYNN TALINGTING (Corporate Secretary)
+and PATRICK CARLO P. DEDEL (President / Proprietor). Saved officer names and
+secretary nationality override the defaults. Complete Document Setup remains
+required. PDF/Word generation and saved-name overrides were verified.
+Genuine official certificates are still missing as listed below.
 
 The following seven genuine R&L documents remain missing:
 

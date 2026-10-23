@@ -1,5 +1,4 @@
 import { secretaryDefaults } from '../../lib/secretaryDefaults'
-import { getBidderCompany } from '../../lib/bidderAssets'
 import {
   PDFDocument,
   StandardFonts,
@@ -211,22 +210,14 @@ export async function generateSecretaryCertificatePreview(
     )
   )
 
-  const needsOwnOfficers = getBidderCompany(setup).id === 'r-and-l'
-  if (needsOwnOfficers && clean(setup.legalStructure) && !/corporat/i.test(setup.legalStructure)) {
-    throw new Error('Missing Required Information: the saved R&L legal structure needs its appropriate authorization form; this template is a corporate Secretary\'s Certificate.')
-  }
   const secretary = clean(
-    clean(setup.corporateSecretaryName) || (needsOwnOfficers ? '' : secretaryDefaults.corporateSecretaryName)
+    clean(setup.corporateSecretaryName) || secretaryDefaults.corporateSecretaryName
   )
 
   const president = clean(
-    clean(setup.companyPresidentName) || (needsOwnOfficers ? '' : secretaryDefaults.companyPresidentName)
+    clean(setup.companyPresidentName) || secretaryDefaults.companyPresidentName
   )
-  const secretaryNationality = needsOwnOfficers ? clean(setup.corporateSecretaryNationality) || '________' : 'Filipino'
-
-  if (needsOwnOfficers && (!secretary || !president)) {
-    throw new Error('Missing Required Information: save the actual R&L Corporate Secretary and President / Proprietor names before generating this certificate.')
-  }
+  const secretaryNationality = clean(setup.corporateSecretaryNationality) || 'Filipino'
   if (
     !bidder ||
     !project ||
