@@ -72,6 +72,7 @@ export function getStaticDocumentPath(value, filename, { required = true } = {})
 export function getTemplatePath(filename, value, { required = true } = {}) {
   const company = getBidderCompany(value)
   let path = encodeAssetUrl(expectedBidderAssetPath(company.id, 'templates', filename))
+  if (company.id === 'r-and-l') return required ? requireAsset(path, company.name + ' template: ' + filename) : path
   if (!assetExists(path) && (company.id === 'mikata' || !companyOnlyTemplates.has(filename))) path = sharedAssetPath('templates', filename)
   // Generic layouts live with the original Mikata templates. Other bidders
   // may reuse layouts, but must supply their own history, staff and financials.
@@ -135,7 +136,7 @@ export function fitBidderLogo(logo, width, height) {
 }
 
 export function letterheadLogoLayout(logo, slot) {
-  if (logo.companyId === 'manotech') {
+  if (['manotech', 'r-and-l'].includes(logo.companyId)) {
     const fitted = fitBidderLogo(logo, 190, slot.height)
     return { ...fitted, x: slot.x, top: slot.top + (slot.height - fitted.height) / 2,
       separatorX: slot.x + 200, separatorTop: slot.top + 5,

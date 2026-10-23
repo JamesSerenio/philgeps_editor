@@ -1,4 +1,5 @@
 import { secretaryDefaults } from '../../lib/secretaryDefaults'
+import { getBidderCompany } from '../../lib/bidderAssets'
 import {
   PDFDocument,
   StandardFonts,
@@ -210,14 +211,22 @@ export async function generateSecretaryCertificatePreview(
     )
   )
 
+  const needsOwnOfficers = getBidderCompany(setup).id === 'r-and-l'
+  if (needsOwnOfficers && clean(setup.legalStructure) && !/corporat/i.test(setup.legalStructure)) {
+    throw new Error('Missing Required Information: the saved R&L legal structure needs its appropriate authorization form; this template is a corporate Secretary\'s Certificate.')
+  }
   const secretary = clean(
-    clean(setup.corporateSecretaryName) || secretaryDefaults.corporateSecretaryName
+    clean(setup.corporateSecretaryName) || (needsOwnOfficers ? '' : secretaryDefaults.corporateSecretaryName)
   )
 
   const president = clean(
-    clean(setup.companyPresidentName) || secretaryDefaults.companyPresidentName
+    clean(setup.companyPresidentName) || (needsOwnOfficers ? '' : secretaryDefaults.companyPresidentName)
   )
+  const secretaryNationality = needsOwnOfficers ? clean(setup.corporateSecretaryNationality) || '________' : 'Filipino'
 
+  if (needsOwnOfficers && (!secretary || !president)) {
+    throw new Error('Missing Required Information: save the actual R&L Corporate Secretary and President / Proprietor names before generating this certificate.')
+  }
   if (
     !bidder ||
     !project ||
@@ -521,7 +530,7 @@ export async function generateSecretaryCertificatePreview(
       },
       {
         text:
-          `, of legal age, Filipino, and with office address at ${address}, after having been duly sworn in accordance with law, hereby depose and state that:`,
+          `, of legal age, ${secretaryNationality}, and with office address at ${address}, after having been duly sworn in accordance with law, hereby depose and state that:`,
       },
     ],
     {

@@ -121,7 +121,7 @@ export function getSlccEntry(
 ) {
   return {
     ...(
-      ['builtech', 'manotech'].includes(getBidderCompany(data).id) ? {} :
+      ['builtech', 'manotech', 'r-and-l'].includes(getBidderCompany(data).id) ? {} :
       DEFAULT_ENTRIES[variant]?.[type] ?? DEFAULT_ENTRIES.streetlight.government
     ),
     ...(
@@ -926,7 +926,7 @@ export async function generateSlccPreview(
       ? 'cctv'
       : 'streetlight'
 
-  if (!['mikata', 'builtech', 'manotech'].includes(getBidderCompany(data).id)) {
+  if (!['mikata', 'builtech', 'manotech', 'r-and-l'].includes(getBidderCompany(data).id)) {
     // Historical contract values belong to the selected company, never to Mikata.
     const response = await fetchAsset(getTemplatePath('SLCC_table_' + variant + '.pdf', data))
     return URL.createObjectURL(await response.blob())
@@ -1082,7 +1082,7 @@ export async function generateSlccPreview(
     171
   )
 
-  const fields = ['builtech', 'manotech'].includes(getBidderCompany(data).id)
+  const fields = ['builtech', 'manotech', 'r-and-l'].includes(getBidderCompany(data).id)
     ? [entry.ownerDetails, entry.natureOfWork, entry.description,
       entry.percentage, entry.awardCompletion, entry.dates].map(value => flat(value) ? value : 'NONE')
     : [entry.ownerDetails, entry.natureOfWork, entry.description, ...FINANCIALS[variant]]

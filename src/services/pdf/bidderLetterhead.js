@@ -10,8 +10,10 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
   const image = logo.type === 'jpg' ? await document.embedJpg(logo.data) : await document.embedPng(logo.data)
   const bold = await document.embedFont(StandardFonts.TimesRomanBold)
   const italic = await document.embedFont(StandardFonts.HelveticaBoldOblique)
-  page.drawRectangle({ ...geometry.box, color: rgb(1, 1, 1) })
-  if (company.id === 'manotech') {
+  page.drawRectangle({ ...geometry.box,
+    ...(company.id === 'r-and-l' ? { width: page.getWidth() - geometry.box.x } : {}),
+    color: rgb(1, 1, 1) })
+  if (['manotech', 'r-and-l'].includes(company.id)) {
     const slot = geometry.logo
     const layout = letterheadLogoLayout(logo, { ...slot, top: page.getHeight() - slot.y - slot.height })
     page.drawImage(image, { x: layout.x, y: page.getHeight() - layout.top - layout.height,
@@ -22,6 +24,23 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
     const font = await document.embedFont(StandardFonts.HelveticaBold)
     const address = String(setup.businessAddress ?? setup.companyAddress ?? company.address ?? '').trim().toUpperCase()
     const x = layout.separatorX + 12, available = page.getWidth() - x - 24
+    if (company.id === 'r-and-l' && address) {
+      let size = 10.5, lines
+      do {
+        lines = ['']
+        for (const word of address.split(/\s+/)) {
+          const last = lines.length - 1, next = lines[last] ? lines[last] + ' ' + word : word
+          if (font.widthOfTextAtSize(next, size) > available && lines[last]) lines.push(word)
+          else lines[last] = next
+        }
+        if (lines.length <= 2) break
+        size -= .25
+      } while (size > 7)
+      const leading = size + 3
+      const baseline = page.getHeight() - layout.separatorTop - layout.separatorHeight / 2 - size * .35 + (lines.length - 1) * leading / 2
+      lines.forEach((line, index) => page.drawText(line, { x, y: baseline - index * leading, size, font, color: rgb(0, 0, 0) }))
+      return
+    }
     let size = 11
     while (size > 6 && font.widthOfTextAtSize(address, size) > available) size -= .1
     if (address) page.drawText(address, { x, y: page.getHeight() - layout.separatorTop - layout.separatorHeight / 2 - size * .35,

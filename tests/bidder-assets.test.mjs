@@ -36,7 +36,7 @@ test('all inventoried company and shared asset paths still exist after cleanup',
   }
   for (const company of bidderCompanies) {
     for (const filename of templates) {
-      if (!['mikata', 'builtech', 'manotech'].includes(company.id) && ['NFCC_Template.pdf', 'Manpower Requirements.pdf', 'Statement of Ongoing Government and Private Contracts,.pdf', 'SLCC_table_cctv.pdf', 'SLCC_table_streetlight.pdf'].includes(filename)) continue
+      if (!['mikata', 'builtech', 'manotech', 'r-and-l'].includes(company.id) && ['NFCC_Template.pdf', 'Manpower Requirements.pdf', 'Statement of Ongoing Government and Private Contracts,.pdf', 'SLCC_table_cctv.pdf', 'SLCC_table_streetlight.pdf'].includes(filename)) continue
       const resolved = getTemplatePath(filename, company.id)
       assert.ok(fs.existsSync('public' + decodeURIComponent(resolved)), resolved)
     }
@@ -55,9 +55,9 @@ test('missing bidder certificates never fall back to Mikata or shared legal orig
 })
 test('only generic templates may use shared fallback; history and staff require company files', () => {
   for (const company of bidderCompanies.slice(1)) {
-    if (['builtech', 'manotech'].includes(company.id)) {
+    if (['builtech', 'manotech', 'r-and-l'].includes(company.id)) {
       assert.ok(getTemplatePath('TABBING.pdf', company.id).includes('/' + company.folder + '/'))
-      assert.ok(getLogoPath(company.id).endsWith(company.folder + '-logo.png'))
+      assert.ok(decodeURIComponent(getLogoPath(company.id)).endsWith(company.logoFilename))
       continue
     }
     assert.equal(getTemplatePath('TABBING.pdf', company.id), '/pdf/templates/MIKATA_CORPORATION/MIKATA%20CORPORATION%20-%20TABBING.pdf')

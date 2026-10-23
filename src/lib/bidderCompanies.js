@@ -6,7 +6,7 @@ export const bidderCompanies = [
   { id: 'fjq', name: 'FJQ CONSTRUCTION', folder: 'FJQ_CONSTRUCTION', aliases: ['FJQ'] },
   { id: 'golden-m', name: 'GOLDEN M ELECTRICAL AND INDUSTRIAL SUPPLIES AND TRADING', folder: 'GOLDEN_M', aliases: ['GOLDEN M'] },
   { id: 'manotech', name: 'MANOTECH', folder: 'MANOTECH', aliases: [], logoFilename: 'MANOTECH-logo.png', address: 'Purok 4, Poblacion, Linamon, Lanao del Norte' },
-  { id: 'r-and-l', name: 'R&L BUILDERS AND CONSTRUCTION SUPPLY', folder: 'R_AND_L_BUILDERS', aliases: ['R&L BUILDERS', 'R AND L BUILDERS'] },
+  { id: 'r-and-l', name: 'R&L BUILDERS AND CONSTRUCTION SUPPLY', folder: 'R_AND_L_BUILDERS', aliases: ['R&L BUILDERS', 'R AND L BUILDERS'], logoFilename: 'R&L Builders Construction Supply Logo.png' },
   { id: 'migoy-bugoy', name: 'MIGOY BUGOY ENTERPRISES', folder: 'MIGOY_BUGOY', aliases: ['MIGOY BUGOY'] },
   { id: 'wdc', name: 'WDC BUILDERS & SUPPLIES', folder: 'WDC_BUILDERS', aliases: ['WDC BUILDERS', 'WDC'] },
   { id: 'mega-pluto', name: 'MEGA PLUTO', folder: 'MEGA_PLUTO', aliases: [] },

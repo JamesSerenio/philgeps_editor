@@ -7,7 +7,7 @@ import { fillManotechTable } from './manotechDataPdf'
 // NFCC and manpower share Manotech's layout and saved-data behavior. Ongoing-contract NONE rows
 // retain the original template formatting; Mikata history is never used.
 export async function fillBuiltechTable(document, setup, kind) {
-  if (getBidderCompany(setup).id === 'manotech') return fillManotechTable(document, setup, kind)
+  if (['manotech', 'r-and-l'].includes(getBidderCompany(setup).id)) return fillManotechTable(document, setup, kind)
   if (getBidderCompany(setup).id !== 'builtech') return
   if (kind === 'nfcc' || kind === 'manpower') return fillManotechTable(document, setup, kind)
   const page = document.getPage(0), height = page.getHeight()

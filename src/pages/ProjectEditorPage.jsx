@@ -1,4 +1,5 @@
 import { assetExists, getTemplatePath } from '../lib/bidderAssets'
+import { restoreBidderVariants } from '../lib/bidderProfiles'
 import GenerateDocumentsModal from '../components/GenerateDocumentsModal'
 import { exportFilename } from '../lib/exportFilename'
 import DashboardIcon from '../components/DashboardIcon'
@@ -1053,15 +1054,21 @@ function ProjectEditorContent({ id }) {
   // ===================================================
 
   function changeSetup(value) {
-    setDocumentSetup(value)
+    const restored = restoreBidderVariants(setup, value, bidSecurity, omnibus)
+    setDocumentSetup(restored.setup)
 
     const next = {
-      ...bidSecurity,
-      templateVariant,
-      documentSetup: value,
+      ...restored.bidSecurity,
+      templateVariant: normalizeVariant(restored.bidSecurity?.templateVariant),
+      documentSetup: restored.setup,
     }
 
     setBidSecurity(next)
+
+    if (restored.omnibus !== omnibus) {
+      setOmnibus(restored.omnibus)
+      persistence.change('omnibus', restored.omnibus)
+    }
 
     persistence.change(
       'bid_security',

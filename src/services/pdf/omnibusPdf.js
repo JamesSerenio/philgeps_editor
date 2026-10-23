@@ -1,5 +1,6 @@
 import { getTemplatePath, fetchAsset, getBidderCompany } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { drawRAndLOmnibusBody } from './rAndLOmnibusLayout'
 
 export async function generateOmnibusPreview(project) {
   // =========================================================
@@ -927,7 +928,7 @@ function replaceInlineCompany({
 
         {
           text:
-            'National ID',
+            getBidderCompany(project).id === 'r-and-l' ? clean(project.identityDocumentType) || '________________' : 'National ID',
           font: boldItalic,
         },
 
@@ -1030,6 +1031,13 @@ function replaceInlineCompany({
   // GET PAGES
   // =========================================================
 
+  if (getBidderCompany(project).id === 'r-and-l') {
+    await drawRAndLOmnibusBody(pdfDoc, { bidderName, businessAddress, projectTitle, representative,
+      nationality: clean(project.nationality) || (selectedProfile ? 'Filipino' : '________'),
+      municipality, province, day, month, year, fullDate, designation, numbered: variant === 'initao_lgu' })
+    drawJurat(pdfDoc.getPage(pdfDoc.getPageCount() - 1))
+    return URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }))
+  }
   const page1 =
     pdfDoc.getPage(0)
 

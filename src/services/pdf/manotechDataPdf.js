@@ -1,4 +1,5 @@
 import { StandardFonts, rgb } from 'pdf-lib'
+import { getBidderCompany } from '../../lib/bidderAssets'
 
 // Only the selected Manotech profile supplies private financial/staff data.
 export async function fillManotechTable(document, setup, kind) {
@@ -12,6 +13,9 @@ export async function fillManotechTable(document, setup, kind) {
     if (line) page.drawText(line, { x, y: height - top, size, font, color: ink })
   }
   if (kind === 'nfcc') {
+    const multiplier = getBidderCompany(setup).id === 'r-and-l'
+      ? Number(setup.financials?.multiplier ?? setup.nfcc?.multiplier ?? setup.multiplier ?? 15) : 15
+    if (!Number.isFinite(multiplier) || multiplier <= 0) throw new Error(companyName + ' NFCC: enter a positive multiplier.')
     // Clear the old grid completely, then draw one uniform table.
     page.drawRectangle({ x: 53.5, y: 287.8, width: 469, height: 152, color: white })
     const bold = await document.embedFont(StandardFonts.HelveticaBold)
@@ -25,7 +29,7 @@ export async function fillManotechTable(document, setup, kind) {
     const label = (value, x, y, size = 9.96, face = bold) => page.drawText(value, { x, y, size, font: face, color: ink })
     label('Net Financial Contracting Capacity', 60.024, 429.07)
     label('Amount', 392.23, 429.07)
-    ;['Current Assets', 'Current Liabilities', 'Net Working Capital (6)', 'Multiply by 15'].forEach((value, index) => label(value, 60.024, [414.79, 394.37, 373.97, 353.57][index]))
+    ;['Current Assets', 'Current Liabilities', 'Net Working Capital (6)', `Multiply by ${multiplier}`].forEach((value, index) => label(value, 60.024, [414.79, 394.37, 373.97, 353.57][index]))
     ;['Less: Value of all outstanding and uncompleted', 'portions of sub-projects under on-going contracts',
       'including awarded contracts to be started', 'coinciding with contract to be bid'].forEach((value, index) => label(value, 60.024, 333.17 - index * 12.44, 9.5, boldItalic))
     const amounts = ['currentAssets', 'currentLiabilities', 'outstandingContracts'].map(key => {
@@ -37,7 +41,7 @@ export async function fillManotechTable(document, setup, kind) {
     })
     const [assets, liabilities, outstanding] = amounts
     const working = assets != null && liabilities != null ? assets - liabilities : null
-    const rows = [assets, liabilities, working, working == null ? null : working * 15, outstanding]
+    const rows = [assets, liabilities, working, working == null ? null : working * multiplier, outstanding]
     rows.forEach((amount, index) => {
       if (amount == null) return
       const value = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })

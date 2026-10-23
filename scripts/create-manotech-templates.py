@@ -16,6 +16,7 @@ SOURCE = ROOT / 'public/pdf/templates/MIKATA_CORPORATION'
 DEST = ROOT / 'public/pdf/templates/MANOTECH'
 LOGO = ROOT / 'public/images/MANOTECH/MANOTECH-logo.png'
 ADDRESS = 'Purok 4, Poblacion, Linamon, Lanao del Norte'
+TARGET_NAME = 'MANOTECH'
 COMPANY = re.compile(r'(?:MIKATA\s*)+(?:PRIME\s*)*(?:CORPORATION\s*)*', re.I)
 PERSON = re.compile(r'(?:JHO\s+ANN\s+Q[.,]?\s*CLEOPAS|CARLOS\s+RAFAEL\s+A[.]?\s*JAMILO|MARLJONE\s+BLAIRE\s+B[.]?\s*TINGTING|ALYSSA\s+LYNN\s+TALINGTING|PATRICK\s+CARLO\s+P[.]?\s*DEDEL)', re.I)
 PRIVATE = re.compile(r'cleopas|jamilo|tingting|dedel|alesna|hablos|talingting|MikataPrime@|0917\s*129|0926\s*253|Tankulan|Manolo Fortich|Camaman.an', re.I)
@@ -71,7 +72,7 @@ def convert(source, dest, tessdata):
                 for span in line['spans']:
                     value, rect = span['text'], fitz.Rect(span['bbox'])
                     if any(r.intersects(rect) for r in redactions): continue
-                    updated = COMPANY.sub('MANOTECH ', value)
+                    updated = COMPANY.sub(TARGET_NAME + ' ', value)
                     updated = PERSON.sub('________________', updated)
                     if PRIVATE.search(updated): updated = '________________'
                     if OLD_ADDRESS.search(updated):
@@ -84,13 +85,14 @@ def convert(source, dest, tessdata):
         for rect, value, span in replacements: insert(page, rect, value, span)
         if header:
             page.insert_image(fitz.Rect(header[4:8]), filename=str(LOGO), keep_proportion=True)
-            page.insert_text((header[8], header[9]), 'MANOTECH', fontname='tibo', fontsize=22)
+            insert(page, fitz.Rect(header[8], header[9] - 24, page.rect.width - 24, header[9] + 2), TARGET_NAME,
+                   {'font': 'Times-Bold', 'size': 22, 'origin': (header[8], header[9])})
             page.insert_text((header[8], header[10]), 'Office: ' + ADDRESS, fontname='hebi', fontsize=9)
         # Remove broken fragments already present in the Initao source overlay.
         for pattern in ['MIKATA', 'CLEOPAS', 'TANKULAN', 'CARMEN', 'SAN AGUSTIN', 'MikataPrime@gmail.com']:
             for rect in page.search_for(pattern): page.add_redact_annot(rect, fill=False)
         page.apply_redactions(images=2 if tp else 0, graphics=0, text=0)
-    doc.set_metadata({'title': 'MANOTECH - ' + name, 'author': 'MANOTECH'})
+    doc.set_metadata({'title': TARGET_NAME + ' - ' + name, 'author': TARGET_NAME})
     dest.parent.mkdir(parents=True, exist_ok=True)
     doc.save(dest, garbage=4, deflate=True, clean=True)
     check = fitz.open(dest)
