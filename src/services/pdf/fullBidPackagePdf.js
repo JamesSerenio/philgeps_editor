@@ -1,4 +1,5 @@
 import { getStaticDocumentPath } from '../../lib/bidderAssets'
+import { incompleteDocumentText } from '../../lib/incompleteDocument'
 import { generateTabbingPreview } from './tabbingPdf'
 import { getDeadline } from '../../lib/projectFormatters'
 import { generateInitaoDividerPreview } from './initaoDividersPdf'
@@ -6,6 +7,7 @@ import { generateInitaoDividerPreview } from './initaoDividersPdf'
 import {
   PDFDocument,
   degrees,
+  StandardFonts,
 } from 'pdf-lib'
 
 import * as pdfService from '../pdfService'
@@ -833,11 +835,6 @@ export function getBidPackageDocuments({
   bidSecurityVariant: selectedBidSecurity,
   omnibusVariant: selectedOmnibus,
 } = {}) {
-  if (!setup?.referenceNumber) {
-    throw new Error(
-      'Reference Number is required.'
-    )
-  }
 
   // ---------------------------------------------------
   // SELECT TEMPLATES
@@ -911,7 +908,6 @@ export function getBidPackageDocuments({
 
 export async function generateFullBidPackagePdf(options = {}) {
   const documents = getBidPackageDocuments(options)
-  documents.forEach(entry => entry.validate?.())
   const setup = options.setup ?? {}
   const onProgress = options.onProgress ?? (() => {})
   // ---------------------------------------------------
@@ -944,6 +940,7 @@ export async function generateFullBidPackagePdf(options = {}) {
         documents[index]
 
       try {
+        document.validate?.()
         let source
 
         // ---------------------------------------------
@@ -1023,12 +1020,22 @@ export async function generateFullBidPackagePdf(options = {}) {
           error
         )
 
-        throw new Error(
-          `Document ${index + 1}/${documents.length} - ` +
-          `${document.name}: ` +
-          (error.message || String(error)),
-          { cause: error }
-        )
+        const placeholder = combined.addPage([A4_WIDTH, A4_HEIGHT])
+        const font = await combined.embedFont(StandardFonts.Helvetica)
+        let y = A4_HEIGHT - 80
+        for (const [lineIndex, value] of incompleteDocumentText(document.name, index + 1, documents.length).entries()) {
+          const size = lineIndex === 0 ? 16 : 11
+          let line = ''
+          for (const word of value.split(/\s+/)) {
+            if (line && font.widthOfTextAtSize(line + ' ' + word, size) > A4_WIDTH - 100) {
+              placeholder.drawText(line, { x: 50, y, size, font }); y -= 17; line = ''
+            }
+            line += (line ? ' ' : '') + word
+          }
+          if (line) placeholder.drawText(line, { x: 50, y, size, font })
+          y -= 34
+        }
+        onProgress({ completed: index + 1, total: documents.length, message: document.name + ' - placeholder added' })
       }
     }
 

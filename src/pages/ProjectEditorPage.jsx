@@ -1223,11 +1223,6 @@ async function handleGenerateAll(format = 'pdf') {
       setup.referenceNumber ?? ''
     ).trim()
 
-    if (!ref) {
-      throw new Error(
-        'Reference Number is missing.'
-      )
-    }
 
     const projectTitle = String(
       setup.projectTitle ?? ''

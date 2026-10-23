@@ -44,6 +44,11 @@ Behavior
 - Existing package order is unchanged: 23 default sections including tabbing,
   or 26 with Initao dividers. PDF and Word share the existing document list.
 - Preview/download flow and stale-preview protections remain in place.
+- Subsequent user request: incomplete packages now generate in both PDF and
+  Word. Missing documents or required section details produce a clearly marked
+  placeholder at the same position; all later available sections retain their
+  original order and content. Missing reference numbers no longer block export.
+  No other bidder's official certificates are substituted.
 
 Missing information
 -------------------
