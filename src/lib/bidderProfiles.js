@@ -6,6 +6,7 @@ export const bidderProfileFields = [
   'identityDocumentType', 'legalStructure',
   'corporateSecretaryNationality',
   'slccVariant',
+  'registeredBusinessName', 'legalBusinessName',
 ]
 
 // Declaration variants live outside Document Setup; snapshot them alongside the
@@ -16,7 +17,7 @@ export function restoreBidderVariants(previousSetup, nextSetup, bidSecurity, omn
   if (!previousId || !nextId || previousId === nextId) return { setup: nextSetup, bidSecurity, omnibus }
   const variants = { ...previousSetup.bidderTemplateVariants, ...nextSetup.bidderTemplateVariants,
     [previousId]: { bidSecurity: bidSecurity?.templateVariant ?? 'old_default', omnibus: omnibus?.templateVariant ?? 'old_default' } }
-  const selected = variants[nextId] ?? (previousId === 'r-and-l' || nextId === 'r-and-l'
+  const selected = variants[nextId] ?? (['r-and-l', 'mega-pluto'].includes(previousId) || ['r-and-l', 'mega-pluto'].includes(nextId)
     ? { bidSecurity: 'old_default', omnibus: 'old_default' }
     : variants[previousId])
   return { setup: { ...nextSetup, bidderTemplateVariants: variants },
@@ -30,7 +31,7 @@ export function selectBidderProfile(setup, previousId, nextId) {
   if (previousId) profiles[previousId] = current
   // Entering/leaving Builtech or Manotech must never inherit another company's people or
   // financial history. Older projects retain their current company's details.
-  const selected = profiles[nextId] ?? ((['builtech', 'manotech', 'r-and-l'].includes(nextId) || ['builtech', 'manotech', 'r-and-l'].includes(previousId))
+  const selected = profiles[nextId] ?? ((['builtech', 'manotech', 'r-and-l', 'mega-pluto'].includes(nextId) || ['builtech', 'manotech', 'r-and-l', 'mega-pluto'].includes(previousId))
     ? Object.fromEntries(bidderProfileFields.map(field => [field, ['financials', 'ongoingEntries', 'slccEntries', 'slccContractTypes'].includes(field) ? {} : '']))
     : current)
   return { ...selected, authorizedRepresentative: selected.submittedBy ?? '',

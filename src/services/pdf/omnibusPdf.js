@@ -928,7 +928,7 @@ function replaceInlineCompany({
 
         {
           text:
-            getBidderCompany(project).id === 'r-and-l' ? clean(project.identityDocumentType) || '________________' : 'National ID',
+            ['r-and-l', 'mega-pluto'].includes(getBidderCompany(project).id) ? clean(project.identityDocumentType) || '________________' : 'National ID',
           font: boldItalic,
         },
 
@@ -1031,7 +1031,7 @@ function replaceInlineCompany({
   // GET PAGES
   // =========================================================
 
-  if (getBidderCompany(project).id === 'r-and-l') {
+  if (['r-and-l', 'mega-pluto'].includes(getBidderCompany(project).id)) {
     await drawRAndLOmnibusBody(pdfDoc, { bidderName, businessAddress, projectTitle, representative,
       nationality: clean(project.nationality) || (selectedProfile ? 'Filipino' : '________'),
       municipality, province, day, month, year, fullDate, designation, numbered: variant === 'initao_lgu' })

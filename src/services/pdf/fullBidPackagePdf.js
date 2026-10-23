@@ -1,4 +1,5 @@
 import { getStaticDocumentPath } from '../../lib/bidderAssets'
+import { documentBidderName } from '../../lib/bidderCompanies'
 import { incompleteDocumentText } from '../../lib/incompleteDocument'
 import { generateTabbingPreview } from './tabbingPdf'
 import { getDeadline } from '../../lib/projectFormatters'
@@ -494,6 +495,7 @@ function createDocumentData({
   const common = {
     tableOfContentsVariant: omnibusVariant,
     ...setup,
+    bidderName: documentBidderName(setup),
     companyAddress: setup?.businessAddress ?? setup?.companyAddress ?? '',
 
     items: technical,

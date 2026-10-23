@@ -11,8 +11,31 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
   const bold = await document.embedFont(StandardFonts.TimesRomanBold)
   const italic = await document.embedFont(StandardFonts.HelveticaBoldOblique)
   page.drawRectangle({ ...geometry.box,
-    ...(company.id === 'r-and-l' ? { width: page.getWidth() - geometry.box.x } : {}),
+    ...(['r-and-l', 'mega-pluto'].includes(company.id) ? { width: page.getWidth() - geometry.box.x } : {}),
     color: rgb(1, 1, 1) })
+  if (company.id === 'mega-pluto') {
+    const slot = geometry.logo
+    const layout = letterheadLogoLayout(logo, { ...slot, top: page.getHeight() - slot.y - slot.height })
+    page.drawImage(image, { x: layout.x, y: page.getHeight() - layout.top - layout.height, width: layout.width, height: layout.height })
+    page.drawLine({ start: { x: layout.separatorX, y: page.getHeight() - layout.separatorTop },
+      end: { x: layout.separatorX, y: page.getHeight() - layout.separatorTop - layout.separatorHeight }, thickness: .7, color: rgb(.4, .4, .4) })
+    const font = await document.embedFont(StandardFonts.HelveticaBold)
+    const x = layout.separatorX + 12, width = page.getWidth() - x - 24
+    let top = layout.separatorTop + 15
+    for (const [value, size] of [[setup.registeredBusinessName || setup.legalBusinessName || setup.bidderName || company.name, 14],
+      [String(setup.businessAddress ?? setup.companyAddress ?? company.address).toUpperCase(), 10],
+      [setup.phone || company.phone, 9], [setup.email || company.email, 9]]) {
+      let line = ''
+      for (const word of String(value ?? '').split(/\s+/).filter(Boolean)) {
+        if (line && font.widthOfTextAtSize(line + ' ' + word, size) > width) {
+          page.drawText(line, { x, y: page.getHeight() - top, size, font }); top += size + 3; line = ''
+        }
+        line += (line ? ' ' : '') + word
+      }
+      if (line) { page.drawText(line, { x, y: page.getHeight() - top, size, font }); top += size + 4 }
+    }
+    return
+  }
   if (company.id === 'r-and-l') {
     const slot = geometry.logo
     const top = page.getHeight() - slot.y - slot.height

@@ -13,7 +13,7 @@ export async function tabbingWord(options) {
     positionedGaps: true,
     rightAllowance: 8,
     pageChildren() {
-      return [new Paragraph({ style: 'TabbingLogo',
+      return [new Paragraph({ style: logo.companyId === 'mega-pluto' ? 'MegaPlutoLogo' : 'TabbingLogo',
         spacing: { before: 0, after: 0, line: 1, lineRule: LineRuleType.EXACT },
         children: [...manotechLetterheadRule(logo, layout), new ImageRun({ type: logo.type, data: logo.data,
           transformation: { width: layout.width * 96 / 72, height: layout.height * 96 / 72 },

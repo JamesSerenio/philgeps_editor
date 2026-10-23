@@ -1,4 +1,5 @@
 import { secretaryDefaults } from '../../lib/secretaryDefaults'
+import { getBidderCompany } from '../../lib/bidderCompanies'
 import {
   PDFDocument,
   StandardFonts,
@@ -210,14 +211,21 @@ export async function generateSecretaryCertificatePreview(
     )
   )
 
+  const megaPluto = getBidderCompany(setup).id === 'mega-pluto'
+  if (megaPluto && clean(setup.legalStructure) && !/corporat/i.test(setup.legalStructure)) {
+    throw new Error('Missing Required Information: MEGA PLUTO needs an authorization form matching its saved legal structure; the corporate certificate is not applicable.')
+  }
   const secretary = clean(
-    clean(setup.corporateSecretaryName) || secretaryDefaults.corporateSecretaryName
+    clean(setup.corporateSecretaryName) || (megaPluto ? '' : secretaryDefaults.corporateSecretaryName)
   )
 
   const president = clean(
-    clean(setup.companyPresidentName) || secretaryDefaults.companyPresidentName
+    clean(setup.companyPresidentName) || (megaPluto ? '' : secretaryDefaults.companyPresidentName)
   )
-  const secretaryNationality = clean(setup.corporateSecretaryNationality) || 'Filipino'
+  const secretaryNationality = clean(setup.corporateSecretaryNationality) || (megaPluto ? '________' : 'Filipino')
+  if (megaPluto && (!clean(setup.legalStructure) || !secretary || !president)) {
+    throw new Error('Missing Required Information: save MEGA PLUTO legal structure, Corporate Secretary and President details. No officers from another company are assigned.')
+  }
   if (
     !bidder ||
     !project ||

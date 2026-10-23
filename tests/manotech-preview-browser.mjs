@@ -5,7 +5,9 @@ import { pathToFileURL } from 'node:url'
 const { webkit } = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(process.env.PLAYWRIGHT_MODULE).href : 'playwright')
 const browser = await webkit.launch({ headless: true, ...(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {}) })
 const base = process.env.VITE_TEST_URL || 'http://127.0.0.1:5175'
-const company = process.env.TEST_BIDDER === 'r-and-l'
+const company = process.env.TEST_BIDDER === 'mega-pluto'
+  ? { id: 'mega-pluto', name: 'MEGA PLUTO', address: 'Kihare, Bukidnon, 8703' }
+  : process.env.TEST_BIDDER === 'r-and-l'
   ? { id: 'r-and-l', name: 'R&L BUILDERS AND CONSTRUCTION SUPPLY', address: 'Brgy. Baloy Extension, Gusa, Cagayan de Oro City, Misamis Oriental, Philippines' }
   : { id: 'manotech', name: 'MANOTECH', address: 'Purok 4, Poblacion, Linamon, Lanao del Norte' }
 const output = '.tmp/' + company.id + '-validation'

@@ -4,6 +4,7 @@ import {
   Packer,
 } from 'docx'
 import { incompleteDocumentText } from '../../lib/incompleteDocument'
+import { documentBidderName } from '../../lib/bidderCompanies'
 import { heading, paragraph, section } from './wordHelpers'
 
 import {
@@ -25,6 +26,7 @@ import {
 export async function generateFullBidPackageWord(
   options = {}
 ) {
+  options = { ...options, setup: { ...options.setup, bidderName: documentBidderName(options.setup) } }
   const {
     onProgress = () => {},
   } = options

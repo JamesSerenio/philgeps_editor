@@ -51,7 +51,7 @@ export async function afterSalesWord(options = {}) {
       if (index !== 0) return []
       return [
         new Paragraph({
-          style: 'AfterSalesLogo',
+          style: logo.companyId === 'mega-pluto' ? 'MegaPlutoLogo' : 'AfterSalesLogo',
           spacing: {
             before: 0,
             after: 0,

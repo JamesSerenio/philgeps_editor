@@ -9,10 +9,15 @@ export const bidderCompanies = [
   { id: 'r-and-l', name: 'R&L BUILDERS AND CONSTRUCTION SUPPLY', folder: 'R_AND_L_BUILDERS', aliases: ['R&L BUILDERS', 'R AND L BUILDERS'], logoFilename: 'R&L Builders Construction Supply Logo.png', headerAddress: 'L. R. Borja Extension, Gusa, Cagayan de Oro City, Misamis Oriental, 9000', phone: '0917-549-0226; 0917-702-1850', email: 'opadoramei@gmail.com' },
   { id: 'migoy-bugoy', name: 'MIGOY BUGOY ENTERPRISES', folder: 'MIGOY_BUGOY', aliases: ['MIGOY BUGOY'] },
   { id: 'wdc', name: 'WDC BUILDERS & SUPPLIES', folder: 'WDC_BUILDERS', aliases: ['WDC BUILDERS', 'WDC'] },
-  { id: 'mega-pluto', name: 'MEGA PLUTO', folder: 'MEGA_PLUTO', aliases: [] },
+  { id: 'mega-pluto', name: 'MEGA PLUTO', folder: 'MEGA_PLUTO', aliases: [], logoFilename: 'MEGA_PLUTO-logo.png', address: 'Kihare, Bukidnon, 8703', phone: '09751761554', email: 'megapluto.ph@gmail.com' },
 ]
 
 const normalize = value => String(value ?? '').trim().replace(/\s+/g, ' ').toUpperCase()
+export function documentBidderName(setup) {
+  return setup?.bidderId === 'mega-pluto' || normalize(setup?.bidderName) === 'MEGA PLUTO'
+    ? String(setup.registeredBusinessName || setup.legalBusinessName || setup.bidderName || 'MEGA PLUTO').trim()
+    : setup?.bidderName ?? ''
+}
 export function getBidderCompany(value) {
   const input = typeof value === 'object' && value !== null ? value.bidderId || value.bidderName : value
   // Empty legacy setup used the existing Mikata templates before a bidder was chosen.

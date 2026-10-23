@@ -47,7 +47,7 @@ export async function warrantyWord(options = {}) {
       if (index !== 0 || !logo) return []
       return [
         new Paragraph({
-          style: 'WarrantyLogo',
+          style: logo.companyId === 'mega-pluto' ? 'MegaPlutoLogo' : 'WarrantyLogo',
           spacing: {
             before: 0,
             after: 0,

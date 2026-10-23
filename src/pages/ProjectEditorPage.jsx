@@ -1,4 +1,5 @@
 import { assetExists, getTemplatePath } from '../lib/bidderAssets'
+import { documentBidderName } from '../lib/bidderCompanies'
 import { restoreBidderVariants } from '../lib/bidderProfiles'
 import GenerateDocumentsModal from '../components/GenerateDocumentsModal'
 import { exportFilename } from '../lib/exportFilename'
@@ -683,7 +684,7 @@ function ProjectEditorContent({ id }) {
             setup.date ?? '',
 
           bidderName:
-            setup.bidderName ?? '',
+            documentBidderName(setup),
 
           businessAddress:
             setup.businessAddress ?? '',
