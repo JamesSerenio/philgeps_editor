@@ -20,7 +20,7 @@ test('all 22 independent Mega Pluto templates preserve source geometry and hashe
     const filename = entry.source.replace('public/pdf/templates/MIKATA_CORPORATION/', '').replace('MIKATA CORPORATION - ', '')
     assert.ok(assets.getTemplatePath(filename, 'mega-pluto').startsWith('/pdf/templates/MEGA_PLUTO/'))
   }
-  assert.ok(assets.getLogoPath('mega-pluto').endsWith('/MEGA_PLUTO-logo.png'))
+  assert.ok(assets.getLogoPath('mega-pluto').endsWith('/MEGA_PLUTO-logo-transparent.png'))
   assert.throws(() => assets.getTemplatePath('missing.pdf', 'mega-pluto'), /Missing MEGA PLUTO template/)
   assert.equal(assets.getMissingBidderAssets('mega-pluto').length, 7)
 })

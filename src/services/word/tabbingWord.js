@@ -1,12 +1,13 @@
 import { getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
-import { manotechLetterheadRule } from './manotechLetterhead'
+import { manotechLetterheadRule, prepareMegaPlutoHeader } from './manotechLetterhead'
 
 export async function tabbingWord(options) {
   const logo = await getBidderLogo(options.setup)
   const layout = letterheadLogoLayout(logo, { x: 43.45, top: 25.8, width: 104.19, height: 86.95 })
   return templateWord(options, options.sectionNumber ?? 1, {
+    preparePage: page => prepareMegaPlutoHeader(page, logo),
     tables: false,
     paragraphStyle: 'Tabbing',
     exactLineSpacing: true,

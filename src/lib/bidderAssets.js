@@ -140,7 +140,8 @@ export async function getBidderLogo(value) {
       }
     }
   } finally { URL.revokeObjectURL(objectUrl) }
-  return { path, data, type, width, height, companyId: getBidderCompany(value).id }
+  const companyId = getBidderCompany(value).id
+  return { path, data, type, width, height, companyId }
 }
 export function getMissingBidderAssets(value) {
   const company = getBidderCompany(value), missing = []
@@ -162,9 +163,8 @@ export function fitBidderLogo(logo, width, height) {
 
 export function letterheadLogoLayout(logo, slot) {
   if (logo.companyId === 'mega-pluto') {
-    const fitted = fitBidderLogo(logo, 105, 82)
-    return { ...fitted, x: slot.x + (105 - fitted.width) / 2, top: slot.top + (82 - fitted.height) / 2,
-      separatorX: slot.x + 120, separatorTop: slot.top + 3, separatorHeight: 76 }
+    const fitted = fitBidderLogo(logo, 88, 80)
+    return { ...fitted, x: slot.x + 4 + (88 - fitted.width) / 2, top: slot.top + (80 - fitted.height) / 2 }
   }
   if (logo.companyId === 'r-and-l') {
     return { width: 540, height: 65, x: slot.x, top: slot.top }

@@ -1,7 +1,7 @@
 import { getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
-import { manotechLetterheadRule } from './manotechLetterhead'
+import { manotechLetterheadRule, prepareMegaPlutoHeader } from './manotechLetterhead'
 import {
   generateProductWarrantyPreview,
   formatWarrantyYears,
@@ -28,6 +28,7 @@ export async function warrantyWord(options = {}) {
         : 'Warranty'
     },
     preparePage(page) {
+      prepareMegaPlutoHeader(page, logo)
       // Ignore erased template underlines; retain only visible PDF rules.
       page.fragments.forEach((part) => {
         part.underline = page.lines.some(

@@ -1,7 +1,7 @@
 import { getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
-import { manotechLetterheadRule } from './manotechLetterhead'
+import { manotechLetterheadRule, prepareMegaPlutoHeader } from './manotechLetterhead'
 import {
   generateAfterSalesPreview,
   serviceYearsText,
@@ -39,6 +39,7 @@ export async function afterSalesWord(options = {}) {
       return Math.round(Math.max(...line.parts.map(part => part.size)) * 2) === 26 ? 'AfterSalesBody' : 'AfterSales'
     },
     preparePage(page) {
+      prepareMegaPlutoHeader(page, logo)
       // Ignore erased template underlines; retain only visible PDF rules.
       page.fragments.forEach(part => {
         part.underline = page.lines.some(rule => Math.abs(rule.y1-rule.y2)<.1 && rule.y1>=part.y && rule.y1<=part.y+3 && rule.x1<=part.x+2 && rule.x2>=part.x+part.width-2)

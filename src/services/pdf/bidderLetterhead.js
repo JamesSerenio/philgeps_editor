@@ -15,24 +15,32 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
     color: rgb(1, 1, 1) })
   if (company.id === 'mega-pluto') {
     const slot = geometry.logo
-    const layout = letterheadLogoLayout(logo, { ...slot, top: page.getHeight() - slot.y - slot.height })
+    const headerTop = page.getHeight() - slot.y - slot.height
+    const layout = letterheadLogoLayout(logo, { ...slot, top: headerTop })
+    const headerWidth = page.getWidth() - slot.x - 24
     page.drawImage(image, { x: layout.x, y: page.getHeight() - layout.top - layout.height, width: layout.width, height: layout.height })
-    page.drawLine({ start: { x: layout.separatorX, y: page.getHeight() - layout.separatorTop },
-      end: { x: layout.separatorX, y: page.getHeight() - layout.separatorTop - layout.separatorHeight }, thickness: .7, color: rgb(.4, .4, .4) })
     const font = await document.embedFont(StandardFonts.HelveticaBold)
-    const x = layout.separatorX + 12, width = page.getWidth() - x - 24
-    let top = layout.separatorTop + 15
-    for (const [value, size] of [[setup.registeredBusinessName || setup.legalBusinessName || setup.bidderName || company.name, 14],
-      [String(setup.businessAddress ?? setup.companyAddress ?? company.address).toUpperCase(), 10],
-      [setup.phone || company.phone, 9], [setup.email || company.email, 9]]) {
-      let line = ''
+    const regular = await document.embedFont(StandardFonts.Helvetica)
+    const x = slot.x + 112, width = headerWidth - 122
+    const gold = rgb(.68, .55, .27), green = rgb(.06, .34, .23)
+    const titleSize = Math.min(30, width / font.widthOfTextAtSize('MEGA PLUTO', 1))
+    page.drawText('MEGA ', { x, y: page.getHeight() - headerTop - 28, size: titleSize, font, color: green })
+    page.drawText('PLUTO', { x: x + font.widthOfTextAtSize('MEGA ', titleSize),
+      y: page.getHeight() - headerTop - 28, size: titleSize, font, color: gold })
+    let top = headerTop + 46
+    for (const [label, value] of [['Business Address: ', setup.businessAddress ?? setup.companyAddress ?? company.address],
+      ['Email Address: ', setup.email || company.email], ['Mobile Number: ', setup.phone || company.phone]]) {
+      const size = 10, leading = 14
+      let cursor = x
+      page.drawText(label, { x: cursor, y: page.getHeight() - top, size, font: regular, color: rgb(.4, .43, .43) })
+      cursor += regular.widthOfTextAtSize(label, size)
       for (const word of String(value ?? '').split(/\s+/).filter(Boolean)) {
-        if (line && font.widthOfTextAtSize(line + ' ' + word, size) > width) {
-          page.drawText(line, { x, y: page.getHeight() - top, size, font }); top += size + 3; line = ''
-        }
-        line += (line ? ' ' : '') + word
+        const token = word + ' '
+        if (cursor + regular.widthOfTextAtSize(token, size) > x + width && cursor > x) { top += leading; cursor = x }
+        page.drawText(token, { x: cursor, y: page.getHeight() - top, size, font: regular, color: rgb(.16, .2, .2) })
+        cursor += regular.widthOfTextAtSize(token, size)
       }
-      if (line) { page.drawText(line, { x, y: page.getHeight() - top, size, font }); top += size + 4 }
+      top += leading
     }
     return
   }

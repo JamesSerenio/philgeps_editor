@@ -5,7 +5,7 @@ Implemented 2026-10-24 in the existing React/Vite editor.
 ## Implemented behavior
 
 - Stable bidder ID mega-pluto and MEGA_PLUTO folders; 22 separate applicant-controlled templates. Conversion audit records original/output hashes, page counts and source paths. Original company templates and official certificates remain unchanged.
-- Inspected supplied gold/charcoal MP logo; source image bytes unchanged. Proportional logo on the left, vertical separator, editable company name, bold uppercase address and contact details on the right. Word preview correction is scoped to MegaPlutoLogo paragraphs only.
+- Latest requested refinement: removed the beige banner and used a transparent MP emblem on a clean white page. Kept the green MEGA / gold PLUTO title, simplified the contact typography, and improved spacing/alignment. Source MEGA_PLUTO-logo.png remains unchanged; the active derived asset is MEGA_PLUTO-logo-transparent.png. Company details remain editable in Word; preview corrections remain scoped to Mega Pluto headers.
 - Existing saved default address Kihare, Bukidnon, 8703 confirmed. Contact defaults 09751761554 and megapluto.ph@gmail.com come from the user's reference; no conflicting local values existed. Saved custom address/contact edits take precedence.
 - Existing registeredBusinessName / legalBusinessName overrides branding in package documents. No registered legal name invented. Standard bidder dropdown still displays MEGA PLUTO.
 - Isolated company profiles restore people, financials, manpower, contracts, contacts, officers, legal structure and variants using the existing editor-state JSON. No new schema or extra sidebar inputs.
@@ -48,6 +48,8 @@ Missing genuine official documents:
 No live Supabase save/reopen, desktop Microsoft Word round-trip or live Vercel deployment was performed. Local JSON serialization and actual browser preview were tested. Full default PDF/DOCX export was tested; Initao forms and order were verified individually, but a separate full Initao DOCX was not exported. No alternative authorization form is claimed for an unconfirmed sole proprietorship.
 
 ## Complete added-file list
+
+- public/images/MEGA_PLUTO/MEGA_PLUTO-logo-transparent.png (background-extracted derivative; original retained)
 
 - scripts/create-mega-pluto-templates.py
 - tests/mega-pluto.test.mjs

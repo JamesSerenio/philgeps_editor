@@ -1,12 +1,13 @@
 import { getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
-import { manotechLetterheadRule } from './manotechLetterhead'
+import { manotechLetterheadRule, prepareMegaPlutoHeader } from './manotechLetterhead'
 
 export async function manpowerWord(options) {
   const logo = await getBidderLogo(options.setup)
   const layout = letterheadLogoLayout(logo, { x: 36.25, top: 64.001, width: 106.77, height: 83.479 })
   return templateWord(options, 15, {
+    preparePage: page => prepareMegaPlutoHeader(page, logo),
     tables: true,
     headerRows: 1,
     paragraphStyle: 'Manpower',
