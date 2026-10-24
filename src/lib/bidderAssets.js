@@ -163,8 +163,8 @@ export function fitBidderLogo(logo, width, height) {
 
 export function letterheadLogoLayout(logo, slot) {
   if (logo.companyId === 'mega-pluto') {
-    const fitted = fitBidderLogo(logo, 88, 80)
-    return { ...fitted, x: slot.x + 4 + (88 - fitted.width) / 2, top: slot.top + (80 - fitted.height) / 2 }
+    const fitted = fitBidderLogo(logo, 58, 48)
+    return { ...fitted, x: ((slot.pageWidth ?? 612) - fitted.width) / 2, top: 10 }
   }
   if (logo.companyId === 'r-and-l') {
     return { width: 540, height: 65, x: slot.x, top: slot.top }

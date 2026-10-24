@@ -49,12 +49,11 @@ test('Mega Pluto profile, legal name, custom address and variants survive compan
   assert.equal(selectBidder(own, 'MIKATA CORPORATION').submittedBy, 'OTHER PERSON')
 })
 
-test('Mega Pluto never receives sample contracts or another company officers; order remains unchanged', async () => {
+test('Mega Pluto has no sample contracts, validates setup and preserves document order', async () => {
   const { getSlccEntry } = await server.ssrLoadModule('/src/services/pdf/slccPdf.js')
   assert.deepEqual(getSlccEntry({ bidderId: 'mega-pluto' }), {})
   const { generateSecretaryCertificatePreview } = await server.ssrLoadModule('/src/services/pdf/secretarysCertificatePdf.js')
-  await assert.rejects(generateSecretaryCertificatePreview({ bidderId: 'mega-pluto', date: '2026-10-24' }), /Missing Required Information/)
-  await assert.rejects(generateSecretaryCertificatePreview({ bidderId: 'mega-pluto', date: '2026-10-24', legalStructure: 'sole proprietorship', corporateSecretaryName: 'TEST', companyPresidentName: 'TEST' }), /not applicable/)
+  await assert.rejects(generateSecretaryCertificatePreview({ bidderId: 'mega-pluto', date: '2026-10-24' }), /Please complete Document Setup/)
   const { getBidPackageDocuments } = await server.ssrLoadModule('/src/services/pdf/fullBidPackagePdf.js')
   for (const omnibusVariant of ['old_default', 'initao_lgu']) {
     const names = bidderId => getBidPackageDocuments({ setup: { bidderId, referenceNumber: 'TEST' }, omnibusVariant }).map(d => [d.name, d.wordSection])

@@ -15,32 +15,34 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
     color: rgb(1, 1, 1) })
   if (company.id === 'mega-pluto') {
     const slot = geometry.logo
-    const headerTop = page.getHeight() - slot.y - slot.height
-    const layout = letterheadLogoLayout(logo, { ...slot, top: headerTop })
-    const headerWidth = page.getWidth() - slot.x - 24
+    const layout = letterheadLogoLayout(logo, { ...slot, pageWidth: page.getWidth() })
     page.drawImage(image, { x: layout.x, y: page.getHeight() - layout.top - layout.height, width: layout.width, height: layout.height })
     const font = await document.embedFont(StandardFonts.HelveticaBold)
     const regular = await document.embedFont(StandardFonts.Helvetica)
-    const x = slot.x + 112, width = headerWidth - 122
+    const width = page.getWidth() - 96
     const gold = rgb(.68, .55, .27), green = rgb(.06, .34, .23)
-    const titleSize = Math.min(30, width / font.widthOfTextAtSize('MEGA PLUTO', 1))
-    page.drawText('MEGA ', { x, y: page.getHeight() - headerTop - 28, size: titleSize, font, color: green })
+    const titleSize = 26
+    const x = (page.getWidth() - font.widthOfTextAtSize('MEGA PLUTO', titleSize)) / 2
+    page.drawText('MEGA ', { x, y: page.getHeight() - 82, size: titleSize, font, color: green })
     page.drawText('PLUTO', { x: x + font.widthOfTextAtSize('MEGA ', titleSize),
-      y: page.getHeight() - headerTop - 28, size: titleSize, font, color: gold })
-    let top = headerTop + 46
+      y: page.getHeight() - 82, size: titleSize, font, color: gold })
+    let top = 97
     for (const [label, value] of [['Business Address: ', setup.businessAddress ?? setup.companyAddress ?? company.address],
       ['Email Address: ', setup.email || company.email], ['Mobile Number: ', setup.phone || company.phone]]) {
-      const size = 10, leading = 14
-      let cursor = x
-      page.drawText(label, { x: cursor, y: page.getHeight() - top, size, font: regular, color: rgb(.4, .43, .43) })
-      cursor += regular.widthOfTextAtSize(label, size)
-      for (const word of String(value ?? '').split(/\s+/).filter(Boolean)) {
-        const token = word + ' '
-        if (cursor + regular.widthOfTextAtSize(token, size) > x + width && cursor > x) { top += leading; cursor = x }
-        page.drawText(token, { x: cursor, y: page.getHeight() - top, size, font: regular, color: rgb(.16, .2, .2) })
-        cursor += regular.widthOfTextAtSize(token, size)
+      const size = 9.5, leading = 11
+      const lines = []
+      let line = ''
+      for (const word of (label + String(value ?? '')).split(/\s+/).filter(Boolean)) {
+        const next = line ? line + ' ' + word : word
+        if (line && regular.widthOfTextAtSize(next, size) > width) { lines.push(line); line = word }
+        else line = next
       }
-      top += leading
+      if (line) lines.push(line)
+      for (const text of lines) {
+        page.drawText(text, { x: (page.getWidth() - regular.widthOfTextAtSize(text, size)) / 2,
+          y: page.getHeight() - top, size, font: regular, color: rgb(.25, .29, .29) })
+        top += leading
+      }
     }
     return
   }

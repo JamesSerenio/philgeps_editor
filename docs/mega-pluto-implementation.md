@@ -5,14 +5,14 @@ Implemented 2026-10-24 in the existing React/Vite editor.
 ## Implemented behavior
 
 - Stable bidder ID mega-pluto and MEGA_PLUTO folders; 22 separate applicant-controlled templates. Conversion audit records original/output hashes, page counts and source paths. Original company templates and official certificates remain unchanged.
-- Latest requested refinement: removed the beige banner and used a transparent MP emblem on a clean white page. Kept the green MEGA / gold PLUTO title, simplified the contact typography, and improved spacing/alignment. Source MEGA_PLUTO-logo.png remains unchanged; the active derived asset is MEGA_PLUTO-logo-transparent.png. Company details remain editable in Word; preview corrections remain scoped to Mega Pluto headers.
+- Latest requested refinement: a higher, centered stacked header with the transparent MP emblem above the green MEGA / gold PLUTO name and individually centered contact lines, on a clean white page. PDF and Word use the same page-centered logo position. Source MEGA_PLUTO-logo.png remains unchanged; the active derived asset is MEGA_PLUTO-logo-transparent.png. Company details remain editable in Word; preview corrections remain scoped to Mega Pluto headers.
 - Existing saved default address Kihare, Bukidnon, 8703 confirmed. Contact defaults 09751761554 and megapluto.ph@gmail.com come from the user's reference; no conflicting local values existed. Saved custom address/contact edits take precedence.
 - Existing registeredBusinessName / legalBusinessName overrides branding in package documents. No registered legal name invented. Standard bidder dropdown still displays MEGA PLUTO.
 - Isolated company profiles restore people, financials, manpower, contracts, contacts, officers, legal structure and variants using the existing editor-state JSON. No new schema or extra sidebar inputs.
 - Existing representative directory supplies civil status, nationality and residence only for selected/saved people; no invented age or identity-document type.
 - Complete uniform manpower/NFCC grids use own saved data. Missing values stay blank; configured multipliers work. SLCC never uses another bidder's sample contracts.
 - Omnibus retains the existing full clauses and clean reflow for default/Initao variants.
-- Secretary's Certificate requires explicit corporate legal structure and own officer names. No inherited officers. Non-corporate structures cannot use the corporate certificate; an alternative approved authorization source was not found locally.
+- At the user's subsequent request to match Mikata, Secretary's Certificate uses the shared starting names ALYSSA LYNN TALINGTING and PATRICK CARLO P. DEDEL. Saved officer names and nationality override defaults. Complete Document Setup is still required; PDF/Word generation and saved-name overrides were verified.
 - Incomplete packages still generate with marked missing-document placeholders in the same positions. Existing package order remains 23 default sections including tabbing / 26 Initao sections.
 - Preview-first PDF/Word workflow, exact-file downloads and stale-preview protection retained.
 
@@ -34,7 +34,7 @@ Browser generation used in-memory TEST FIXTURE certificates and fictional TEST o
 
 ## Missing information and unperformed checks
 
-No independently verified registered legal name, legal structure or own Mega Pluto officer identities were found locally. The pending clarification was not answered; documents use MEGA PLUTO branding until a legal name is saved. Corporate certificate displays Missing Required Information until applicable own details exist.
+No independently verified registered legal name or legal structure was found locally; documents use MEGA PLUTO branding until a legal name is saved. The user subsequently requested the same Secretary's Certificate defaults as Mikata, which are now applied unless saved names override them.
 
 Missing genuine official documents:
 - SEC Registration Certificate.pdf (or the actual structure's appropriate registration)
