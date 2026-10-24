@@ -1,3 +1,6 @@
+import { applyBidderLetterhead } from './bidderLetterhead'
+import { getBidderCompany, getBidderLogo } from '../../lib/bidderAssets'
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { parseProjectDate } from '../../lib/projectFormatters'
 import { wrapText } from './pdfHelpers'
@@ -11,13 +14,15 @@ export function formatTabbingDeadline(value) {
 
 export async function generateTabbingPreview(data = {}) {
   const deadline = formatTabbingDeadline(data.closingDate ?? data.closing_date)
-  const response = await fetch('/pdf/templates/TABBING.pdf')
+  const response = await fetchAsset(getTemplatePath("TABBING.pdf", data))
   if (!response.ok) throw new Error('Unable to load TABBING.pdf.')
   const document = await PDFDocument.load(await response.arrayBuffer())
   const bold = await document.embedFont(StandardFonts.TimesRomanBold)
   const office = await document.embedFont(StandardFonts.HelveticaBoldOblique)
   const white = rgb(1, 1, 1), red = rgb(1, 0, 0)
   const clean = value => String(value ?? '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim()
+  const company = getBidderCompany(data)
+  const logo = company.id === 'mikata' ? null : await getBidderLogo(data)
   for (const page of document.getPages()) {
     const height = page.getHeight()
     const erase = (x, top, width, boxHeight) => page.drawRectangle({ x, y: height - top - boxHeight, width, height: boxHeight, color: white })
@@ -31,10 +36,17 @@ export async function generateTabbingPreview(data = {}) {
       lines.forEach((line, index) => page.drawText(line, { x: centered ? x + (width - font.widthOfTextAtSize(line, size)) / 2 : x,
         y: height - baseline - index * leading, size, font, color }))
     }
-    erase(151, 29, 420, 34)
-    draw(data.bidderName, 152.47, 55.7, 414, 25.92)
-    erase(154, 65, 417, 14)
-    draw('CDO Office: ' + clean(data.businessAddress), 155.59, 75.62, 412, 9.12, { font: office })
+    await applyBidderLetterhead(document, page, data, {
+      box: { x: 34, y: height - 108, width: 542, height: 86 },
+      logo: { x: 43.45, y: height - 25.8 - 86.95, width: 104.19, height: 86.95 },
+      text: { x: 152.47, y: height - 55.7, addressY: height - 75.62, width: 414, size: 25.92 },
+    }, logo)
+    if (!['builtech', 'manotech', 'r-and-l', 'mega-pluto'].includes(company.id)) {
+      erase(151, 29, 420, 34)
+      draw(data.bidderName, 152.47, 55.7, 414, 25.92)
+      erase(154, 65, 417, 14)
+      draw((company.id === 'mikata' ? 'CDO Office: ' : 'Office: ') + clean(data.businessAddress), 155.59, 75.62, 412, 9.12, { font: office })
+    }
     erase(286, 177, 291, 29)
     draw(data.procuringEntity, 287.16, 191.09, 285, 12, { maxLines: 2, color: red })
     erase(286, 205, 291, 38)

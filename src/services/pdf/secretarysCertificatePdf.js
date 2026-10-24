@@ -1,4 +1,4 @@
-
+import { secretaryDefaults } from '../../lib/secretaryDefaults'
 import {
   PDFDocument,
   StandardFonts,
@@ -211,15 +211,13 @@ export async function generateSecretaryCertificatePreview(
   )
 
   const secretary = clean(
-    setup.corporateSecretaryName ||
-    'ALYSSA LYNN TALINGTING'
+    clean(setup.corporateSecretaryName) || secretaryDefaults.corporateSecretaryName
   )
 
   const president = clean(
-    setup.companyPresidentName ||
-    'PATRICK CARLO P. DEDEL'
+    clean(setup.companyPresidentName) || secretaryDefaults.companyPresidentName
   )
-
+  const secretaryNationality = clean(setup.corporateSecretaryNationality) || 'Filipino'
   if (
     !bidder ||
     !project ||
@@ -228,7 +226,7 @@ export async function generateSecretaryCertificatePreview(
     !entity
   ) {
     throw new Error(
-      'Please complete Document Setup first.'
+      'Please complete Document Setup, Corporate Secretary and Company President / Proprietor first.'
     )
   }
 
@@ -523,7 +521,7 @@ export async function generateSecretaryCertificatePreview(
       },
       {
         text:
-          `, of legal age, Filipino, and with office address at ${address}, after having been duly sworn in accordance with law, hereby depose and state that:`,
+          `, of legal age, ${secretaryNationality}, and with office address at ${address}, after having been duly sworn in accordance with law, hereby depose and state that:`,
       },
     ],
     {

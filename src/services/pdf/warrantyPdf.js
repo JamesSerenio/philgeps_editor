@@ -1,3 +1,5 @@
+import { applyBidderLetterhead } from './bidderLetterhead'
+import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 
 import {
   PDFDocument,
@@ -279,14 +281,9 @@ function rich(
 export async function generateProductWarrantyPreview(
   data = {}
 ) {
-  const base =
-    import.meta.env?.BASE_URL || '/'
+  const url = getTemplatePath('Warranty.pdf', data)
 
-  const url =
-    `${base.replace(/\/?$/, '/')}` +
-    'pdf/templates/Warranty.pdf'
-
-  const response = await fetch(url, {
+  const response = await fetchAsset(url, {
     cache: 'no-store',
   })
 
@@ -481,6 +478,12 @@ export async function generateProductWarrantyPreview(
   }
 
   // ==================================================
+  await applyBidderLetterhead(doc, page, data, {
+    box: { x: 24, y: 681, width: 565, height: 90 },
+    logo: { x: 25.5, y: 685.9, width: 110.24, height: 83.448 },
+    text: { x: 144, y: 738.5, addressY: 723.9, width: 437 },
+  })
+
   // FIRST PARAGRAPH
   // Only this paragraph is replaced.
   // ==================================================

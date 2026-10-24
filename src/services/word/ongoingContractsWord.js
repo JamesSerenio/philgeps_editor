@@ -1,3 +1,5 @@
+import { getBidderCompany } from '../../lib/bidderAssets'
+import { templateWord } from './templateWord'
 
 import {
   AlignmentType,
@@ -847,6 +849,9 @@ export function ongoingContractsWord(
   options = {}
 ) {
   const setup = options.setup ?? options
+  if (getBidderCompany(setup).id !== 'mikata') {
+    return templateWord(options, options.sectionNumber ?? 7, { tables: true, tableExactGeometry: true, exactLineSpacing: true })
+  }
 
   const ongoing =
     options.ongoingContracts ??

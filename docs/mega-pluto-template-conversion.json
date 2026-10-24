@@ -1,0 +1,156 @@
+[
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TABLE OF CONTENTS-INITAO.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/INITAO/MEGA PLUTO - TABLE OF CONTENTS-INITAO.pdf",
+    "sourceSha256": "75321c3dec945583ba4b3cdd9a540f3bb2e6d5d1925656dc9187e349a65112ad",
+    "sha256": "29715a8e016b03269f70c76e20c2e5c8c027aacceacd216f84c187c71331e324",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TECHNICAL COMPONENT ENVELOPE.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/INITAO/MEGA PLUTO - TECHNICAL COMPONENT ENVELOPE.pdf",
+    "sourceSha256": "6dc53a9b6ee3e8cfd44d5083955cb3911c6825db5a508803e5a25cb0e529de72",
+    "sha256": "cfccf076825e96ec0f631924e936f3452a8ccf2276dd7c7f93cd4e98b55bd19d",
+    "pages": 3
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - After Sales.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - After Sales.pdf",
+    "sourceSha256": "9bdc0379e812c453f2cdd9d1ce0f04972cbae2fd4a6a1e3e4b71032779534746",
+    "sha256": "7d32e89cf80444b70d268f602b692c1cace4968c9957363a74deb7d04d030587",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security with table.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Bid Security with table.pdf",
+    "sourceSha256": "215b5affbc006b22272fbcabadcd91d7f257ae162abc1d590e54b01a4caeb729",
+    "sha256": "47f1fec9c0d61921684cdef8b10ffaf950ec23fc2c73daf0110470edea145c2e",
+    "pages": 2
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security without table.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Bid Security without table.pdf",
+    "sourceSha256": "6a2679637dbdeddc6cdbef0bc22f55ee91fe91c313d7ab2fb8d8c1c791ea7bc2",
+    "sha256": "dee0a357c5b60efadf111933b7c9071b32c196a020727064198ccb10e3343d33",
+    "pages": 2
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - BID_FORM_CLEAN_TEMPLATE.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - BID_FORM_CLEAN_TEMPLATE.pdf",
+    "sourceSha256": "5553895863dc0a29cc0fa73ea3bb00f0600a346b570efb0492647bcb98e19a78",
+    "sha256": "7b4fde7f7d75f2506574f017fa0a819f6aa737e360cadf55fc1738126db9febc",
+    "pages": 2
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Manpower Requirements.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Manpower Requirements.pdf",
+    "sourceSha256": "7a8459e14cc504d57b2fb5aa30645cf1efcbfda9bce78403d1041eee067b425a",
+    "sha256": "ff24b6ba8a6afc85681d65793bbfdd906f89036bb04032a68f61ee527ab57120",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - New_tab_and_pages_Initao_LGU_template.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - New_tab_and_pages_Initao_LGU_template.pdf",
+    "sourceSha256": "6e40cf4b959614c2ec3d8334b323afca6a05166c223a942ec73b2d84118c5a90",
+    "sha256": "b1114d829572e192edbcba76335a77fee522f6a8a8ad8f510c108c423b7bfbfa",
+    "pages": 6
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - NFCC_Template.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - NFCC_Template.pdf",
+    "sourceSha256": "52803962106803098b58f6d7bc72b8d88312f5e0cbbe59b357e05eb66d9235a4",
+    "sha256": "610b4baa4ba52a0b017e7dbb802d2d66c2e5eb008f6abb710657fd628408d09d",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement Initao.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Omnibus Sworn Statement Initao.pdf",
+    "sourceSha256": "f08f229f972779c73ebaea68f64c107751662ab82bd0760434cb04f9e62eaffa",
+    "sha256": "a36cdde6572d97901255a34b84011fa941ac6691d8b7f44fd4c62ae6bc692269",
+    "pages": 3
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Omnibus Sworn Statement.pdf",
+    "sourceSha256": "3772a1a5dbfb9c4dec73d0ef16e1c67491a0fb5f78e6ca39cc6c32db248210ff",
+    "sha256": "792a0d7a919d403e519bd1bd0cac63bdd0a55b0d7438d7a7d78ebde7244c3e90",
+    "pages": 3
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - PRICE SCHEDULE FOR GOODS.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - PRICE SCHEDULE FOR GOODS.pdf",
+    "sourceSha256": "6a50e6963d1a82179920b66cd1639f92ad3c7645fb84a02cc21046fa8355c993",
+    "sha256": "82463600c29608dfa6573386f5eb754ca351feafd182eef9ee5219b146f349ff",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Production Delivery Schedule.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Production Delivery Schedule.pdf",
+    "sourceSha256": "91ce60dbe3085e5d720f598df6cf78cf5e746572966f628256d0ff8d8dc821aa",
+    "sha256": "1d5950ee685759cbf12553da21a242895972fc69d3660ff2d9ba69357efb9782",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SECRETARY\u2019S CERTIFICATE .pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - SECRETARY\u2019S CERTIFICATE .pdf",
+    "sourceSha256": "6cbaadf770c98fd786b134f8a1f468a3b4ec0fd7d16cd1bd8bf75657b7610339",
+    "sha256": "1576aff12f4e86662fb25310628639e7290c138fd8cddde83a5f8ba2b7d473c6",
+    "pages": 2
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_cctv.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - SLCC_table_cctv.pdf",
+    "sourceSha256": "4819f6bb1ede31fdeaa6b8db48059b47a1daa5fce4724a4f12757edc7108278e",
+    "sha256": "9ed79a7cdc8b90cd4388079ba9b7b753ab7accaed72c8195c8e3a8183bf13ea8",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_streetlight.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - SLCC_table_streetlight.pdf",
+    "sourceSha256": "b70cfe2d9123d5549687abf2d0f0ad09235e193b1c915e520cca2db104e52acc",
+    "sha256": "e08600232d6b8a2a94c4c7dc37af5d66ce40e1646a6296983928d0c97ff6e7fa",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Statement of Ongoing Government and Private Contracts,.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Statement of Ongoing Government and Private Contracts,.pdf",
+    "sourceSha256": "dd2c2f6d83adb14717a5c501dee7cf5f698ec0eb0f3e91b664d5ad259f48871c",
+    "sha256": "36daa3dc503c0148c2ef87bcd12cc0e83cd8fbbecdf333b2f3c1cfe4561ee2f9",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SUMMARY OF BID PRICES.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - SUMMARY OF BID PRICES.pdf",
+    "sourceSha256": "4510b9957c19b6e913c75521d2d69f21321da1e5b9a56ad1735db2c7270b9371",
+    "sha256": "a5f62c034fb96d988356cb17c6b1a062ff102b260e8c0ae631647d4d41cf30f7",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABBING.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - TABBING.pdf",
+    "sourceSha256": "18f988be99cf230a3af0045b47512d2d4f9e0db7ae6fe63568354ef5820b13db",
+    "sha256": "7a1a8d9a420ef61e31f0012a83ba6324b5b44b2da7a57e7349f93934047e5301",
+    "pages": 9
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABLE OF CONTENTS.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - TABLE OF CONTENTS.pdf",
+    "sourceSha256": "0a29c8711dd4b8ce52156ec28695a0742cf3ebb6c5d355c6eb637b9e6d825ea3",
+    "sha256": "d9acf5c9e99c00d6574c743edf430416b028d4e3737fcb9ff8f86cb029541f8a",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Technical Specifications.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Technical Specifications.pdf",
+    "sourceSha256": "c0ab0caae5db24af54963503c63fc1eded6893236ff9a739cd6f3e6a00847908",
+    "sha256": "f6c6a49ff3df8a6f191a203b4e97901507bd20033623793c6a5bcca6aced1f3e",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Warranty.pdf",
+    "output": "public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Warranty.pdf",
+    "sourceSha256": "b50096f129444223d36061c92bb506fb3ea5bf7baca0fe67ad5c998c3c5c4d80",
+    "sha256": "88fccb3aca7e2258c171f59f63e7bc264de619b38ca9a0cd6fb8c23abf6db274",
+    "pages": 1
+  }
+]

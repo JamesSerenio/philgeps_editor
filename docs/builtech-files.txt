@@ -1,0 +1,57 @@
+MODIFIED
+src/components/DocumentSetup.jsx
+src/editors/SLCCEditor.jsx
+src/lib/bidderAddresses.js
+src/lib/bidderAssetManifest.json
+src/lib/bidderAssets.js
+src/lib/bidderCompanies.js
+src/lib/documentSetup.js
+src/pages/ProjectEditorPage.jsx
+src/services/pdf/bidderLetterhead.js
+src/services/pdf/fullBidPackagePdf.js
+src/services/pdf/manpowerPdf.js
+src/services/pdf/nfccPdf.js
+src/services/pdf/omnibusPdf.js
+src/services/pdf/ongoingContractsPdf.js
+src/services/pdf/secretarysCertificatePdf.js
+src/services/pdf/slccPdf.js
+tests/bidder-assets.test.mjs
+
+ADDED
+docs/builtech-asset-download-validation.json
+docs/builtech-browser-validation.json
+docs/builtech-mobile-fields.png
+docs/builtech-regression-validation.json
+docs/builtech-template-conversion.json
+docs/builtech-template-support.md
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - After Sales.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - BID_FORM_CLEAN_TEMPLATE.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Bid Security with table.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Bid Security without table.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Manpower Requirements.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - NFCC_Template.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - New_tab_and_pages_Initao_LGU_template.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Omnibus Sworn Statement Initao.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Omnibus Sworn Statement.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - PRICE SCHEDULE FOR GOODS.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Production Delivery Schedule.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SECRETARY’S CERTIFICATE .pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SLCC_table_cctv.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SLCC_table_streetlight.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - SUMMARY OF BID PRICES.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Statement of Ongoing Government and Private Contracts,.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - TABBING.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - TABLE OF CONTENTS.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Technical Specifications.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/BUILTECH SOLUTIONS - Warranty.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/INITAO/BUILTECH SOLUTIONS - TABLE OF CONTENTS-INITAO.pdf
+public/pdf/templates/BUILTECH_SOLUTIONS/INITAO/BUILTECH SOLUTIONS - TECHNICAL COMPONENT ENVELOPE.pdf
+scripts/create-builtech-templates.py
+src/components/BidderCompanyFields.jsx
+src/lib/bidderProfiles.js
+src/services/pdf/builtechDataPdf.js
+tests/builtech-templates.test.mjs
+docs/builtech-files.txt
+
+USER-SUPPLIED EXISTING ASSET USED (UNCHANGED)
+public/images/BUILTECH_SOLUTIONS/BUILTECH_SOLUTIONS-logo.png

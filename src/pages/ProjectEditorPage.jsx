@@ -1,3 +1,6 @@
+import { assetExists, getTemplatePath } from '../lib/bidderAssets'
+import { documentBidderName } from '../lib/bidderCompanies'
+import { restoreBidderVariants } from '../lib/bidderProfiles'
 import GenerateDocumentsModal from '../components/GenerateDocumentsModal'
 import { exportFilename } from '../lib/exportFilename'
 import DashboardIcon from '../components/DashboardIcon'
@@ -660,6 +663,8 @@ function ProjectEditorContent({ id }) {
       pricingReady
     )
       ? {
+          ...setup,
+          bidderId: setup.bidderId,
           province:
             setup.province ?? '',
 
@@ -679,7 +684,7 @@ function ProjectEditorContent({ id }) {
             setup.date ?? '',
 
           bidderName:
-            setup.bidderName ?? '',
+            documentBidderName(setup),
 
           businessAddress:
             setup.businessAddress ?? '',
@@ -1036,9 +1041,7 @@ function ProjectEditorContent({ id }) {
       )
     : (
         selected?.template
-          ? `/pdf/templates/${encodeURIComponent(
-              selected.template
-            )}`
+          ? (() => { try { const path = getTemplatePath(selected.template, setup, { required: false }); return assetExists(path) ? path : null } catch { return null } })()
           : null
       )
 
@@ -1052,15 +1055,21 @@ function ProjectEditorContent({ id }) {
   // ===================================================
 
   function changeSetup(value) {
-    setDocumentSetup(value)
+    const restored = restoreBidderVariants(setup, value, bidSecurity, omnibus)
+    setDocumentSetup(restored.setup)
 
     const next = {
-      ...bidSecurity,
-      templateVariant,
-      documentSetup: value,
+      ...restored.bidSecurity,
+      templateVariant: normalizeVariant(restored.bidSecurity?.templateVariant),
+      documentSetup: restored.setup,
     }
 
     setBidSecurity(next)
+
+    if (restored.omnibus !== omnibus) {
+      setOmnibus(restored.omnibus)
+      persistence.change('omnibus', restored.omnibus)
+    }
 
     persistence.change(
       'bid_security',
@@ -1215,11 +1224,6 @@ async function handleGenerateAll(format = 'pdf') {
       setup.referenceNumber ?? ''
     ).trim()
 
-    if (!ref) {
-      throw new Error(
-        'Reference Number is missing.'
-      )
-    }
 
     const projectTitle = String(
       setup.projectTitle ?? ''

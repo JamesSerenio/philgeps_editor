@@ -1,0 +1,156 @@
+[
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TABLE OF CONTENTS-INITAO.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/INITAO/R&L BUILDERS AND CONSTRUCTION SUPPLY - TABLE OF CONTENTS-INITAO.pdf",
+    "sourceSha256": "75321c3dec945583ba4b3cdd9a540f3bb2e6d5d1925656dc9187e349a65112ad",
+    "sha256": "7001ae1d5f2a29a2872178fa3c5230e62b2309821b83cedf4942717917a96b45",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TECHNICAL COMPONENT ENVELOPE.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/INITAO/R&L BUILDERS AND CONSTRUCTION SUPPLY - TECHNICAL COMPONENT ENVELOPE.pdf",
+    "sourceSha256": "6dc53a9b6ee3e8cfd44d5083955cb3911c6825db5a508803e5a25cb0e529de72",
+    "sha256": "5cbe869cad6ff9334b6d1fff5d5b7fd628a43531616493d97ed863031621f147",
+    "pages": 3
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - After Sales.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - After Sales.pdf",
+    "sourceSha256": "9bdc0379e812c453f2cdd9d1ce0f04972cbae2fd4a6a1e3e4b71032779534746",
+    "sha256": "78a0fae7846d64f7912420acee7c3dd7b48cd8daf0ee8ba1eb83817811d645be",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security with table.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - Bid Security with table.pdf",
+    "sourceSha256": "215b5affbc006b22272fbcabadcd91d7f257ae162abc1d590e54b01a4caeb729",
+    "sha256": "78bd561ce494e31cc6a2f76422cf582bce857c36e76569ef5f28dd5e9924108d",
+    "pages": 2
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security without table.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - Bid Security without table.pdf",
+    "sourceSha256": "6a2679637dbdeddc6cdbef0bc22f55ee91fe91c313d7ab2fb8d8c1c791ea7bc2",
+    "sha256": "988f1edbcab8f6cd176bd55c61fd90acd00efe5dfe88e60340fd62b082e0ebe0",
+    "pages": 2
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - BID_FORM_CLEAN_TEMPLATE.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - BID_FORM_CLEAN_TEMPLATE.pdf",
+    "sourceSha256": "5553895863dc0a29cc0fa73ea3bb00f0600a346b570efb0492647bcb98e19a78",
+    "sha256": "1ba1cb866c21b707c2c4bef8e64acb8c2b47c4f6a2683ec4337753379622b1a7",
+    "pages": 2
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Manpower Requirements.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - Manpower Requirements.pdf",
+    "sourceSha256": "7a8459e14cc504d57b2fb5aa30645cf1efcbfda9bce78403d1041eee067b425a",
+    "sha256": "b6e8a0deb26d00e1549c8223f114937d3bfa14703e01e12fa1df44a0f37f6b97",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - New_tab_and_pages_Initao_LGU_template.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - New_tab_and_pages_Initao_LGU_template.pdf",
+    "sourceSha256": "6e40cf4b959614c2ec3d8334b323afca6a05166c223a942ec73b2d84118c5a90",
+    "sha256": "176886beb84c0ab23aab45dbab4d99f352b205ba89be7c6e40ff9c06d5d09903",
+    "pages": 6
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - NFCC_Template.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - NFCC_Template.pdf",
+    "sourceSha256": "52803962106803098b58f6d7bc72b8d88312f5e0cbbe59b357e05eb66d9235a4",
+    "sha256": "5f7c892310c83b38d560c4e7320651195691dd836e9773d9d70bd7efa56b8851",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement Initao.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - Omnibus Sworn Statement Initao.pdf",
+    "sourceSha256": "f08f229f972779c73ebaea68f64c107751662ab82bd0760434cb04f9e62eaffa",
+    "sha256": "3de6f05ffe9c0c84c2e47daefcf44b889238053e05c6ff6b50a44d077cfc57b7",
+    "pages": 3
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - Omnibus Sworn Statement.pdf",
+    "sourceSha256": "3772a1a5dbfb9c4dec73d0ef16e1c67491a0fb5f78e6ca39cc6c32db248210ff",
+    "sha256": "15d4c5f846162d3513a24c9ad2082782e142e865b8edb9532beec01131805408",
+    "pages": 3
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - PRICE SCHEDULE FOR GOODS.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - PRICE SCHEDULE FOR GOODS.pdf",
+    "sourceSha256": "6a50e6963d1a82179920b66cd1639f92ad3c7645fb84a02cc21046fa8355c993",
+    "sha256": "71ef28dff1d449920bad2f277eb2f0409c453eaf1897450a8eaa72b4ef0515b5",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Production Delivery Schedule.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - Production Delivery Schedule.pdf",
+    "sourceSha256": "91ce60dbe3085e5d720f598df6cf78cf5e746572966f628256d0ff8d8dc821aa",
+    "sha256": "1a8ada139237f36df12561c60594bce091ecf958208953ee2e62f51b261dda53",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SECRETARY\u2019S CERTIFICATE .pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - SECRETARY\u2019S CERTIFICATE .pdf",
+    "sourceSha256": "6cbaadf770c98fd786b134f8a1f468a3b4ec0fd7d16cd1bd8bf75657b7610339",
+    "sha256": "e177f1120799fcbb778027419078a17c43c9d1bebd8bf64fb4117ae047a24a14",
+    "pages": 2
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_cctv.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - SLCC_table_cctv.pdf",
+    "sourceSha256": "4819f6bb1ede31fdeaa6b8db48059b47a1daa5fce4724a4f12757edc7108278e",
+    "sha256": "7013e9fbad66b70ef8a0116ab228fcbd82f51c85800bc080ee1f42232f29c742",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SLCC_table_streetlight.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - SLCC_table_streetlight.pdf",
+    "sourceSha256": "b70cfe2d9123d5549687abf2d0f0ad09235e193b1c915e520cca2db104e52acc",
+    "sha256": "5408a23cb614101c0d2b764153d67321d59d67a182748c552e384f2f56c86d7c",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Statement of Ongoing Government and Private Contracts,.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - Statement of Ongoing Government and Private Contracts,.pdf",
+    "sourceSha256": "dd2c2f6d83adb14717a5c501dee7cf5f698ec0eb0f3e91b664d5ad259f48871c",
+    "sha256": "14a9477e9181cf1e2c2989cc1b29efcb29f93b92c5ba763ff8d614c8e9c26405",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SUMMARY OF BID PRICES.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - SUMMARY OF BID PRICES.pdf",
+    "sourceSha256": "4510b9957c19b6e913c75521d2d69f21321da1e5b9a56ad1735db2c7270b9371",
+    "sha256": "d16f050c890f789c8ce7a98a2c28c67b65e57db4349e8a67608ce4d2e32e989b",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABBING.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - TABBING.pdf",
+    "sourceSha256": "18f988be99cf230a3af0045b47512d2d4f9e0db7ae6fe63568354ef5820b13db",
+    "sha256": "b4b743b2df6860488c2bc579dca07597003a4fbd70b8124814275e351de6a5a2",
+    "pages": 9
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABLE OF CONTENTS.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - TABLE OF CONTENTS.pdf",
+    "sourceSha256": "0a29c8711dd4b8ce52156ec28695a0742cf3ebb6c5d355c6eb637b9e6d825ea3",
+    "sha256": "75fd1d2c856c493f4e0c3d9d68e0f105b893ce2fa34c64f4643d17e879d52e0e",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Technical Specifications.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - Technical Specifications.pdf",
+    "sourceSha256": "c0ab0caae5db24af54963503c63fc1eded6893236ff9a739cd6f3e6a00847908",
+    "sha256": "da23de320efec9ea35721948414014b5b950c4b07d212dcb4c9da0772d696b49",
+    "pages": 1
+  },
+  {
+    "source": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Warranty.pdf",
+    "output": "public/pdf/templates/R_AND_L_BUILDERS/R&L BUILDERS AND CONSTRUCTION SUPPLY - Warranty.pdf",
+    "sourceSha256": "b50096f129444223d36061c92bb506fb3ea5bf7baca0fe67ad5c998c3c5c4d80",
+    "sha256": "2f5691cabdf52e930d092579f0ee5183f19fb5893e4529a4452bf700af791cf0",
+    "pages": 1
+  }
+]

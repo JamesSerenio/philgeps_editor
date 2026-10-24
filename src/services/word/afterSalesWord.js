@@ -1,5 +1,7 @@
+import { getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { ImageRun, Paragraph, TextWrappingType, LineRuleType } from 'docx'
 import { templateWord } from './templateWord'
+import { manotechLetterheadRule, prepareMegaPlutoHeader } from './manotechLetterhead'
 import {
   generateAfterSalesPreview,
   serviceYearsText,
@@ -25,10 +27,8 @@ export async function afterSalesWord(options = {}) {
     )
   }
   serviceYearsText(setup.servicePeriodYears ?? 1)
-  const response = await fetch('/images/manpower-letterhead-logo.png')
-  if (!response.ok)
-    throw new Error('Unable to load the certificate letterhead logo.')
-  const logo = new Uint8Array(await response.arrayBuffer())
+  const logo = await getBidderLogo(setup)
+  const layout = letterheadLogoLayout(logo, { x: 27, top: 26, width: 108, height: 84 })
   const document = options.document ?? {
     name: 'After Sales.pdf',
     generate: () => generateAfterSalesPreview(setup),
@@ -39,6 +39,7 @@ export async function afterSalesWord(options = {}) {
       return Math.round(Math.max(...line.parts.map(part => part.size)) * 2) === 26 ? 'AfterSalesBody' : 'AfterSales'
     },
     preparePage(page) {
+      prepareMegaPlutoHeader(page, logo)
       // Ignore erased template underlines; retain only visible PDF rules.
       page.fragments.forEach(part => {
         part.underline = page.lines.some(rule => Math.abs(rule.y1-rule.y2)<.1 && rule.y1>=part.y && rule.y1<=part.y+3 && rule.x1<=part.x+2 && rule.x2>=part.x+part.width-2)
@@ -51,7 +52,7 @@ export async function afterSalesWord(options = {}) {
       if (index !== 0) return []
       return [
         new Paragraph({
-          style: 'AfterSalesLogo',
+          style: logo.companyId === 'mega-pluto' ? 'MegaPlutoLogo' : 'AfterSalesLogo',
           spacing: {
             before: 0,
             after: 0,
@@ -59,21 +60,18 @@ export async function afterSalesWord(options = {}) {
             lineRule: LineRuleType.EXACT,
           },
           children: [
+            ...manotechLetterheadRule(logo, layout),
             new ImageRun({
-              type: 'png',
-              data: logo,
-              transformation: {
-                width: (108 * 96) / 72,
-                height: (84 * 96) / 72,
-              },
+              type: logo.type, data: logo.data,
+              transformation: { width: layout.width * 96 / 72, height: layout.height * 96 / 72 },
               floating: {
                 horizontalPosition: {
                   relative: 'page',
-                  offset: Math.round(27 * 12700),
+                  offset: Math.round(layout.x * 12700),
                 },
                 verticalPosition: {
                   relative: 'page',
-                  offset: Math.round(26 * 12700),
+                  offset: Math.round(layout.top * 12700),
                 },
                 wrap: { type: TextWrappingType.NONE },
                 allowOverlap: true,
@@ -81,7 +79,7 @@ export async function afterSalesWord(options = {}) {
               altText: {
                 name: 'After-Sales letterhead logo',
                 title: 'Company letterhead logo',
-                description: 'Original Mikata logo used in the certificate PDF',
+                description: 'Selected company logo used in the certificate PDF',
               },
             }),
           ],
