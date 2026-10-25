@@ -72,7 +72,7 @@ export function getStaticDocumentPath(value, filename, { required = true } = {})
 export function getTemplatePath(filename, value, { required = true } = {}) {
   const company = getBidderCompany(value)
   let path = encodeAssetUrl(expectedBidderAssetPath(company.id, 'templates', filename))
-  if (['r-and-l', 'mega-pluto'].includes(company.id)) return required ? requireAsset(path, company.name + ' template: ' + filename) : path
+  if (['mega-pluto'].includes(company.id)) return required ? requireAsset(path, company.name + ' template: ' + filename) : path
   if (!assetExists(path) && (company.id === 'mikata' || !companyOnlyTemplates.has(filename))) path = sharedAssetPath('templates', filename)
   // Generic layouts live with the original Mikata templates. Other bidders
   // may reuse layouts, but must supply their own history, staff and financials.
@@ -101,7 +101,7 @@ export async function fetchAsset(path, options) {
 export async function getBidderLogo(value) {
   const path = getLogoPath(value)
   const response = await fetchAsset(path)
-  let data = new Uint8Array(await response.arrayBuffer())
+  const data = new Uint8Array(await response.arrayBuffer())
   const type = /\.jpe?g$/i.test(path) ? 'jpg' : 'png'
   const objectUrl = URL.createObjectURL(new Blob([data]))
   const image = new Image()
@@ -114,31 +114,6 @@ export async function getBidderLogo(value) {
     })
     width = image.naturalWidth
     height = image.naturalHeight
-    if (getBidderCompany(value).id === 'r-and-l') {
-      // Trim only the source's empty top/bottom padding when laying out the
-      // supplied banner; preserve its artwork and original asset on disk.
-      const canvas = document.createElement('canvas')
-      canvas.width = width; canvas.height = height
-      const context = canvas.getContext('2d', { willReadFrequently: true })
-      context.drawImage(image, 0, 0)
-      const pixels = context.getImageData(0, 0, width, height).data
-      let first = height, last = 0
-      for (let y = 0; y < height; y++) {
-        let dark = 0
-        for (let x = 0; x < width; x++) {
-          const i = (y * width + x) * 4
-          if (pixels[i] < 110 && pixels[i + 1] < 130 && pixels[i + 2] < 170) dark++
-        }
-        if (dark > width * .3) { first = Math.min(first, y); last = y }
-      }
-      if (last > first) {
-        height = last - first + 1
-        const banner = document.createElement('canvas')
-        banner.width = width; banner.height = height
-        banner.getContext('2d').drawImage(canvas, 0, first, width, height, 0, 0, width, height)
-        data = new Uint8Array(await (await new Promise(resolve => banner.toBlob(resolve, 'image/png'))).arrayBuffer())
-      }
-    }
   } finally { URL.revokeObjectURL(objectUrl) }
   const companyId = getBidderCompany(value).id
   return { path, data, type, width, height, companyId }
@@ -166,20 +141,17 @@ export function letterheadLogoLayout(logo, slot) {
     const fitted = fitBidderLogo(logo, 58, 48)
     return { ...fitted, x: ((slot.pageWidth ?? 612) - fitted.width) / 2, top: 10 }
   }
-  if (logo.companyId === 'r-and-l') {
-    return { width: 540, height: 65, x: slot.x, top: slot.top }
-  }
   if (logo.companyId === 'manotech') {
     const fitted = fitBidderLogo(logo, 190, slot.height)
     return { ...fitted, x: slot.x, top: slot.top + (slot.height - fitted.height) / 2,
       separatorX: slot.x + 200, separatorTop: slot.top + 5,
       separatorHeight: Math.min(72, slot.height - 10) }
   }
-  const box = ['builtech', 'r-and-l'].includes(logo.companyId) ? { ...slot, width: 170, height: 72 } : slot
+  const box = ['builtech'].includes(logo.companyId) ? { ...slot, width: 170, height: 72 } : slot
   const fitted = fitBidderLogo(logo, box.width, box.height)
   return {
     ...fitted,
-    x: box.x + (['builtech', 'r-and-l'].includes(logo.companyId) ? (box.width - fitted.width) / 2 : 0),
-    top: box.top + (['builtech', 'r-and-l'].includes(logo.companyId) ? (box.height - fitted.height) / 2 : 0),
+    x: box.x + (['builtech'].includes(logo.companyId) ? (box.width - fitted.width) / 2 : 0),
+    top: box.top + (['builtech'].includes(logo.companyId) ? (box.height - fitted.height) / 2 : 0),
   }
 }

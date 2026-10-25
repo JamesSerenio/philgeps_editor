@@ -11,7 +11,7 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
   const bold = await document.embedFont(StandardFonts.TimesRomanBold)
   const italic = await document.embedFont(StandardFonts.HelveticaBoldOblique)
   page.drawRectangle({ ...geometry.box,
-    ...(['r-and-l', 'mega-pluto'].includes(company.id) ? { width: page.getWidth() - geometry.box.x } : {}),
+    ...(['mega-pluto'].includes(company.id) ? { width: page.getWidth() - geometry.box.x } : {}),
     color: rgb(1, 1, 1) })
   if (company.id === 'mega-pluto') {
     const slot = geometry.logo
@@ -44,26 +44,6 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
         top += leading
       }
     }
-    return
-  }
-  if (company.id === 'r-and-l') {
-    const slot = geometry.logo
-    const top = page.getHeight() - slot.y - slot.height
-    const layout = letterheadLogoLayout(logo, { ...slot, top })
-    page.drawImage(image, { x: layout.x, y: page.getHeight() - layout.top - layout.height,
-      width: layout.width, height: layout.height })
-    const font = await document.embedFont(StandardFonts.HelveticaBold)
-    // The supplied reference is one wide banner with two centered footer lines.
-    // Its printed address is separate from the project's saved business address.
-    const details = [company.headerAddress,
-      'Contact: ' + (setup.phone || company.phone) + ' | Email: ' + (setup.email || company.email)]
-    details.forEach((line, index) => {
-      let size = index === 0 ? 8 : 6.5
-      while (font.widthOfTextAtSize(line, size) > layout.width - 12) size -= .1
-      page.drawText(line, { x: layout.x + (layout.width - font.widthOfTextAtSize(line, size)) / 2,
-        y: page.getHeight() - layout.top - layout.height - 10 - index * 9,
-        size, font, color: rgb(0, 0, 0) })
-    })
     return
   }
   if (company.id === 'manotech') {

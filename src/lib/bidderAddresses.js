@@ -9,15 +9,6 @@ export const bidderAddresses = {
     businessAddress: 'M. Vega St., Abarlos Compound, Consolacion, Cagayan de Oro City',
     additionalOffice: 'Jamille St., Maria Cristina Subdivision, Brgy. San Miguel, Iligan City',
   },
-  'r-and-l': {
-    name: 'R&L BUILDERS AND CONSTRUCTION SUPPLY',
-    businessAddress: 'Brgy. Baloy Extension, Gusa, Cagayan de Oro City, Misamis Oriental, Philippines',
-  },
-  wdc: {
-    name: 'WDC BUILDERS & SUPPLIES',
-    businessAddress: 'B-5, L-20, Cilria District 7, Puntod, Cagayan de Oro City',
-    additionalOffice: '2nd Floor, ATC Building, Velez St. corner A. Luna, Brgy. 19, Cagayan de Oro City',
-  },
   'mega-pluto': { name: 'MEGA PLUTO', businessAddress: 'Kihare, Bukidnon, 8703' },
   manotech: { name: 'MANOTECH', businessAddress: 'Purok 4, Poblacion, Linamon, Lanao del Norte' },
   mikata: {

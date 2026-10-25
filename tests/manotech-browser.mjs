@@ -10,8 +10,6 @@ const { webkit } = await import(modulePath ? pathToFileURL(modulePath).href : 'p
 const browser = await webkit.launch({ headless: true, ...(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {}) })
 const company = process.env.TEST_BIDDER === 'mega-pluto'
   ? { id: 'mega-pluto', name: 'MEGA PLUTO', address: 'Kihare, Bukidnon, 8703', logo: 'public/images/MEGA_PLUTO/MEGA_PLUTO-logo-transparent.png' }
-  : process.env.TEST_BIDDER === 'r-and-l'
-  ? { id: 'r-and-l', name: 'R&L BUILDERS AND CONSTRUCTION SUPPLY', address: 'Brgy. Baloy Extension, Gusa, Cagayan de Oro City, Misamis Oriental, Philippines', logo: 'public/images/R_AND_L_BUILDERS/R&L Builders Construction Supply Logo.png' }
   : { id: 'manotech', name: 'MANOTECH', address: 'Purok 4, Poblacion, Linamon, Lanao del Norte', logo: 'public/images/MANOTECH/MANOTECH-logo.png' }
 const output = '.tmp/' + company.id + '-validation'
 const artifact = company.id + '-test'
@@ -90,12 +88,7 @@ try {
   assert.ok(xml.includes('<w:tbl>'))
   assert.ok(xml.includes('landscape'))
   assert.ok(!/MIKATA|BUILTECH|CLEOPAS|JAMILO|TINGTING|DEDEL|TALINGTING/.test(xml))
-  const logo = company.id === 'r-and-l'
-    ? Buffer.from(await page.evaluate(async id => {
-      const { getBidderLogo } = await import('/src/lib/bidderAssets.js')
-      return Array.from((await getBidderLogo(id)).data)
-    }, company.id))
-    : fs.readFileSync(company.logo)
+  const logo = fs.readFileSync(company.logo)
   let ownLogo = false
   for (const entry of Object.values(zip.files).filter(x => x.name.startsWith('word/media/') && !x.dir)) {
     if ((await entry.async('nodebuffer')).equals(logo)) ownLogo = true

@@ -9,9 +9,9 @@ const assets = await server.ssrLoadModule('/src/lib/bidderAssets.js')
 after(() => server.close())
 const { bidderCompanies, getBidderCompany, getStaticDocumentPath, getTemplatePath, getLogoPath, expectedBidderAssetPath, getMissingBidderAssets } = assets
 
-test('all ten stable company identities resolve by ID, folder, name and aliases', () => {
-  assert.equal(bidderCompanies.length, 10)
-  assert.equal(new Set(bidderCompanies.map(company => company.id)).size, 10)
+test('all four supported company identities resolve by ID, folder, name and aliases', () => {
+  assert.equal(bidderCompanies.length, 4)
+  assert.equal(new Set(bidderCompanies.map(company => company.id)).size, 4)
   for (const company of bidderCompanies) for (const label of [company.id, company.folder, company.name, ...company.aliases]) assert.equal(getBidderCompany(label).id, company.id)
   assert.equal(getBidderCompany({ bidderName: 'MIKATA PRIME CORPORATION' }).id, 'mikata')
   assert.equal(getBidderCompany({}).id, 'mikata')
@@ -36,7 +36,7 @@ test('all inventoried company and shared asset paths still exist after cleanup',
   }
   for (const company of bidderCompanies) {
     for (const filename of templates) {
-      if (!['mikata', 'builtech', 'manotech', 'r-and-l', 'mega-pluto'].includes(company.id) && ['NFCC_Template.pdf', 'Manpower Requirements.pdf', 'Statement of Ongoing Government and Private Contracts,.pdf', 'SLCC_table_cctv.pdf', 'SLCC_table_streetlight.pdf'].includes(filename)) continue
+      if (!['mikata', 'builtech', 'manotech', 'mega-pluto'].includes(company.id) && ['NFCC_Template.pdf', 'Manpower Requirements.pdf', 'Statement of Ongoing Government and Private Contracts,.pdf', 'SLCC_table_cctv.pdf', 'SLCC_table_streetlight.pdf'].includes(filename)) continue
       const resolved = getTemplatePath(filename, company.id)
       assert.ok(fs.existsSync('public' + decodeURIComponent(resolved)), resolved)
     }
@@ -55,7 +55,7 @@ test('missing bidder certificates never fall back to Mikata or shared legal orig
 })
 test('only generic templates may use shared fallback; history and staff require company files', () => {
   for (const company of bidderCompanies.slice(1)) {
-    if (['builtech', 'manotech', 'r-and-l', 'mega-pluto'].includes(company.id)) {
+    if (['builtech', 'manotech', 'mega-pluto'].includes(company.id)) {
       assert.ok(getTemplatePath('TABBING.pdf', company.id).includes('/' + company.folder + '/'))
       assert.ok(decodeURIComponent(getLogoPath(company.id)).endsWith(company.logoFilename))
       continue
@@ -67,8 +67,8 @@ test('only generic templates may use shared fallback; history and staff require 
   }
 })
 test('public URLs safely encode company names and reject traversal', () => {
-  const path = expectedBidderAssetPath('r-and-l', 'static', 'SEC Registration Certificate.pdf')
-  assert.ok(assets.encodeAssetUrl(path).includes('R&L'))
+  const path = expectedBidderAssetPath('mega-pluto', 'static', 'SEC Registration Certificate.pdf')
+  assert.ok(assets.encodeAssetUrl('/images/A&B test.png').includes('A&B'))
   assert.ok(!assets.encodeAssetUrl(path).includes(' '))
   assert.throws(() => expectedBidderAssetPath('mikata', 'static', '../private.pdf'), /Invalid asset filename/)
   assert.throws(() => expectedBidderAssetPath('mikata', 'static', 'folder\\private.pdf'), /Invalid asset filename/)

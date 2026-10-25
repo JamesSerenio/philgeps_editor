@@ -13,7 +13,7 @@ export async function fillManotechTable(document, setup, kind) {
     if (line) page.drawText(line, { x, y: height - top, size, font, color: ink })
   }
   if (kind === 'nfcc') {
-    const multiplier = ['r-and-l', 'mega-pluto'].includes(getBidderCompany(setup).id)
+    const multiplier = ['mega-pluto'].includes(getBidderCompany(setup).id)
       ? Number(setup.financials?.multiplier ?? setup.nfcc?.multiplier ?? setup.multiplier ?? 15) : 15
     if (!Number.isFinite(multiplier) || multiplier <= 0) throw new Error(companyName + ' NFCC: enter a positive multiplier.')
     // Clear the old grid completely, then draw one uniform table.

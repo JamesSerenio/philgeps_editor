@@ -15,6 +15,9 @@ export default function DocumentSetup({
   onTemplateChange,
 }) {
   const dateInputRef = useRef(null)
+  const selectedBidder = bidders.find(bidder =>
+    bidder.id === value.bidderId || bidder.name === value.bidderName || bidder.aliases.includes(value.bidderName),
+  )
 
   const textFields = [
     ['province', 'Province'],
@@ -112,25 +115,12 @@ export default function DocumentSetup({
 
         <select
           aria-label="Bidder Name"
-          value={value.bidderName || ''}
+          value={selectedBidder?.name || ''}
           onChange={handleBidderChange}
         >
           <option value="">
             Select bidder
           </option>
-
-          {value.bidderName &&
-            !bidders.some(
-              (bidder) =>
-                bidder.name ===
-                value.bidderName,
-            ) && (
-              <option
-                value={value.bidderName}
-              >
-                {value.bidderName}
-              </option>
-            )}
 
           {bidders.map(
             (bidder) => (

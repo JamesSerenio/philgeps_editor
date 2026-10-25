@@ -2,7 +2,7 @@ import { StandardFonts, rgb } from 'pdf-lib'
 
 // The longer registered name needs real paragraph reflow, not fitted text slots.
 // Clauses follow the existing default Omnibus form; only applicant data changes.
-export async function drawRAndLOmnibusBody(pdf, data) {
+export async function drawBidderOmnibusBody(pdf, data) {
   const regular = await pdf.embedFont(StandardFonts.TimesRoman)
   const emphasis = await pdf.embedFont(StandardFonts.TimesRomanBoldItalic)
   const bold = await pdf.embedFont(StandardFonts.TimesRomanBold)

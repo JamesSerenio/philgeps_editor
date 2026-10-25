@@ -12,9 +12,9 @@ try {
     const { readPdfLayout } = await import('/src/services/word/pdfLayout.js')
     const cases = []
     for (const variant of ['old_default', 'initao_lgu']) {
-      const options = { setup: { bidderId: 'r-and-l', bidderName: 'R&L BUILDERS AND CONSTRUCTION SUPPLY',
+      const options = { setup: { bidderId: 'mega-pluto', bidderName: 'MEGA PLUTO',
         referenceNumber: 'TEST', projectTitle: 'TEST SOLAR PROJECT', procuringEntity: 'TEST MUNICIPALITY',
-        businessAddress: 'TEST R&L ADDRESS', date: '2026-10-23', closingDate: '2026-11-05', municipality: 'Linamon', province: 'Lanao del Norte', submittedBy: 'TEST REPRESENTATIVE', designation: 'Authorized Representative' }, omnibusVariant: variant }
+        businessAddress: 'TEST MEGA PLUTO ADDRESS', date: '2026-10-23', closingDate: '2026-11-05', municipality: 'Linamon', province: 'Lanao del Norte', submittedBy: 'TEST REPRESENTATIVE', designation: 'Authorized Representative' }, omnibusVariant: variant }
       const names = getBidPackageDocuments(options).map(d => d.name)
       const progress = []
       const pdfUrl = await generateFullBidPackagePdf({ ...options, onProgress: p => progress.push(p.message) })
@@ -30,7 +30,7 @@ try {
       URL.revokeObjectURL(pdfUrl)
     }
     // Missing project fields/reference must also preserve every section.
-    const empty = { setup: { bidderId: 'r-and-l', bidderName: 'R&L BUILDERS AND CONSTRUCTION SUPPLY' } }
+    const empty = { setup: { bidderId: 'mega-pluto', bidderName: 'MEGA PLUTO' } }
     const url = await generateFullBidPackagePdf(empty)
     const pages = await readPdfLayout(url, 'Incomplete setup')
     if (!pages.some(p => p.fragments.some(t => t.str.includes('DOCUMENT NOT YET AVAILABLE')))) throw new Error('No placeholders for incomplete setup')

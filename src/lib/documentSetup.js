@@ -19,7 +19,9 @@ export const representatives = [
 // BIDDER / COMPANY OPTIONS
 // ============================================================
 
-export const bidders = bidderCompanies.map(bidder => ({
+export const bidders = bidderCompanies.filter(bidder =>
+  ['mega-pluto', 'manotech', 'builtech', 'mikata'].includes(bidder.id),
+).map(bidder => ({
   ...bidder,
   address: getDefaultBidderAddress(bidder.id) || bidder.address,
 }))

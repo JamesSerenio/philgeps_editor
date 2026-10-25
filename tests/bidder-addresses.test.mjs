@@ -25,16 +25,16 @@ test('custom addresses persist by bidder through switching and a saved JSON roun
   setup = selectBidder(setup, 'BUILTECH SOLUTIONS')
   assert.equal(setup.businessAddress, 'Custom Builtech address')
   setup = changeBidderAddress(setup, '')
-  setup = selectBidder(selectBidder(setup, 'WDC BUILDERS & SUPPLIES'), 'BUILTECH SOLUTIONS')
+  setup = selectBidder(selectBidder(setup, 'MANOTECH'), 'BUILTECH SOLUTIONS')
   assert.equal(setup.businessAddress, '')
 })
 
 test('unconfigured bidders retain only their own saved addresses; new bidders never inherit another address', () => {
-  for (const name of ['MAGNUS', 'FJQ CONSTRUCTION', 'GOLDEN M', 'MIGOY BUGOY ENTERPRISES', 'Legacy saved company']) {
+  for (const name of ['Legacy saved company']) {
     const legacy = { bidderName: name, businessAddress: 'Original saved address' }
-    const selected = selectBidder(selectBidder(legacy, 'WDC BUILDERS & SUPPLIES'), name)
+    const selected = selectBidder(selectBidder(legacy, 'MANOTECH'), name)
     assert.equal(selected.businessAddress, 'Original saved address')
-    assert.equal(selectBidder(selectBidder({}, 'WDC'), name).businessAddress, '')
+    assert.equal(selectBidder(selectBidder({}, 'MANOTECH'), name).businessAddress, '')
   }
   const cleared = selectBidder(selectBidder({}, 'MIKATA CORPORATION'), '')
   assert.equal(cleared.businessAddress, '')

@@ -1,6 +1,6 @@
 import { getTemplatePath, fetchAsset, getBidderCompany } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
-import { drawRAndLOmnibusBody } from './rAndLOmnibusLayout'
+import { drawBidderOmnibusBody } from './bidderOmnibusLayout'
 
 export async function generateOmnibusPreview(project) {
   // =========================================================
@@ -928,7 +928,7 @@ function replaceInlineCompany({
 
         {
           text:
-            ['r-and-l', 'mega-pluto'].includes(getBidderCompany(project).id) ? clean(project.identityDocumentType) || '________________' : 'National ID',
+            ['mega-pluto'].includes(getBidderCompany(project).id) ? clean(project.identityDocumentType) || '________________' : 'National ID',
           font: boldItalic,
         },
 
@@ -1031,8 +1031,8 @@ function replaceInlineCompany({
   // GET PAGES
   // =========================================================
 
-  if (['r-and-l', 'mega-pluto'].includes(getBidderCompany(project).id)) {
-    await drawRAndLOmnibusBody(pdfDoc, { bidderName, businessAddress, projectTitle, representative,
+  if (['mega-pluto'].includes(getBidderCompany(project).id)) {
+    await drawBidderOmnibusBody(pdfDoc, { bidderName, businessAddress, projectTitle, representative,
       nationality: clean(project.nationality) || (selectedProfile ? 'Filipino' : '________'),
       municipality, province, day, month, year, fullDate, designation, numbered: variant === 'initao_lgu' })
     drawJurat(pdfDoc.getPage(pdfDoc.getPageCount() - 1))

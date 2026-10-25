@@ -87,7 +87,7 @@ export default function SLCCEditor({
 
   // Get original default values.
   const defaults =
-    ['builtech', 'r-and-l', 'mega-pluto'].includes(getBidderCompany(value).id) ? {} : DEFAULT_ENTRIES[variant][contractType]
+    ['builtech', 'mega-pluto'].includes(getBidderCompany(value).id) ? {} : DEFAULT_ENTRIES[variant][contractType]
 
   // Get saved values from Supabase state.
   const savedEntry =
