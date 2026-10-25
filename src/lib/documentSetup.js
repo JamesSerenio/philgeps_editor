@@ -1,3 +1,5 @@
+import { bidderCompanies } from './bidderCompanies'
+import { getDefaultBidderAddress } from './bidderAddresses'
 export const representatives = [
   {
     name: 'JHO ANN Q. CLEOPAS',
@@ -17,13 +19,12 @@ export const representatives = [
 // BIDDER / COMPANY OPTIONS
 // ============================================================
 
-export const bidders = [
-  {
-    name: 'MIKATA CORPORATION',
-    address:
-      'ZONE 13, CARMEN, CAGAYAN DE ORO CITY, MISAMIS ORIENTAL, 9000',
-  },
-]
+export const bidders = bidderCompanies.filter(bidder =>
+  ['mega-pluto', 'manotech', 'builtech', 'mikata'].includes(bidder.id),
+).map(bidder => ({
+  ...bidder,
+  address: getDefaultBidderAddress(bidder.id) || bidder.address,
+}))
 
 // ============================================================
 // DATE FORMAT
@@ -153,7 +154,9 @@ export function createDocumentSetup(
       prior('bidderName'),
 
     businessAddress:
-      prior('companyAddress'),
+      bid.businessAddress ?? bid.companyAddress ??
+      omnibus.businessAddress ?? omnibus.companyAddress ??
+      getDefaultBidderAddress(prior('bidderName')),
 
     submittedBy:
       prior('authorizedRepresentative'),
@@ -171,6 +174,8 @@ export function createDocumentSetup(
 
 export function setupProject(setup) {
   return {
+    ...setup,
+    bidderId: setup.bidderId,
     province:
       setup.province || '',
 

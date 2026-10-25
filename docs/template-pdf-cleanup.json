@@ -1,0 +1,108 @@
+{
+  "backup": "C:\\Users\\Admin\\AppData\\Local\\Temp\\philgeps-template-duplicates-kJoznk",
+  "removed": [
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TABLE OF CONTENTS-INITAO.pdf",
+      "retained": "public/pdf/templates/INITAO/TABLE OF CONTENTS-INITAO.pdf",
+      "bytes": 135790,
+      "sha256": "75321c3dec945583ba4b3cdd9a540f3bb2e6d5d1925656dc9187e349a65112ad"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/INITAO/MIKATA CORPORATION - TECHNICAL COMPONENT ENVELOPE.pdf",
+      "retained": "public/pdf/templates/INITAO/TECHNICAL COMPONENT ENVELOPE.pdf",
+      "bytes": 188268,
+      "sha256": "6dc53a9b6ee3e8cfd44d5083955cb3911c6825db5a508803e5a25cb0e529de72"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - After Sales.pdf",
+      "retained": "public/pdf/templates/After Sales.pdf",
+      "bytes": 286921,
+      "sha256": "9bdc0379e812c453f2cdd9d1ce0f04972cbae2fd4a6a1e3e4b71032779534746"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security with table.pdf",
+      "retained": "public/pdf/templates/Bid Security with table.pdf",
+      "bytes": 208565,
+      "sha256": "215b5affbc006b22272fbcabadcd91d7f257ae162abc1d590e54b01a4caeb729"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Bid Security without table.pdf",
+      "retained": "public/pdf/templates/Bid Security without table.pdf",
+      "bytes": 184765,
+      "sha256": "6a2679637dbdeddc6cdbef0bc22f55ee91fe91c313d7ab2fb8d8c1c791ea7bc2"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - BID_FORM_CLEAN_TEMPLATE.pdf",
+      "retained": "public/pdf/templates/BID_FORM_CLEAN_TEMPLATE.pdf",
+      "bytes": 306068,
+      "sha256": "5553895863dc0a29cc0fa73ea3bb00f0600a346b570efb0492647bcb98e19a78"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - New_tab_and_pages_Initao_LGU_template.pdf",
+      "retained": "public/pdf/templates/New_tab_and_pages_Initao_LGU_template.pdf",
+      "bytes": 318362,
+      "sha256": "6e40cf4b959614c2ec3d8334b323afca6a05166c223a942ec73b2d84118c5a90"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement Initao.pdf",
+      "retained": "public/pdf/templates/Omnibus Sworn Statement Initao.pdf",
+      "bytes": 512929,
+      "sha256": "f08f229f972779c73ebaea68f64c107751662ab82bd0760434cb04f9e62eaffa"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Omnibus Sworn Statement.pdf",
+      "retained": "public/pdf/templates/Omnibus Sworn Statement.pdf",
+      "bytes": 288388,
+      "sha256": "3772a1a5dbfb9c4dec73d0ef16e1c67491a0fb5f78e6ca39cc6c32db248210ff"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - PRICE SCHEDULE FOR GOODS.pdf",
+      "retained": "public/pdf/templates/PRICE SCHEDULE FOR GOODS.pdf",
+      "bytes": 289722,
+      "sha256": "6a50e6963d1a82179920b66cd1639f92ad3c7645fb84a02cc21046fa8355c993"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Production Delivery Schedule.pdf",
+      "retained": "public/pdf/templates/Production Delivery Schedule.pdf",
+      "bytes": 240970,
+      "sha256": "91ce60dbe3085e5d720f598df6cf78cf5e746572966f628256d0ff8d8dc821aa"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SECRETARY’S CERTIFICATE .pdf",
+      "retained": "public/pdf/templates/SECRETARY’S CERTIFICATE .pdf",
+      "bytes": 300291,
+      "sha256": "6cbaadf770c98fd786b134f8a1f468a3b4ec0fd7d16cd1bd8bf75657b7610339"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - SUMMARY OF BID PRICES.pdf",
+      "retained": "public/pdf/templates/SUMMARY OF BID PRICES.pdf",
+      "bytes": 152432,
+      "sha256": "4510b9957c19b6e913c75521d2d69f21321da1e5b9a56ad1735db2c7270b9371"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABBING.pdf",
+      "retained": "public/pdf/templates/TABBING.pdf",
+      "bytes": 306930,
+      "sha256": "18f988be99cf230a3af0045b47512d2d4f9e0db7ae6fe63568354ef5820b13db"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - TABLE OF CONTENTS.pdf",
+      "retained": "public/pdf/templates/TABLE OF CONTENTS.pdf",
+      "bytes": 172396,
+      "sha256": "0a29c8711dd4b8ce52156ec28695a0742cf3ebb6c5d355c6eb637b9e6d825ea3"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Technical Specifications.pdf",
+      "retained": "public/pdf/templates/Technical Specifications.pdf",
+      "bytes": 387859,
+      "sha256": "c0ab0caae5db24af54963503c63fc1eded6893236ff9a739cd6f3e6a00847908"
+    },
+    {
+      "file": "public/pdf/templates/MIKATA_CORPORATION/MIKATA CORPORATION - Warranty.pdf",
+      "retained": "public/pdf/templates/Warranty.pdf",
+      "bytes": 287395,
+      "sha256": "b50096f129444223d36061c92bb506fb3ea5bf7baca0fe67ad5c998c3c5c4d80"
+    }
+  ],
+  "totalBytes": 4568051
+}

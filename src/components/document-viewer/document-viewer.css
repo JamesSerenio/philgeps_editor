@@ -349,3 +349,21 @@
 .bid-export-word-mount p.docx_tabbing,
 .bid-export-word-mount p.docx_tabbing span { hyphens: none; -webkit-hyphens: none; overflow-wrap: normal; word-break: normal; }
 .bid-export-word-mount p.docx_tabbinglogo { position: absolute; top: 0; left: 0; height: 0; line-height: 0; margin: 0 !important; }
+.bid-export-word-mount section.docx:has(.docx_megaplutologo) {
+  position: relative;
+}
+
+/* docx-preview treats page-anchored drawings as paragraph-relative. Only the
+   Mega Pluto header anchor paragraph needs its origin restored to the page. */
+.bid-export-word-mount .docx_megaplutologo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0 !important;
+  z-index: 0;
+}
+
+.bid-export-word-mount section.docx:has(.docx_megaplutologo) > article > p:not(.docx_megaplutologo) {
+  position: relative;
+  z-index: 1;
+}

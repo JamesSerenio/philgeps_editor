@@ -1,0 +1,30 @@
+[
+  {
+    "variant": "cctv",
+    "saved": false,
+    "pdfPages": 1,
+    "wordTables": 1,
+    "dateCount": 1
+  },
+  {
+    "variant": "cctv",
+    "saved": true,
+    "pdfPages": 1,
+    "wordTables": 1,
+    "dateCount": 1
+  },
+  {
+    "variant": "streetlight",
+    "saved": false,
+    "pdfPages": 1,
+    "wordTables": 1,
+    "dateCount": 1
+  },
+  {
+    "variant": "streetlight",
+    "saved": true,
+    "pdfPages": 1,
+    "wordTables": 1,
+    "dateCount": 1
+  }
+]

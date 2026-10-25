@@ -1,3 +1,6 @@
+import { getStaticDocumentPath } from '../../lib/bidderAssets'
+import { documentBidderName } from '../../lib/bidderCompanies'
+import { incompleteDocumentText } from '../../lib/incompleteDocument'
 import { generateTabbingPreview } from './tabbingPdf'
 import { getDeadline } from '../../lib/projectFormatters'
 import { generateInitaoDividerPreview } from './initaoDividersPdf'
@@ -5,6 +8,7 @@ import { generateInitaoDividerPreview } from './initaoDividersPdf'
 import {
   PDFDocument,
   degrees,
+  StandardFonts,
 } from 'pdf-lib'
 
 import * as pdfService from '../pdfService'
@@ -23,7 +27,7 @@ import * as secretarysCertificatePdf from './secretarysCertificatePdf'
 // CONFIGURATION
 // =====================================================
 
-const STATIC_FOLDER = '/pdf/static'
+// Static certificates are resolved per bidder; originals remain available for Mikata.
 
 // A4 paper in PDF points: 210 mm x 297 mm
 const A4_WIDTH = 595.28
@@ -37,11 +41,8 @@ const A4_DOCUMENTS = new Set([
 // Margin for resized document content.
 const A4_MARGIN = 20
 
-function staticFile(filename) {
-  return (
-    `${STATIC_FOLDER}/` +
-    encodeURIComponent(filename)
-  )
+function staticFile(filename, bidder) {
+  return getStaticDocumentPath(bidder, filename, { required: false })
 }
 
 // =====================================================
@@ -214,11 +215,11 @@ function generatedDocument(
 // STATIC PDF
 // =====================================================
 
-function staticDocument(filename) {
-  return {
-    name: filename,
-    path: staticFile(filename),
-  }
+function staticDocument(filename, bidder) {
+  // Constructing the document list must remain safe while Document Setup loads.
+  let path = null
+  try { path = staticFile(filename, bidder) } catch { /* validate reports it during export */ }
+  return { name: filename, path, validate: () => getStaticDocumentPath(bidder, filename) }
 }
 
 // =====================================================
@@ -494,6 +495,8 @@ function createDocumentData({
   const common = {
     tableOfContentsVariant: omnibusVariant,
     ...setup,
+    bidderName: documentBidderName(setup),
+    companyAddress: setup?.businessAddress ?? setup?.companyAddress ?? '',
 
     items: technical,
     technical,
@@ -548,15 +551,15 @@ function createDocumentData({
     },
 
     bidSecurityData: {
-      ...common,
       ...bidSecurity,
+      ...common,
       templateVariant: bidSecurityVariant,
       bidSecurityVariant,
     },
 
     omnibusData: {
-      ...common,
       ...omnibus,
+      ...common,
       templateVariant: omnibusVariant,
       omnibusVariant,
     },
@@ -574,6 +577,7 @@ function buildDocumentOrder({
   bidSecurityData,
   omnibusData,
 }) {
+  const staticForBidder = filename => staticDocument(filename, common)
   return [
     // 01
     generatedDocument(
@@ -588,28 +592,28 @@ function buildDocumentOrder({
     ),
 
     // 02
-    staticDocument(
+    staticForBidder(
       'SEC Registration Certificate.pdf'
     ),
 
     // 03
-    staticDocument(
+    staticForBidder(
       'Mayor\u2019s Permit  Municipal License (CY 2026).pdf'
     ),
 
     // 04
     // AUTOMATIC A4 CONVERSION
-    staticDocument(
+    staticForBidder(
       'TAX_template.pdf'
     ),
 
     // 05
-    staticDocument(
+    staticForBidder(
       'Certificate of Registration (COR).pdf'
     ),
 
     // 06
-    staticDocument(
+    staticForBidder(
       'Latest Income and Business Tax Returns.pdf'
     ),
 
@@ -644,12 +648,12 @@ function buildDocumentOrder({
     ),
 
     // 09
-    staticDocument(
+    staticForBidder(
       'PhilGEPS Platinum Certificate.pdf'
     ),
 
     // 10
-    staticDocument(
+    staticForBidder(
       'Audited Financial Statements.pdf'
     ),
 
@@ -833,11 +837,6 @@ export function getBidPackageDocuments({
   bidSecurityVariant: selectedBidSecurity,
   omnibusVariant: selectedOmnibus,
 } = {}) {
-  if (!setup?.referenceNumber) {
-    throw new Error(
-      'Reference Number is required.'
-    )
-  }
 
   // ---------------------------------------------------
   // SELECT TEMPLATES
@@ -892,7 +891,7 @@ export function getBidPackageDocuments({
   const divider = key => ({
     name: 'TECHNICAL COMPONENT ENVELOPE - ' + dividerNames[key] + '.pdf',
     wordSection: 'initaoDivider',
-    generate: () => generateInitaoDividerPreview(dividerPages[key]),
+    generate: () => generateInitaoDividerPreview(dividerPages[key], setup),
   })
   const orderedDocuments = omnibusVariant === 'initao_lgu'
     ? initaoOrder.map(item => typeof item === 'number' ? defaultDocuments[item - 1] : divider(item))
@@ -943,6 +942,7 @@ export async function generateFullBidPackagePdf(options = {}) {
         documents[index]
 
       try {
+        document.validate?.()
         let source
 
         // ---------------------------------------------
@@ -1022,12 +1022,22 @@ export async function generateFullBidPackagePdf(options = {}) {
           error
         )
 
-        throw new Error(
-          `Document ${index + 1}/${documents.length} - ` +
-          `${document.name}: ` +
-          (error.message || String(error)),
-          { cause: error }
-        )
+        const placeholder = combined.addPage([A4_WIDTH, A4_HEIGHT])
+        const font = await combined.embedFont(StandardFonts.Helvetica)
+        let y = A4_HEIGHT - 80
+        for (const [lineIndex, value] of incompleteDocumentText(document.name, index + 1, documents.length).entries()) {
+          const size = lineIndex === 0 ? 16 : 11
+          let line = ''
+          for (const word of value.split(/\s+/)) {
+            if (line && font.widthOfTextAtSize(line + ' ' + word, size) > A4_WIDTH - 100) {
+              placeholder.drawText(line, { x: 50, y, size, font }); y -= 17; line = ''
+            }
+            line += (line ? ' ' : '') + word
+          }
+          if (line) placeholder.drawText(line, { x: 50, y, size, font })
+          y -= 34
+        }
+        onProgress({ completed: index + 1, total: documents.length, message: document.name + ' - placeholder added' })
       }
     }
 

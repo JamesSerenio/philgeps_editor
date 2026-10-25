@@ -1,4 +1,5 @@
 
+import { getBidderCompany } from '../lib/bidderAssets'
 // =====================================================
 // DEFAULT VALUES FOR BOTH SLCC TEMPLATES
 // =====================================================
@@ -86,7 +87,7 @@ export default function SLCCEditor({
 
   // Get original default values.
   const defaults =
-    DEFAULT_ENTRIES[variant][contractType]
+    ['builtech', 'mega-pluto'].includes(getBidderCompany(value).id) ? {} : DEFAULT_ENTRIES[variant][contractType]
 
   // Get saved values from Supabase state.
   const savedEntry =
