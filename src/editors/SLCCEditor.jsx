@@ -73,6 +73,7 @@ export default function SLCCEditor({
   // Select CCTV or STREETLIGHT.
   const variant =
     value.slccVariant === 'cctv' ||
+    value.slccVariant === 'none' ||
     value.slccVariant === 'streetlight'
       ? value.slccVariant
       : /cctv/i.test(value.projectTitle ?? '')
@@ -87,7 +88,7 @@ export default function SLCCEditor({
 
   // Get original default values.
   const defaults =
-    ['builtech', 'mega-pluto'].includes(getBidderCompany(value).id) ? {} : DEFAULT_ENTRIES[variant][contractType]
+    ['builtech', 'mega-pluto'].includes(getBidderCompany(value).id) ? {} : (DEFAULT_ENTRIES[variant]?.[contractType] ?? {})
 
   // Get saved values from Supabase state.
   const savedEntry =
@@ -198,6 +199,7 @@ export default function SLCCEditor({
           <option value="streetlight">
             STREETLIGHT
           </option>
+          <option value="none">NONE</option>
         </select>
       </div>
 

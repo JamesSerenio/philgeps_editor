@@ -68,6 +68,8 @@ function chooseSlccVariant(setup, selected) {
     setup?.selectedSlcc
   )
 
+  if (value === 'none') return 'none'
+
   if (
     value.includes('cctv') ||
     value.includes('camera')
@@ -897,9 +899,20 @@ export function getBidPackageDocuments({
     ? initaoOrder.map(item => typeof item === 'number' ? defaultDocuments[item - 1] : divider(item))
     : defaultDocuments
 
-  const documents = [tabbing, ...orderedDocuments]
+  // Insert after ordering so existing section numbers and Initao dividers
+  // still refer to the same generators. Supporting originals stay unchanged.
+  const documents = [tabbing, ...orderedDocuments].flatMap(entry => {
+    if (entry.wordSection !== 8 || slccVariant === 'none') return [entry]
+    const filename = slccVariant === 'cctv'
+      ? 'SLCC_CCTV_template.pdf'
+      : 'SLCC_Streetlight_template.pdf'
+    const supporting = { ...staticDocument(filename, setup), wordSection: 'slccSupporting' }
+    // Other companies only include their own supporting certificate if supplied.
+    try { supporting.validate() } catch { return [entry] }
+    return [entry, supporting]
+  })
 
-  if (documents.length !== (omnibusVariant === 'initao_lgu' ? 26 : 23)) {
+  if (orderedDocuments.length !== (omnibusVariant === 'initao_lgu' ? 25 : 22)) {
     throw new Error(
       'The bid package must contain 23 sections, or 26 with Initao dividers.'
     )

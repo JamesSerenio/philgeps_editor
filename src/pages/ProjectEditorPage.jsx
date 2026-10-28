@@ -181,7 +181,7 @@ function yearsFromSetup(value) {
 
 function slccVariantFromSetup(value) {
   if (
-    ['cctv', 'streetlight'].includes(
+    ['cctv', 'streetlight', 'none'].includes(
       value?.slccVariant
     )
   ) {
