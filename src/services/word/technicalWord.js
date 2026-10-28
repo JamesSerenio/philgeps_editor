@@ -15,6 +15,7 @@ import { PDFDocument, StandardFonts } from 'pdf-lib'
 import { section, sectionMarker } from './wordHelpers'
 import { complianceText } from './wordContent'
 import { formatBidDate } from '../../lib/bidFormData'
+import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
 
 // Match the existing PDF's Times text, A4 margins, column widths, and page budget.
 // All text and tables remain native editable Word content.
@@ -177,25 +178,25 @@ function complianceLines(regular, bold) {
   if (current.length) lines.push(current)
   return lines
 }
-function tableHeader() {
+function tableHeader(columns = widths, layout = 'separate') {
   return new TableRow({
     height: { value: pt(44), rule: HeightRule.EXACT },
     children: [
       'Item\nNo.',
       'Specification/s',
-      'Qty',
+      layout === 'merged' ? 'Qty / Unit' : 'Qty',
       'Unit',
       'Statement\nof\nCompliance',
-    ].map((text, i) =>
+    ].flatMap((text, i) => i === 3 && layout !== 'separate' ? [] : [
       cell(
         para(text, { bold: true, align: AlignmentType.CENTER, line: 11.5 }),
-        widths[i],
+        columns[i],
         { center: true, left: 0, right: 0 },
-      ),
+      )],
     ),
   })
 }
-function segmentRows(segment) {
+function segmentRows(segment, widths, layout) {
   return segment.fragments.map((fragment, i) => {
     const children = []
     if (!i)
@@ -226,14 +227,14 @@ function segmentRows(segment) {
     if (!i) {
       children.push(
         cell(
-          para(segment.first ? segment.qty : '', {
+          para(segment.first ? quantityText(segment, layout) : '', {
             align: AlignmentType.CENTER,
           }),
           widths[2],
           { center: true, rowSpan: segment.fragments.length },
         ),
       )
-      children.push(
+      if (layout === 'separate') children.push(
         cell(
           para(segment.first ? segment.unit : '', {
             align: AlignmentType.CENTER,
@@ -322,6 +323,8 @@ function signature(setup) {
   )
 }
 export async function technicalWord({ setup = {}, technical = [], sectionNumber = 12 }) {
+  const layout = quantityUnitLayout(setup.qtyUnitLayout)
+  const columns = quantityColumnWidths(widths, 2, 3, layout)
   const metrics = await PDFDocument.create()
   const regular = await metrics.embedFont(StandardFonts.TimesRoman)
   const bold = await metrics.embedFont(StandardFonts.TimesRomanBold)
@@ -375,7 +378,7 @@ export async function technicalWord({ setup = {}, technical = [], sectionNumber 
           text,
           row.bold === true ? bold : regular,
           10,
-          244 - (marker ? 27 : 13),
+          columns[1] - (marker ? 27 : 13),
         ),
       }
     })
@@ -533,7 +536,7 @@ export async function technicalWord({ setup = {}, technical = [], sectionNumber 
     }
     if (page.includeTable)
       children.push(
-        table([tableHeader(), ...page.segments.flatMap(segmentRows)]),
+        table([tableHeader(columns, layout), ...page.segments.flatMap(segment => segmentRows(segment, columns, layout))], columns.filter(width => width > 0)),
       )
     if (page.signature)
       children.push(para('', { size: 1, line: 18 }), signature(setup))

@@ -4,6 +4,7 @@ import {
   StandardFonts,
   rgb,
 } from 'pdf-lib'
+import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
 
 // A4 PORTRAIT
 const PAGE_W = 595.28
@@ -16,7 +17,7 @@ const BOTTOM = 65
 const TABLE_W = PAGE_W - LEFT - RIGHT
 
 // Item No | Specifications | Qty | Unit | Delivery
-const WIDTHS = [
+const DEFAULT_WIDTHS = [
   49,
   255,
   49,
@@ -24,11 +25,6 @@ const WIDTHS = [
   TABLE_W - 406,
 ]
 
-const X = [LEFT]
-
-for (const width of WIDTHS) {
-  X.push(X[X.length - 1] + width)
-}
 
 const BLACK = rgb(0, 0, 0)
 
@@ -315,7 +311,7 @@ function printableDate(value) {
 // PREPARE SPECIFICATION LINES
 // ==========================================
 
-function createRows(item, fonts) {
+function createRows(item, fonts, specificationWidth = DEFAULT_WIDTHS[1]) {
   const sourceLines = Array.isArray(
     item.specificationLines
   )
@@ -347,7 +343,7 @@ function createRows(item, fonts) {
     )
 
     const availableWidth =
-      WIDTHS[1] -
+      specificationWidth -
       (marker ? 24 : 12)
 
     const wrapped = wrapText(
@@ -391,6 +387,9 @@ function createRows(item, fonts) {
 export async function generateScheduleRequirementsPreview(
   data = {}
 ) {
+  const layout = quantityUnitLayout(data.qtyUnitLayout)
+  const WIDTHS = quantityColumnWidths(DEFAULT_WIDTHS, 2, 3, layout)
+  const X = WIDTHS.reduce((edges, width) => [...edges, edges.at(-1) + width], [LEFT])
   const doc = await PDFDocument.create()
 
   const fonts = {
@@ -585,7 +584,7 @@ export async function generateScheduleRequirementsPreview(
       bottom
     )
 
-    for (const x of X) {
+    for (const x of new Set(X)) {
       drawLine(
         page,
         x,
@@ -598,12 +597,13 @@ export async function generateScheduleRequirementsPreview(
     const headers = [
       'Item\nNo.',
       'Specification/s',
-      'Qty',
+      layout === 'merged' ? 'Qty / Unit' : 'Qty',
       'Unit',
       'Delivered\nWeeks/Months',
     ]
 
     headers.forEach((header, index) => {
+      if (index === 3 && layout !== 'separate') return
       drawCenteredLines(
         page,
         header,
@@ -637,7 +637,7 @@ export async function generateScheduleRequirementsPreview(
     const bottom = top - totalHeight
 
     // Aligned vertical column borders.
-    for (const x of X) {
+    for (const x of new Set(X)) {
       drawLine(
         page,
         x,
@@ -729,7 +729,7 @@ export async function generateScheduleRequirementsPreview(
 
       drawCenteredLines(
         page,
-        item.qty ?? '',
+        quantityText(item, layout),
         fonts.normal,
         9.5,
         X[2],
@@ -737,7 +737,7 @@ export async function generateScheduleRequirementsPreview(
         middle
       )
 
-      drawCenteredLines(
+      if (layout === 'separate') drawCenteredLines(
         page,
         item.unit ?? '',
         fonts.normal,
@@ -780,7 +780,8 @@ export async function generateScheduleRequirementsPreview(
 
     const rows = createRows(
       item,
-      fonts
+      fonts,
+      WIDTHS[1]
     )
 
     const periodRows = wrapText(

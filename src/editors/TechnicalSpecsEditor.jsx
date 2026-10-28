@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
 } from 'react'
+import { quantityUnitLayout, quantityUnitLayouts } from '../lib/quantityUnitLayout'
 
 // ==========================================
 // AVAILABLE SYMBOLS
@@ -196,7 +197,10 @@ export default function TechnicalSpecsEditor({
   onChange,
   onSave,
   compact = false,
+  project = {},
+  onLayoutChange,
 }) {
+  const layout = quantityUnitLayout(project.qtyUnitLayout)
   const listId = useId().replace(/:/g, '_')
 
   const inputs = useRef({})
@@ -601,6 +605,12 @@ export default function TechnicalSpecsEditor({
       {/* SPECIFICATION ITEMS */}
       {/* ================================== */}
 
+      {onLayoutChange && <label style={labelStyle}>Qty / Unit columns
+        <select aria-label="Qty / Unit columns" style={inputStyle} value={layout}
+          onChange={event => onLayoutChange(event.target.value)}>
+          {quantityUnitLayouts.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+      </label>}
       {items.map((item, itemIndex) => (
         <div
           key={item.id}
@@ -983,7 +993,7 @@ export default function TechnicalSpecsEditor({
               display: 'grid',
 
               gridTemplateColumns:
-                '1fr 1fr',
+                layout === 'quantity_only' ? '1fr' : '1fr 1fr',
 
               gap: 7,
 
@@ -1017,7 +1027,7 @@ export default function TechnicalSpecsEditor({
               />
             </div>
 
-            <div>
+            {layout !== 'quantity_only' && <div>
               <label
                 htmlFor={
                   `${listId}_unit_${itemIndex}`
@@ -1025,7 +1035,7 @@ export default function TechnicalSpecsEditor({
 
                 style={labelStyle}
               >
-                Unit (searchable and editable)
+                Unit (optional)
               </label>
 
               <input
@@ -1042,7 +1052,7 @@ export default function TechnicalSpecsEditor({
                 autoComplete="off"
 
                 placeholder={
-                  'Type or select unit'
+                  'Leave blank or select unit'
                 }
 
                 value={item.unit}
@@ -1084,10 +1094,9 @@ export default function TechnicalSpecsEditor({
                   color: '#63756d',
                 }}
               >
-                Type to search or enter
-                your own unit.
+                Optional. Leave blank when no unit is provided.
               </small>
-            </div>
+            </div>}
           </div>
         </div>
       ))}

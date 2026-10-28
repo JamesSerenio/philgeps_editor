@@ -355,6 +355,7 @@ export async function generateOmnibusPreview(project) {
     maxX = 543,
     size = BODY_SIZE,
     lineHeight = LINE_HEIGHT,
+    measureOnly = false,
   }) {
     let x = firstX
     let line = 0
@@ -411,7 +412,7 @@ export async function generateOmnibusPreview(project) {
           newLine()
         }
 
-        page.drawText(word, {
+        if (!measureOnly) page.drawText(word, {
           x,
           y: getY(),
           size,
@@ -425,6 +426,25 @@ export async function generateOmnibusPreview(project) {
     }
 
     return line + 1
+  }
+
+  function drawRichFitted({ maxBottom, ...options }) {
+    const initialSize = options.size ?? BODY_SIZE
+    const leadingRatio = (options.lineHeight ?? LINE_HEIGHT) / initialSize
+    let size = initialSize
+    let lines
+    let lineHeight
+    do {
+      lineHeight = size * leadingRatio
+      lines = drawRichWrapped({ ...options, size, lineHeight, measureOnly: true })
+      if (options.top + size + (lines - 1) * lineHeight <= maxBottom) {
+        return drawRichWrapped({ ...options, size, lineHeight })
+      }
+      size = Math.round((size - .1) * 10) / 10
+    } while (size >= 8)
+    const error = new Error('Omnibus text requires paragraph reflow.')
+    error.code = 'OMNIBUS_REFLOW_REQUIRED'
+    throw error
   }
 
   // =========================================================
@@ -672,14 +692,15 @@ function replaceInlineCompany({
       68,
       236,
       480,
-      getBidderCompany(project).id === 'manotech' ? 96 : 79
+      96
     )
 
-    drawRichWrapped({
+    drawRichFitted({
       page,
       firstX: 108,
       nextX: 72,
       top: 241,
+      maxBottom: 329,
       maxX: 543,
       segments: [
         ...(numbered
@@ -732,11 +753,12 @@ function replaceInlineCompany({
       27
     )
 
-    drawRichWrapped({
+    drawRichFitted({
       page,
       firstX: 148.5,
       nextX: 148.5,
       top: 339,
+      maxBottom: 361,
       maxX: 540,
       size: 11,
       lineHeight: 12.3,
@@ -1031,11 +1053,14 @@ function replaceInlineCompany({
   // GET PAGES
   // =========================================================
 
-  if (['mega-pluto'].includes(getBidderCompany(project).id)) {
+  async function drawReflowedBody() {
     await drawBidderOmnibusBody(pdfDoc, { bidderName, businessAddress, projectTitle, representative,
       nationality: clean(project.nationality) || (selectedProfile ? 'Filipino' : '________'),
       municipality, province, day, month, year, fullDate, designation, numbered: variant === 'initao_lgu' })
     drawJurat(pdfDoc.getPage(pdfDoc.getPageCount() - 1))
+  }
+  if (['mega-pluto'].includes(getBidderCompany(project).id)) {
+    await drawReflowedBody()
     return URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }))
   }
   const page1 =
@@ -1051,6 +1076,7 @@ function replaceInlineCompany({
   // PAGE 1
   // =========================================================
 
+  try {
   drawAffiant(page1)
 
   drawRepresentativeInfo(
@@ -1221,6 +1247,10 @@ page2.drawText(
   // =========================================================
 
   drawJurat(page3)
+  } catch (error) {
+    if (error.code !== 'OMNIBUS_REFLOW_REQUIRED') throw error
+    await drawReflowedBody()
+  }
 
   // =========================================================
   // SAVE

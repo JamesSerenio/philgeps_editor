@@ -7,6 +7,7 @@ import {
 } from 'react'
 
 import { supabase } from '../supabase'
+import { pastedAmount } from '../lib/pastedAmount'
 
 // ==========================================
 // PRICE FORMATTING
@@ -364,6 +365,21 @@ export default function PriceScheduleEditor({
   // HANDLE PRICE INPUT
   // ========================================
 
+  function pastePrice(event, item, index, field) {
+    const copied = event.clipboardData.getData('text/plain')
+    const amount = pastedAmount(copied)
+    event.preventDefault()
+    if (amount === null) return
+    const input = event.currentTarget
+    // Formatted currency represents a complete amount. Plain digits retain
+    // normal insertion/selection behavior when editing part of a number.
+    const formatted = copied.trim() !== amount
+    const start = input.selectionStart ?? 0
+    const end = input.selectionEnd ?? input.value.length
+    const next = formatted ? amount : input.value.slice(0, start) + amount + input.value.slice(end)
+    changePrice(item, index, field, next)
+  }
+
   function changePrice(
     item,
     index,
@@ -699,6 +715,7 @@ export default function PriceScheduleEditor({
                 }
                 inputMode="decimal"
                 value={entry.price}
+                onPaste={event => pastePrice(event, item, index, 'price')}
                 placeholder="0.00"
                 onChange={(e) =>
                   changePrice(
@@ -760,6 +777,7 @@ export default function PriceScheduleEditor({
                 }
                 inputMode="decimal"
                 value={entry.deduction}
+                onPaste={event => pastePrice(event, item, index, 'deduction')}
                 placeholder="0.00"
                 onChange={(e) =>
                   changePrice(

@@ -1,5 +1,6 @@
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
 
 // ==========================================
 // A4 TECHNICAL SPECIFICATIONS
@@ -12,7 +13,7 @@ const LEFT = 35
 const RIGHT = 560
 const BOTTOM = 790
 
-const COL = [
+const DEFAULT_COL = [
   LEFT,
   91,
   335,
@@ -617,6 +618,9 @@ async function makePdf(
   project = {},
   sourceItems = []
 ) {
+  const layout = quantityUnitLayout(project.qtyUnitLayout)
+  const widths = quantityColumnWidths(DEFAULT_COL.slice(1).map((edge, index) => edge - DEFAULT_COL[index]), 2, 3, layout)
+  const COL = widths.reduce((edges, width) => [...edges, edges.at(-1) + width], [LEFT])
   const doc =
     await PDFDocument.create()
 
@@ -666,7 +670,7 @@ async function makePdf(
       bottom
     )
 
-    for (const x of COL) {
+    for (const x of new Set(COL)) {
       line(
         page,
         x,
@@ -679,13 +683,14 @@ async function makePdf(
     const headings = [
       'Item\nNo.',
       'Specification/s',
-      'Qty',
+      layout === 'merged' ? 'Qty / Unit' : 'Qty',
       'Unit',
       'Statement\nof\nCompliance',
     ]
 
     headings.forEach(
       (heading, col) => {
+        if (col === 3 && layout !== 'separate') return
         const lines =
           heading.split('\n')
 
@@ -968,7 +973,7 @@ async function makePdf(
     )
 
     // Full-height vertical borders
-    for (const x of COL) {
+    for (const x of new Set(COL)) {
       line(
         page,
         x,
@@ -1125,14 +1130,14 @@ async function makePdf(
       center(
         page,
         regular,
-        item.qty,
+        quantityText(item, layout),
         COL[2],
         COL[3],
         top,
         bottom
       )
 
-      center(
+      if (layout === 'separate') center(
         page,
         regular,
         item.unit,

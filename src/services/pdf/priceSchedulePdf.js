@@ -1,5 +1,6 @@
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
 
 // =====================================================
 // PAGE CONFIGURATION - A4 LANDSCAPE
@@ -10,17 +11,12 @@ const H = 595.28
 const LEFT = 36
 const BOTTOM = 38
 
-const WIDTHS = [
+const DEFAULT_WIDTHS = [
   40, 154, 48, 42, 42, 70,
   80, 80, 68, 72, 72,
 ]
 
-const TOTAL_W = WIDTHS.reduce((a, b) => a + b, 0)
-
-const EDGE = WIDTHS.reduce(
-  (arr, width) => [...arr, arr.at(-1) + width],
-  [LEFT]
-)
+const TOTAL_W = DEFAULT_WIDTHS.reduce((a, b) => a + b, 0)
 
 const BLACK = rgb(0.08, 0.08, 0.08)
 const BORDER = rgb(0.35, 0.35, 0.35)
@@ -307,6 +303,9 @@ function boxText(
 export async function generatePriceSchedulePreview(
   data = {}
 ) {
+  const layout = quantityUnitLayout(data.qtyUnitLayout)
+  const WIDTHS = quantityColumnWidths(DEFAULT_WIDTHS, 3, 4, layout)
+  const EDGE = WIDTHS.reduce((edges, width) => [...edges, edges.at(-1) + width], [LEFT])
   const doc = await PDFDocument.create()
 
   const regular = await doc.embedFont(
@@ -445,6 +444,7 @@ export async function generatePriceSchedulePreview(
       i < EDGE.length - 1;
       i++
     ) {
+      if (i === 4 && layout !== 'separate') continue
       line(
         page,
         EDGE[i],
@@ -455,9 +455,10 @@ export async function generatePriceSchedulePreview(
     }
 
     HEADERS.forEach((header, col) => {
+      if (col === 4 && layout !== 'separate') return
       boxText(
         page,
-        header,
+        col === 3 && layout === 'merged' ? 'Qty / Unit' : header,
         EDGE[col],
         top,
         WIDTHS[col],
@@ -646,6 +647,7 @@ export async function generatePriceSchedulePreview(
         col < EDGE.length - 1;
         col++
       ) {
+        if (col === 4 && layout !== 'separate') continue
         line(
           page,
           EDGE[col],
@@ -714,7 +716,7 @@ export async function generatePriceSchedulePreview(
             item.country ||
             'PHL'
           ),
-          safe(item.qty),
+          quantityText(item, layout),
           safe(item.unit),
           display(unit50),
           display(transport20),
@@ -725,7 +727,7 @@ export async function generatePriceSchedulePreview(
         ]
 
         fields.forEach((field, column) => {
-          if (column === 1 || !field) {
+          if (column === 1 || (column === 4 && layout !== 'separate') || !field) {
             return
           }
 

@@ -1612,6 +1612,7 @@ async function handleGenerateAll(format = 'pdf') {
           compact
           project={sharedProject}
           value={technical}
+          onLayoutChange={qtyUnitLayout => changeSetup({ ...setup, qtyUnitLayout })}
           onChange={changeTechnical}
           onSave={saveTechnical}
         />
