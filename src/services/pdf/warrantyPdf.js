@@ -364,7 +364,7 @@ export async function generateProductWarrantyPreview(
 
   const province = clean(
     data.province
-  )
+  ).toUpperCase()
 
   const place =
     [municipality, province]
