@@ -257,16 +257,8 @@ export async function generateNfccPreview(project) {
     black,
   )
 
-  drawFitText({
-    value: projectTitle,
-    x: valueX,
-    y: 741,
-    width: valueWidth,
-    size: valueSize,
-    minSize: 6.8,
-    font: bold,
-    color: red,
-  })
+  // Draw after moving the body, keeping long titles at a readable size.
+  const titleLines = wrapHeaderValue(projectTitle)
 
   // ---------------------------------------------------------
   // REFERENCE NUMBER
@@ -358,274 +350,283 @@ export async function generateNfccPreview(project) {
 
   // Keep the address as readable as the other header values. Wrap even a
   // single long token instead of squeezing the entire address into one line.
-  const addressLines = []
-  let addressLine = ''
-  for (const word of businessAddress.split(/\s+/).filter(Boolean)) {
-    const next = addressLine ? addressLine + ' ' + word : word
-    if (addressLine && bold.widthOfTextAtSize(next, valueSize) > valueWidth) {
-      addressLines.push(addressLine)
-      addressLine = ''
-    }
-    for (const character of (addressLine ? ' ' : '') + word) {
-      if (bold.widthOfTextAtSize(addressLine + character, valueSize) > valueWidth) {
+  function wrapHeaderValue(value) {
+    const addressLines = []
+    let addressLine = ''
+    for (const word of value.split(/\s+/).filter(Boolean)) {
+      const next = addressLine ? addressLine + ' ' + word : word
+      if (addressLine && bold.widthOfTextAtSize(next, valueSize) > valueWidth) {
         addressLines.push(addressLine)
         addressLine = ''
       }
-      addressLine += character
+      for (const character of (addressLine ? ' ' : '') + word) {
+        if (bold.widthOfTextAtSize(addressLine + character, valueSize) > valueWidth) {
+          addressLines.push(addressLine)
+          addressLine = ''
+        }
+        addressLine += character
+      }
     }
-  }
-  if (addressLine) addressLines.push(addressLine)
-
-  // =========================================================
-  // REMOVE OLD SIGNATORY ONLY
-  //
-  // Hindi gagalawin ang NFCC computation table.
-  // =========================================================
-
-  page.drawRectangle({
-    x: 18,
-    y: 155,
-    width: 560,
-    height: 132,
-    color: white,
-  })
-
-  // =========================================================
-  // NEW SIGNATORY
-  // =========================================================
-
-  const footerLabelX = 32
-  const footerColonX = 128
-  const footerValueX = 155
-
-  const footerLabelSize = 10
-  const footerValueSize = 10.3
-
-  // ---------------------------------------------------------
-  // SUBMITTED
-  // ---------------------------------------------------------
-
-  const submittedY = 258
-
-  drawText(
-    'Submitted',
-    footerLabelX,
-    submittedY,
-    footerLabelSize,
-    regular,
-    black,
-  )
-
-  drawText(
-    ':',
-    footerColonX,
-    submittedY,
-    footerLabelSize,
-    regular,
-    black,
-  )
-
-  const submittedSize = fitFontSize(
-    submittedBy,
-    bold,
-    footerValueSize,
-    300,
-    8,
-  )
-
-  drawText(
-    submittedBy,
-    footerValueX,
-    submittedY,
-    submittedSize,
-    bold,
-    black,
-  )
-
-  if (submittedBy) {
-    const submittedWidth =
-      bold.widthOfTextAtSize(
-        submittedBy,
-        submittedSize,
-      )
-
-    page.drawLine({
-      start: {
-        x: footerValueX,
-        y: submittedY - 2,
-      },
-      end: {
-        x:
-          footerValueX +
-          submittedWidth,
-        y: submittedY - 2,
-      },
-      thickness: 0.7,
+    if (addressLine) addressLines.push(addressLine)
+    return addressLines
+    }
+    const addressLines = wrapHeaderValue(businessAddress)
+  
+    // =========================================================
+    // REMOVE OLD SIGNATORY ONLY
+    //
+    // Hindi gagalawin ang NFCC computation table.
+    // =========================================================
+  
+    page.drawRectangle({
+      x: 18,
+      y: 155,
+      width: 560,
+      height: 132,
+      color: white,
+    })
+  
+    // =========================================================
+    // NEW SIGNATORY
+    // =========================================================
+  
+    const footerLabelX = 32
+    const footerColonX = 128
+    const footerValueX = 155
+  
+    const footerLabelSize = 10
+    const footerValueSize = 10.3
+  
+    // ---------------------------------------------------------
+    // SUBMITTED
+    // ---------------------------------------------------------
+  
+    const submittedY = 258
+  
+    drawText(
+      'Submitted',
+      footerLabelX,
+      submittedY,
+      footerLabelSize,
+      regular,
+      black,
+    )
+  
+    drawText(
+      ':',
+      footerColonX,
+      submittedY,
+      footerLabelSize,
+      regular,
+      black,
+    )
+  
+    const submittedSize = fitFontSize(
+      submittedBy,
+      bold,
+      footerValueSize,
+      300,
+      8,
+    )
+  
+    drawText(
+      submittedBy,
+      footerValueX,
+      submittedY,
+      submittedSize,
+      bold,
+      black,
+    )
+  
+    if (submittedBy) {
+      const submittedWidth =
+        bold.widthOfTextAtSize(
+          submittedBy,
+          submittedSize,
+        )
+  
+      page.drawLine({
+        start: {
+          x: footerValueX,
+          y: submittedY - 2,
+        },
+        end: {
+          x:
+            footerValueX +
+            submittedWidth,
+          y: submittedY - 2,
+        },
+        thickness: 0.7,
+        color: black,
+      })
+    }
+  
+    drawText(
+      '(Printed Name & Signature)',
+      footerValueX,
+      246,
+      6.3,
+      regular,
+      black,
+    )
+  
+    // ---------------------------------------------------------
+    // DESIGNATION
+    // ---------------------------------------------------------
+  
+    drawText(
+      'Designation',
+      footerLabelX,
+      223,
+      footerLabelSize,
+      regular,
+      black,
+    )
+  
+    drawText(
+      ':',
+      footerColonX,
+      223,
+      footerLabelSize,
+      regular,
+      black,
+    )
+  
+    drawFitText({
+      value: designation,
+      x: footerValueX,
+      y: 223,
+      width: 300,
+      size: footerValueSize,
+      minSize: 8,
+      font: italic,
       color: black,
     })
-  }
-
-  drawText(
-    '(Printed Name & Signature)',
-    footerValueX,
-    246,
-    6.3,
-    regular,
-    black,
-  )
-
-  // ---------------------------------------------------------
-  // DESIGNATION
-  // ---------------------------------------------------------
-
-  drawText(
-    'Designation',
-    footerLabelX,
-    223,
-    footerLabelSize,
-    regular,
-    black,
-  )
-
-  drawText(
-    ':',
-    footerColonX,
-    223,
-    footerLabelSize,
-    regular,
-    black,
-  )
-
-  drawFitText({
-    value: designation,
-    x: footerValueX,
-    y: 223,
-    width: 300,
-    size: footerValueSize,
-    minSize: 8,
-    font: italic,
-    color: black,
-  })
-
-  // ---------------------------------------------------------
-  // NAME OF FIRM
-  // ---------------------------------------------------------
-
-  drawText(
-    'Name of Firm',
-    footerLabelX,
-    200,
-    footerLabelSize,
-    regular,
-    black,
-  )
-
-  drawText(
-    ':',
-    footerColonX,
-    200,
-    footerLabelSize,
-    regular,
-    black,
-  )
-
-  drawFitText({
-    value: bidderName,
-    x: footerValueX,
-    y: 200,
-    width: 300,
-    size: footerValueSize,
-    minSize: 8,
-    font: bold,
-    color: black,
-  })
-
-  // ---------------------------------------------------------
-  // DATE
-  // ---------------------------------------------------------
-
-  drawText(
-    'Date',
-    footerLabelX,
-    177,
-    footerLabelSize,
-    regular,
-    black,
-  )
-
-  drawText(
-    ':',
-    footerColonX,
-    177,
-    footerLabelSize,
-    regular,
-    black,
-  )
-
-  drawFitText({
-    value: date,
-    x: footerValueX,
-    y: 177,
-    width: 300,
-    size: footerValueSize,
-    minSize: 8,
-    font: regular,
-    color: black,
-  })
-
-  // =========================================================
-  // SAVE
-  // =========================================================
-
-  await fillBuiltechTable(pdfDoc, project, 'nfcc')
-  const addressLeading = 14
-  const extraHeight = Math.max(0, addressLines.length - 1) * addressLeading
-  if (extraHeight) {
-    // Translate the complete existing body, table and signature together so
-    // extra address lines never cover the original NFCC paragraph.
-    const bodyHeight = 668
-    // Mask the copied header as well as clipping it. Text extraction for Word
-    // can otherwise read invisible header text outside a PDF form's clip box.
-    const bodyDocument = await PDFDocument.create()
-    const [bodyPage] = await bodyDocument.copyPages(pdfDoc, [0])
-    bodyDocument.addPage(bodyPage)
-    bodyPage.drawRectangle({ x: 0, y: bodyHeight, width: page.getWidth(),
-      height: page.getHeight() - bodyHeight, color: white })
-    const body = await pdfDoc.embedPage(bodyPage, { left: 0, bottom: 0, right: page.getWidth(), top: bodyHeight })
-    await pdfDoc.flush()
-    page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: bodyHeight, color: white })
-    if (extraHeight <= 120) {
-      page.drawPage(body, { x: 0, y: -extraHeight, width: page.getWidth(), height: bodyHeight })
-    } else {
-      const continuation = pdfDoc.addPage([page.getWidth(), page.getHeight()])
-      continuation.drawPage(body, { x: 0, y: continuation.getHeight() - bodyHeight - 36,
-        width: page.getWidth(), height: bodyHeight })
-    }
-    // Draw the header last so editable Word extraction honors the same paint
-    // order as the PDF, including the copied body's invisible header mask.
-    page.drawRectangle({ x: 0, y: bodyHeight, width: page.getWidth(),
-      height: page.getHeight() - bodyHeight, color: white })
-    const title = 'NET FINANCIAL CONTRACTING CAPACITY (NFCC)'
-    drawText(title, (page.getWidth() - bold.widthOfTextAtSize(title, 12)) / 2,
-      page.getHeight() - 45, 12, bold, black)
-    page.drawLine({ start: { x: 18, y: page.getHeight() - 49 },
-      end: { x: page.getWidth() - 18, y: page.getHeight() - 49 }, thickness: 1, color: black })
-    // Use a snapshot: drawText above also recorded the new title.
-    for (const { text, options } of headerText.slice(0, -1)) page.drawText(text, options)
-  }
-  addressLines.forEach((line, index) => drawText(line, valueX, 677 - index * addressLeading, valueSize, bold, red))
-  const bytes =
-    await pdfDoc.save()
-
-  const blob =
-    new Blob(
-      [bytes],
-      {
-        type: 'application/pdf',
-      },
+  
+    // ---------------------------------------------------------
+    // NAME OF FIRM
+    // ---------------------------------------------------------
+  
+    drawText(
+      'Name of Firm',
+      footerLabelX,
+      200,
+      footerLabelSize,
+      regular,
+      black,
     )
-
-  return URL.createObjectURL(
-    blob,
-  )
-}
+  
+    drawText(
+      ':',
+      footerColonX,
+      200,
+      footerLabelSize,
+      regular,
+      black,
+    )
+  
+    drawFitText({
+      value: bidderName,
+      x: footerValueX,
+      y: 200,
+      width: 300,
+      size: footerValueSize,
+      minSize: 8,
+      font: bold,
+      color: black,
+    })
+  
+    // ---------------------------------------------------------
+    // DATE
+    // ---------------------------------------------------------
+  
+    drawText(
+      'Date',
+      footerLabelX,
+      177,
+      footerLabelSize,
+      regular,
+      black,
+    )
+  
+    drawText(
+      ':',
+      footerColonX,
+      177,
+      footerLabelSize,
+      regular,
+      black,
+    )
+  
+    drawFitText({
+      value: date,
+      x: footerValueX,
+      y: 177,
+      width: 300,
+      size: footerValueSize,
+      minSize: 8,
+      font: regular,
+      color: black,
+    })
+  
+    // =========================================================
+    // SAVE
+    // =========================================================
+  
+    await fillBuiltechTable(pdfDoc, project, 'nfcc')
+    const addressLeading = 14
+    const titleExtraHeight = Math.max(0, titleLines.length - 1) * addressLeading
+    const extraHeight = titleExtraHeight + Math.max(0, addressLines.length - 1) * addressLeading
+    if (extraHeight) {
+      // Translate the complete existing body, table and signature together so
+      // extra address lines never cover the original NFCC paragraph.
+      const bodyHeight = 668
+      // Mask the copied header as well as clipping it. Text extraction for Word
+      // can otherwise read invisible header text outside a PDF form's clip box.
+      const bodyDocument = await PDFDocument.create()
+      const [bodyPage] = await bodyDocument.copyPages(pdfDoc, [0])
+      bodyDocument.addPage(bodyPage)
+      bodyPage.drawRectangle({ x: 0, y: bodyHeight, width: page.getWidth(),
+        height: page.getHeight() - bodyHeight, color: white })
+      const body = await pdfDoc.embedPage(bodyPage, { left: 0, bottom: 0, right: page.getWidth(), top: bodyHeight })
+      await pdfDoc.flush()
+      page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: bodyHeight, color: white })
+      if (extraHeight <= 120) {
+        page.drawPage(body, { x: 0, y: -extraHeight, width: page.getWidth(), height: bodyHeight })
+      } else {
+        const continuation = pdfDoc.addPage([page.getWidth(), page.getHeight()])
+        continuation.drawPage(body, { x: 0, y: continuation.getHeight() - bodyHeight - 36,
+          width: page.getWidth(), height: bodyHeight })
+      }
+      // Draw the header last so editable Word extraction honors the same paint
+      // order as the PDF, including the copied body's invisible header mask.
+      page.drawRectangle({ x: 0, y: bodyHeight, width: page.getWidth(),
+        height: page.getHeight() - bodyHeight, color: white })
+      const title = 'NET FINANCIAL CONTRACTING CAPACITY (NFCC)'
+      drawText(title, (page.getWidth() - bold.widthOfTextAtSize(title, 12)) / 2,
+        page.getHeight() - 45, 12, bold, black)
+      page.drawLine({ start: { x: 18, y: page.getHeight() - 49 },
+        end: { x: page.getWidth() - 18, y: page.getHeight() - 49 }, thickness: 1, color: black })
+      // Use a snapshot: drawText above also recorded the new title.
+      for (const { text, options } of headerText.slice(0, -1)) {
+        page.drawText(text, { ...options,
+          y: options.y <= 715 ? options.y - titleExtraHeight : options.y })
+      }
+    }
+    titleLines.forEach((line, index) => drawText(line, valueX, 741 - index * addressLeading, valueSize, bold, red))
+    addressLines.forEach((line, index) => drawText(line, valueX, 677 - titleExtraHeight - index * addressLeading, valueSize, bold, red))
+    const bytes =
+      await pdfDoc.save()
+  
+    const blob =
+      new Blob(
+        [bytes],
+        {
+          type: 'application/pdf',
+        },
+      )
+  
+    return URL.createObjectURL(
+      blob,
+    )
+  }

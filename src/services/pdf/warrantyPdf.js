@@ -360,7 +360,7 @@ export async function generateProductWarrantyPreview(
 
   const municipality = clean(
     data.municipality
-  )
+  ).toUpperCase()
 
   const province = clean(
     data.province
