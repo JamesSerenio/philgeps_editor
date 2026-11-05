@@ -63,7 +63,10 @@ export async function drawBidderOmnibusBody(pdf, data) {
   paragraph([normal('I am granted full power and authority to do, execute and perform any and all acts necessary to participate, submit the bid, and to sign and execute the ensuing contract for '),
     strong(data.projectTitle), normal(` of the Municipality of ${data.municipality}, ${data.province} as supported by the attached duly notarized Special Power of Attorney, Board/Partnership Resolution, or Secretary's Certificate, whichever is applicable;`)],
   { label: data.numbered ? '2.' : undefined })
-  const item = (number, spans) => paragraph(spans, { firstX: 108, nextX: 108, label: number + ')' })
+  const item = (number, spans) => paragraph(spans, {
+    firstX: 108, nextX: 108,
+    label: data.numbered ? (number + 2) + '.' : number + ')',
+  })
   item(1, [company(), normal(' is not “blacklisted” or barred from bidding by the Government of the Philippines or any of its agencies, offices, corporations, or Local Government Units, foreign government/foreign or international financing institution whose blacklisting rules have been recognized by the Government Procurement Policy Board; by itself or by relation, membership, association, affiliation, or controlling interest with another blacklisted person or entity;')])
   item(2, [normal('Each of the documents submitted in satisfaction of the bidding requirements is an authentic copy of the original, complete, and all statements and information provided therein are true and correct;')])
   item(3, [company(), normal(' is authorizing the Head of the Procuring Entity or its duly authorized representative(s) to verify all the documents submitted;')])
