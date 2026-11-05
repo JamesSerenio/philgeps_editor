@@ -1,5 +1,5 @@
 import { assetExists, getTemplatePath } from '../lib/bidderAssets'
-import { documentBidderName } from '../lib/bidderCompanies'
+import { documentBidderName, normalizeBidderSetup } from '../lib/bidderCompanies'
 import { restoreBidderVariants } from '../lib/bidderProfiles'
 import GenerateDocumentsModal from '../components/GenerateDocumentsModal'
 import { exportFilename } from '../lib/exportFilename'
@@ -477,7 +477,7 @@ function ProjectEditorContent({ id }) {
       )
 
       setDocumentSetup(
-        saved?.bid_security?.documentSetup ?? null
+        normalizeBidderSetup(saved?.bid_security?.documentSetup ?? null)
       )
     }
   )

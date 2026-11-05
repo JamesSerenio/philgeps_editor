@@ -4,8 +4,17 @@ import { getDefaultBidderAddress } from '../../lib/bidderAddresses'
 
 export async function applyBidderLetterhead(document, page, setup, geometry, suppliedLogo) {
   const company = getBidderCompany(setup)
-  // The existing Mikata rendering remains pixel-for-pixel unchanged.
-  if (company.id === 'mikata') return
+  // Replace the old company title while retaining the existing logo/contact lines.
+  if (company.id === 'mikata') {
+    const text = geometry.text
+    const font = await document.embedFont(StandardFonts.TimesRomanBold)
+    let size = text.size ?? 22
+    while (size > 6 && font.widthOfTextAtSize(company.name, size) > text.width) size -= .25
+    page.drawRectangle({ x: text.x, y: text.y - 4,
+      width: text.width, height: (text.size ?? 22) + 8, color: rgb(1, 1, 1) })
+    page.drawText(company.name, { x: text.x, y: text.y, size, font, color: rgb(0, 0, 0) })
+    return
+  }
   const logo = suppliedLogo ?? await getBidderLogo(setup)
   const image = logo.type === 'jpg' ? await document.embedJpg(logo.data) : await document.embedPng(logo.data)
   const bold = await document.embedFont(StandardFonts.TimesRomanBold)

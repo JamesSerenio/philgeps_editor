@@ -2,6 +2,19 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createServer } from 'vite'
 import { bidderAddresses, changeBidderAddress, getDefaultBidderAddress, selectBidder } from '../src/lib/bidderAddresses.js'
+import { documentBidderName, normalizeBidderSetup } from '../src/lib/bidderCompanies.js'
+
+test('legacy Mikata names become MIKATA PRIME CORPORATION without losing saved project data', () => {
+  const saved = { bidderId: 'mikata', bidderName: 'MIKATA CORPORATION', businessAddress: 'Custom address', slccVariant: 'cctv' }
+  const updated = normalizeBidderSetup(saved)
+  assert.equal(updated.bidderName, 'MIKATA PRIME CORPORATION')
+  assert.equal(updated.businessAddress, saved.businessAddress)
+  assert.equal(updated.slccVariant, saved.slccVariant)
+  assert.equal(saved.bidderName, 'MIKATA CORPORATION')
+  assert.equal(documentBidderName({ bidderName: 'mikata corporation' }), updated.bidderName)
+  assert.equal(selectBidder(saved, 'MIKATA CORPORATION').bidderName, updated.bidderName)
+  assert.equal(documentBidderName({ bidderName: 'BUILTECH SOLUTIONS' }), 'BUILTECH SOLUTIONS')
+})
 
 test('selection loads the configured primary office immediately and retains unrelated project fields', () => {
   let setup = { referenceNumber: '13261581', projectTitle: 'Existing title' }

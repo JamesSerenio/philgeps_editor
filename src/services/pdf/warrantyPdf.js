@@ -196,10 +196,8 @@ function rich(
 
     for (const { word, font } of tokens) {
       const wordWidth =
-        font.widthOfTextAtSize(
-          word,
-          fontSize
-        )
+        Array.from(word).reduce((width, character) =>
+          width + font.widthOfTextAtSize(character, fontSize), 0)
 
       if (wordWidth > maxWidth) {
         return null
@@ -207,10 +205,10 @@ function rich(
 
       const sp = first
         ? 0
-        : fonts.normal.widthOfTextAtSize(
+        : Math.max(fontSize * 0.32, fonts.normal.widthOfTextAtSize(
             ' ',
             fontSize
-          )
+          ))
 
       if (
         !first &&

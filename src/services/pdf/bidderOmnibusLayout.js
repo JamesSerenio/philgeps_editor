@@ -29,7 +29,11 @@ export async function drawBidderOmnibusBody(pdf, data) {
     if (label) draw(label, firstX - 18, top + size)
     let x = firstX, pending = 0, afterCompany = false
     for (const span of spans) {
-      for (const token of String(span.text ?? '').split(/(\s+)/).filter(Boolean)) {
+      // Keep every company mention in the same full-size run as clause 6.
+      // Move it onto the next line as a whole if it cannot fit beside the text.
+      const isCompany = span.text === data.bidderName
+      const tokens = isCompany ? [data.bidderName] : String(span.text ?? '').split(/(\s+)/).filter(Boolean)
+      for (const token of tokens) {
         if (/^\s+$/.test(token)) { pending = afterCompany ? 7 : regular.widthOfTextAtSize(' ', size); continue }
         const width = span.font.widthOfTextAtSize(token, size)
         if (x + pending + width > right && x > nextX) {
@@ -43,7 +47,7 @@ export async function drawBidderOmnibusBody(pdf, data) {
         pending = 0
         afterCompany = false
       }
-      afterCompany = span.text === data.bidderName
+      afterCompany = isCompany
     }
     top += leading + gap
   }

@@ -1059,7 +1059,7 @@ function replaceInlineCompany({
       municipality, province, day, month, year, fullDate, designation, numbered: variant === 'initao_lgu' })
     drawJurat(pdfDoc.getPage(pdfDoc.getPageCount() - 1))
   }
-  if (['mega-pluto'].includes(getBidderCompany(project).id)) {
+  if (['mikata', 'mega-pluto'].includes(getBidderCompany(project).id)) {
     await drawReflowedBody()
     return URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }))
   }

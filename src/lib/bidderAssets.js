@@ -6,7 +6,7 @@ const available = new Set(manifest)
 const imageExtensions = ['png', 'jpg', 'jpeg']
 const logoCandidates = company => [
   ...(company.logoFilename ? [encodeAssetUrl('/images/' + company.folder + '/' + company.logoFilename)] : []),
-  ...imageExtensions.map(ext => encodeAssetUrl('/images/' + company.folder + '/' + company.name + ' - logo.' + ext)),
+  ...imageExtensions.map(ext => encodeAssetUrl('/images/' + company.folder + '/' + (company.assetPrefix ?? company.name) + ' - logo.' + ext)),
 ]
 // These originals contain company history/financials/staff, so another bidder
 // must supply its own file. They are never shared as another company's data.
@@ -40,7 +40,7 @@ export function sharedAssetPath(kind, filename) {
 export function getBidderPaths(value) {
   const company = getBidderCompany(value)
   return { ...company,
-    logoPath: logoCandidates(company).find(assetExists) ?? encodeAssetUrl('/images/' + company.folder + '/' + company.name + ' - logo.png'),
+    logoPath: logoCandidates(company).find(assetExists) ?? encodeAssetUrl('/images/' + company.folder + '/' + (company.assetPrefix ?? company.name) + ' - logo.png'),
     staticFolder: '/pdf/static/' + company.folder,
     templateFolder: '/pdf/templates/' + company.folder,
     referenceFolder: '/pdf/reference/' + company.folder,
@@ -51,7 +51,7 @@ export function expectedBidderAssetPath(value, kind, filename) {
   const company = getBidderCompany(value), parts = safeFile(filename)
   const last = parts.pop()
   const base = kind === 'images' ? '/images' : '/pdf/' + kind
-  return base + '/' + company.folder + '/' + [...parts, company.name + ' - ' + last].join('/')
+  return base + '/' + company.folder + '/' + [...parts, (company.assetPrefix ?? company.name) + ' - ' + last].join('/')
 }
 export function assetExists(path) {
   try { return available.has(decodeURIComponent(path.split('?')[0])) } catch { return false }
@@ -87,7 +87,7 @@ export function getReferencePath(filename, value) {
 }
 export function getLogoPath(value) {
   const company = getBidderCompany(value)
-  const stem = '/images/' + company.folder + '/' + company.name + ' - logo.'
+  const stem = '/images/' + company.folder + '/' + (company.assetPrefix ?? company.name) + ' - logo.'
   const found = logoCandidates(company).find(assetExists)
   return found ?? requireAsset(encodeAssetUrl(stem + 'png'), company.name + ' logo')
 }

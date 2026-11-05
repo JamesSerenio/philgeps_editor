@@ -1,4 +1,5 @@
 import { applyBidderLetterhead } from './bidderLetterhead'
+import { documentBidderName } from '../../lib/bidderCompanies'
 import { getBidderCompany, getBidderLogo } from '../../lib/bidderAssets'
 import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
@@ -43,7 +44,7 @@ export async function generateTabbingPreview(data = {}) {
     }, logo)
     if (!['builtech', 'manotech', 'mega-pluto'].includes(company.id)) {
       erase(151, 29, 420, 34)
-      draw(data.bidderName, 152.47, 55.7, 414, 25.92)
+      draw(documentBidderName(data), 152.47, 55.7, 414, 25.92)
       erase(154, 65, 417, 14)
       draw((company.id === 'mikata' ? 'CDO Office: ' : 'Office: ') + clean(data.businessAddress), 155.59, 75.62, 412, 9.12, { font: office })
     }

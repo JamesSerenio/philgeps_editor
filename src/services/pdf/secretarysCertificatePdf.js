@@ -343,6 +343,11 @@ export async function generateSecretaryCertificatePreview(
         ? bold
         : regular
 
+      // PDF text is drawn without pair kerning. Advance by the actual glyph
+      // widths so names and bold/regular boundaries retain the full word gap.
+      const textWidth = text => Array.from(text).reduce((width, character) =>
+        width + font.widthOfTextAtSize(character, size), 0)
+
       // Preserve whitespace between spans.
       const tokens =
         normalizeText(span.text).match(/\s+|\S+/g) || []
@@ -354,17 +359,14 @@ export async function generateSecretaryCertificatePreview(
         }
 
         const wordWidth =
-          font.widthOfTextAtSize(
-            token,
-            size
-          )
+          textWidth(token)
 
         const spaceWidth =
           pendingSpace && hasWord
-            ? regular.widthOfTextAtSize(
+            ? Math.max(size * 0.32, regular.widthOfTextAtSize(
                 ' ',
                 size
-              )
+              ))
             : 0
 
         if (
@@ -383,20 +385,14 @@ export async function generateSecretaryCertificatePreview(
 
           while (
             length > 1 &&
-            font.widthOfTextAtSize(
-              remaining.slice(0, length),
-              size
-            ) > maxX - cursor
+            textWidth(remaining.slice(0, length)) > maxX - cursor
           ) {
             length -= 1
           }
 
           if (
             cursor > x &&
-            font.widthOfTextAtSize(
-              remaining.slice(0, length),
-              size
-            ) > maxX - cursor
+            textWidth(remaining.slice(0, length)) > maxX - cursor
           ) {
             nextLine()
             continue
@@ -414,10 +410,7 @@ export async function generateSecretaryCertificatePreview(
           )
 
           cursor +=
-            font.widthOfTextAtSize(
-              part,
-              size
-            )
+            textWidth(part)
 
           remaining =
             remaining.slice(length)

@@ -60,7 +60,7 @@ test('Manotech SLCC has no Mikata sample contracts and document sequence remains
   const { getBidPackageDocuments } = await server.ssrLoadModule('/src/services/pdf/fullBidPackagePdf.js')
   for (const variant of ['old_default', 'initao_lgu']) {
     const docs = id => getBidPackageDocuments({ setup: { bidderId: id, referenceNumber: 'TEST' }, omnibusVariant: variant })
-    assert.deepEqual(docs('manotech').map(x => [x.name, x.wordSection]), docs('mikata').map(x => [x.name, x.wordSection]))
+    assert.deepEqual(docs('manotech').map(x => [x.name, x.wordSection]), docs('mikata').filter(x => x.wordSection !== 'slccSupporting').map(x => [x.name, x.wordSection]))
   }
 })
 

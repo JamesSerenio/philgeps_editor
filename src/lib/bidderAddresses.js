@@ -12,7 +12,7 @@ export const bidderAddresses = {
   'mega-pluto': { name: 'MEGA PLUTO', businessAddress: 'Kihare, Bukidnon, 8703' },
   manotech: { name: 'MANOTECH', businessAddress: 'Purok 4, Poblacion, Linamon, Lanao del Norte' },
   mikata: {
-    name: 'MIKATA CORPORATION',
+    name: 'MIKATA PRIME CORPORATION',
     businessAddress: 'ZONE 13, CARMEN, CAGAYAN DE ORO CITY, MISAMIS ORIENTAL, 9000',
   },
 }
@@ -58,7 +58,7 @@ export function selectBidder(setup, bidderName) {
   return {
     ...setup,
     ...selectBidderProfile(setup, previousKey, key),
-    bidderName,
+    bidderName: company?.name ?? bidderName,
     bidderId: company?.id,
     businessAddress,
     companyAddress: businessAddress,

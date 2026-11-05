@@ -1,4 +1,4 @@
-import { bidderCompanies } from './bidderCompanies'
+import { bidderCompanies, documentBidderName, normalizeBidderSetup } from './bidderCompanies'
 import { getDefaultBidderAddress } from './bidderAddresses'
 export const representatives = [
   {
@@ -97,7 +97,7 @@ export function createDocumentSetup(
   omnibus = {},
 ) {
   if (bid.documentSetup) {
-    return bid.documentSetup
+    return normalizeBidderSetup(bid.documentSetup)
   }
 
   const prior = (key) =>
@@ -151,7 +151,7 @@ export function createDocumentSetup(
       ).format(new Date()),
 
     bidderName:
-      prior('bidderName'),
+      documentBidderName({ bidderName: prior('bidderName') }),
 
     businessAddress:
       bid.businessAddress ?? bid.companyAddress ??
@@ -195,7 +195,7 @@ export function setupProject(setup) {
       setup.date || '',
 
     bidderName:
-      setup.bidderName || '',
+      documentBidderName(setup),
 
     businessAddress:
       setup.businessAddress || '',

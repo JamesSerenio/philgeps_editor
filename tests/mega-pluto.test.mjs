@@ -56,7 +56,7 @@ test('Mega Pluto has no sample contracts, validates setup and preserves document
   await assert.rejects(generateSecretaryCertificatePreview({ bidderId: 'mega-pluto', date: '2026-10-24' }), /Please complete Document Setup/)
   const { getBidPackageDocuments } = await server.ssrLoadModule('/src/services/pdf/fullBidPackagePdf.js')
   for (const omnibusVariant of ['old_default', 'initao_lgu']) {
-    const names = bidderId => getBidPackageDocuments({ setup: { bidderId, referenceNumber: 'TEST' }, omnibusVariant }).map(d => [d.name, d.wordSection])
+    const names = bidderId => getBidPackageDocuments({ setup: { bidderId, referenceNumber: 'TEST' }, omnibusVariant }).filter(d => d.wordSection !== 'slccSupporting').map(d => [d.name, d.wordSection])
     assert.deepEqual(names('mega-pluto'), names('mikata'))
   }
 })

@@ -227,16 +227,14 @@ function drawRichParagraph(
 
       const space = beginning
         ? 0
-        : font.widthOfTextAtSize(
+        : Math.max(size * 0.32, font.widthOfTextAtSize(
             ' ',
             size
-          )
+          ))
 
       const wordWidth =
-        font.widthOfTextAtSize(
-          word,
-          size
-        )
+        Array.from(word).reduce((width, character) =>
+          width + font.widthOfTextAtSize(character, size), 0)
 
       if (wordWidth > maxWidth) {
         return null

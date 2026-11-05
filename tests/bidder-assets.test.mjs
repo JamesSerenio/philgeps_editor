@@ -32,7 +32,7 @@ test('all inventoried company and shared asset paths still exist after cleanup',
   for (const file of manifest.filter(file => file.startsWith('/pdf/templates/'))) {
     const company = bidderCompanies.find(bidder => file.startsWith('/pdf/templates/' + bidder.folder + '/'))
     assert.ok(company, file)
-    assert.ok(path.posix.basename(file).startsWith(company.name + ' - '), file)
+    assert.ok(path.posix.basename(file).startsWith((company.assetPrefix ?? company.name) + ' - '), file)
   }
   for (const company of bidderCompanies) {
     for (const filename of templates) {
