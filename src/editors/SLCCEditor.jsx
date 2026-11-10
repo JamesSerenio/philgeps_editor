@@ -1,38 +1,4 @@
-
-import { getBidderCompany } from '../lib/bidderAssets'
-// =====================================================
-// DEFAULT VALUES FOR BOTH SLCC TEMPLATES
-// =====================================================
-
-const DEFAULT_ENTRIES = {
-  cctv: {
-    government: {
-      ownerDetails: 'LGU MALITBOG',
-      natureOfWork: 'SUPPLY AND DELIVERY',
-      description:
-        'PROCUREMENT AND INSTALLATION OF STREET SOLAR LIGHTS',
-    },
-    private: {
-      ownerDetails: '',
-      natureOfWork: 'SUPPLY AND DELIVERY',
-      description: '',
-    },
-  },
-
-  streetlight: {
-    government: {
-      ownerDetails: 'LGU SUMILAO',
-      natureOfWork: 'SUPPLY AND DELIVERY',
-      description:
-        'PROCUREMENT OF SOLAR STREET LIGHTS FOR MUNICIPAL AND BARANGAY STREET',
-    },
-    private: {
-      ownerDetails: '',
-      natureOfWork: 'SUPPLY AND DELIVERY',
-      description: '',
-    },
-  },
-}
+import { getSlccVariant, getSlccContractType, getSlccEntry } from '../lib/slccEntries'
 
 // =====================================================
 // STYLES
@@ -70,36 +36,9 @@ export default function SLCCEditor({
   value = {},
   onChange,
 }) {
-  // Select CCTV or STREETLIGHT.
-  const variant =
-    value.slccVariant === 'cctv' ||
-    value.slccVariant === 'none' ||
-    value.slccVariant === 'streetlight'
-      ? value.slccVariant
-      : /cctv/i.test(value.projectTitle ?? '')
-        ? 'cctv'
-        : 'streetlight'
-
-  // Get selected contract type.
-  const contractType =
-    value.slccContractTypes?.[variant] === 'private'
-      ? 'private'
-      : 'government'
-
-  // Get original default values.
-  const defaults =
-    ['builtech', 'mega-pluto'].includes(getBidderCompany(value).id) ? {} : (DEFAULT_ENTRIES[variant]?.[contractType] ?? {})
-
-  // Get saved values from Supabase state.
-  const savedEntry =
-    value.slccEntries?.[variant]?.[contractType] ??
-    {}
-
-  // Merge defaults with saved values.
-  const entry = {
-    ...defaults,
-    ...savedEntry,
-  }
+  const variant = getSlccVariant(value)
+  const contractType = getSlccContractType(value, variant)
+  const entry = getSlccEntry(value, variant, contractType)
 
   // ===================================================
   // UPDATE SELECTED TEMPLATE
@@ -334,6 +273,24 @@ export default function SLCCEditor({
           }}
         />
       </div>
+
+      {[
+        ['percentage', "Bidder's Role (%)", 1],
+        ['awardCompletion', 'Amount of Award / Amount at Completion / Duration', 4],
+        ['dates', 'Date Awarded / Contract Effectivity / Date Completed', 4],
+      ].map(([field, label, rows]) => (
+        <div key={field} style={groupStyle}>
+          <label htmlFor={'slcc-' + field} style={labelStyle}>{label}</label>
+          <textarea
+            id={'slcc-' + field}
+            rows={rows}
+            value={entry[field] ?? ''}
+            onChange={event => updateField(field, event.target.value)}
+            style={{ ...inputStyle, resize: 'vertical' }}
+          />
+          {rows > 1 && <small>Keep each amount, duration, or date on its own line.</small>}
+        </div>
+      ))}
 
       {/* ============================================= */}
       {/* CURRENT SELECTION INFORMATION */}

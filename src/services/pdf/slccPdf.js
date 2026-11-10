@@ -1,3 +1,5 @@
+import { getSlccVariant, getSlccContractType, getSlccEntry } from '../../lib/slccEntries'
+export { getSlccContractType, getSlccEntry } from '../../lib/slccEntries'
 import { getBidderCompany, getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
@@ -38,97 +40,6 @@ const BORDER = 0.7
 // ==================================================
 // DEFAULT CONTRACT VALUES
 // ==================================================
-
-const DEFAULT_ENTRIES = {
-  cctv: {
-    government: {
-      ownerDetails: 'LGU MALITBOG',
-      natureOfWork: 'SUPPLY AND DELIVERY',
-      description:
-        'PROCUREMENT AND INSTALLATION OF STREET SOLAR LIGHTS',
-    },
-    private: {
-      ownerDetails: '',
-      natureOfWork: 'SUPPLY AND DELIVERY',
-      description: '',
-    },
-  },
-
-  streetlight: {
-    government: {
-      ownerDetails: 'LGU SUMILAO',
-      natureOfWork: 'SUPPLY AND DELIVERY',
-      description:
-        'PROCUREMENT OF SOLAR STREET LIGHTS FOR MUNICIPAL AND BARANGAY STREET',
-    },
-    private: {
-      ownerDetails: '',
-      natureOfWork: 'SUPPLY AND DELIVERY',
-      description: '',
-    },
-  },
-}
-
-// ==================================================
-// FINANCIAL DETAILS
-// ==================================================
-
-// Existing example values from your templates.
-// Verify these against the actual completed contract.
-
-const FINANCIALS = {
-  cctv: [
-    '100%',
-    '- 716,500.00\n' +
-      '- 716,500.00\n' +
-      '- 15 DAYS',
-    '- APRIL 29, 2026\n' +
-      '- MAY 4, 2026\n' +
-      '- MAY 20, 2026',
-  ],
-
-  streetlight: [
-    '100%',
-    'A. 1,997,496.00\n' +
-      'B. 26 DAYS',
-    'A. MARCH 31, 2026\n' +
-      'B. APRIL 4, 2026\n' +
-      'C. MAY 7, 2026',
-  ],
-}
-
-// ==================================================
-// SAVED CONTRACT TYPE
-// ==================================================
-
-export function getSlccContractType(
-  data = {},
-  variant = 'streetlight'
-) {
-  return data.slccContractTypes?.[variant] === 'private'
-    ? 'private'
-    : 'government'
-}
-
-// ==================================================
-// SAVED CONTRACT DETAILS
-// ==================================================
-
-export function getSlccEntry(
-  data = {},
-  variant = 'streetlight',
-  type = 'government'
-) {
-  return {
-    ...(
-      ['builtech', 'manotech', 'mega-pluto'].includes(getBidderCompany(data).id) ? {} :
-      DEFAULT_ENTRIES[variant]?.[type] ?? DEFAULT_ENTRIES.streetlight.government
-    ),
-    ...(
-      data.slccEntries?.[variant]?.[type] ?? {}
-    ),
-  }
-}
 
 // ==================================================
 // TEXT HELPERS
@@ -921,14 +832,11 @@ function drawSignature(
 export async function generateSlccPreview(
   data = {}
 ) {
-  const variant =
-    data.slccVariant === 'cctv'
-      ? 'cctv'
-      : 'streetlight'
+  const variant = getSlccVariant(data)
 
   if (!['mikata', 'builtech', 'manotech', 'mega-pluto'].includes(getBidderCompany(data).id)) {
     // Historical contract values belong to the selected company, never to Mikata.
-    const response = await fetchAsset(getTemplatePath('SLCC_table_' + variant + '.pdf', data))
+    const response = await fetchAsset(getTemplatePath('SLCC_table_' + (variant === 'none' ? 'streetlight' : variant) + '.pdf', data))
     return URL.createObjectURL(await response.blob())
   }
 
@@ -1082,10 +990,9 @@ export async function generateSlccPreview(
     171
   )
 
-  const fields = ['builtech', 'manotech', 'mega-pluto'].includes(getBidderCompany(data).id)
-    ? [entry.ownerDetails, entry.natureOfWork, entry.description,
-      entry.percentage, entry.awardCompletion, entry.dates].map(value => flat(value) ? value : 'NONE')
-    : [entry.ownerDetails, entry.natureOfWork, entry.description, ...FINANCIALS[variant]]
+  const fields = [entry.ownerDetails, entry.natureOfWork, entry.description,
+    entry.percentage, entry.awardCompletion, entry.dates]
+    .map(value => flat(value) ? value : 'NONE')
 
   const tableBottom = drawTable(
     page,
