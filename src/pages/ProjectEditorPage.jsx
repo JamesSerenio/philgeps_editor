@@ -93,6 +93,7 @@ import OmnibusEditor from '../editors/OmnibusEditor'
 import AfterSalesEditor from '../editors/AfterSalesEditor'
 import WarrantyEditor from '../editors/WarrantyEditor'
 import SLCCEditor from '../editors/SLCCEditor'
+import OngoingContractsEditor from '../editors/OngoingContractsEditor'
 
 // =====================================================
 // DOCUMENT IDENTIFIERS
@@ -1591,6 +1592,10 @@ async function handleGenerateAll(format = 'pdf') {
           }
         />
       )
+    }
+
+    if (document.id === 'ongoing') {
+      return <OngoingContractsEditor value={setup} onChange={changeSetup} />
     }
 
     // ================================================

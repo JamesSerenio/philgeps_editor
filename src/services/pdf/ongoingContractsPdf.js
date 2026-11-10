@@ -1,5 +1,5 @@
 import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
-import { fillBuiltechTable } from './builtechDataPdf'
+import { getOngoingContractEntries } from '../../lib/ongoingContracts'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { formatLongDate } from '../../lib/documentSetup'
 import { clean, wrapText } from './pdfHelpers'
@@ -72,9 +72,130 @@ export async function generateOngoingContractsPreview(project) {
     })
   }
 
+  const governmentEntries = getOngoingContractEntries(project, 'government')
+  const privateEntries = getOngoingContractEntries(project, 'private')
+  const contractRows = [
+    ...governmentEntries.map(entry => ({ type: 'GOVERNMENT', entry })),
+    ...privateEntries.map(entry => ({ type: 'PRIVATE', entry })),
+  ].slice(0, 5)
+  const footerOffset = Math.max(0, contractRows.length - 2) * 16.5
+
+  function drawOngoingRows() {
+    const pageHeight = page.getHeight()
+    const labelLeft = 35.25
+    const edges = [139.83, 243.73, 346.43, 449.3, 551.85, 656.28, 759.88]
+    const rowHeight = 16.5
+    const startTop = 362.25
+    const tableTop = 255.25
+    const headerTopHeight = 28
+    const tableRight = edges[edges.length - 1]
+    const tableBottom = startTop + rowHeight * contractRows.length
+
+    const drawHeaderText = (lines, left, right, top, height, size = 10, font = regular) => {
+      const textLines = lines.filter(Boolean)
+      const lineHeight = size + 2
+      const totalHeight = textLines.length * lineHeight
+      textLines.forEach((line, index) => {
+        let fitted = size
+        const available = right - left - 8
+        while (fitted > 6 && font.widthOfTextAtSize(line, fitted) > available) fitted -= 0.25
+        const width = font.widthOfTextAtSize(line, fitted)
+        page.drawText(line, {
+          x: left + Math.max(4, (right - left - width) / 2),
+          y: pageHeight - top - (height - totalHeight) / 2 - index * lineHeight - fitted,
+          size: fitted,
+          font,
+          color: black,
+        })
+      })
+    }
+
+    // Replace the template grid as one clean, consistent table. This avoids
+    // inheriting its uneven lines when more than one contract is added.
+    page.drawRectangle({
+      x: labelLeft,
+      y: pageHeight - tableBottom,
+      width: tableRight - labelLeft,
+      height: tableBottom - tableTop,
+      color: white,
+    })
+
+    page.drawRectangle({
+      x: labelLeft,
+      y: pageHeight - tableBottom,
+      width: tableRight - labelLeft,
+      height: tableBottom - tableTop,
+      borderColor: black,
+      borderWidth: 0.7,
+    })
+
+    const allEdges = [labelLeft, ...edges]
+    allEdges.slice(1, -1).forEach((x, index) => {
+      // Description and percentage share the Bidder's Role heading.
+      const startsBelowRoleHeading = index === 3
+      page.drawLine({
+        start: { x, y: pageHeight - (startsBelowRoleHeading ? tableTop + headerTopHeight : tableTop) },
+        end: { x, y: pageHeight - tableBottom },
+        color: black,
+        thickness: 0.7,
+      })
+    })
+
+    page.drawLine({
+      start: { x: edges[2], y: pageHeight - (tableTop + headerTopHeight) },
+      end: { x: edges[4], y: pageHeight - (tableTop + headerTopHeight) },
+      color: black,
+      thickness: 0.7,
+    })
+    contractRows.forEach((_, index) => {
+      const top = startTop + index * rowHeight
+      page.drawLine({
+        start: { x: labelLeft, y: pageHeight - top },
+        end: { x: tableRight, y: pageHeight - top },
+        color: black,
+        thickness: 0.7,
+      })
+    })
+
+    drawHeaderText(['Name of', 'Contract'], labelLeft, edges[0], tableTop, startTop - tableTop, 9.5, bold)
+    drawHeaderText(['Owner / Address', '/ Telephone'], edges[0], edges[1], tableTop, startTop - tableTop, 8.5)
+    drawHeaderText(['Nature of', 'Work'], edges[1], edges[2], tableTop, startTop - tableTop, 9.5)
+    drawHeaderText(["Bidder's Role"], edges[2], edges[4], tableTop, headerTopHeight, 10, bold)
+    drawHeaderText(['Description'], edges[2], edges[3], tableTop + headerTopHeight, startTop - tableTop - headerTopHeight, 9)
+    drawHeaderText(['%'], edges[3], edges[4], tableTop + headerTopHeight, startTop - tableTop - headerTopHeight, 10)
+    drawHeaderText(['Amount of Award', '/ Completion', '/ Duration'], edges[4], edges[5], tableTop, startTop - tableTop, 8.5)
+    drawHeaderText(['Date Awarded', '/ Contract', 'Effectivity', '/ Date Completed'], edges[5], edges[6], tableTop, startTop - tableTop, 8.25)
+
+    contractRows.forEach(({ type, entry: values }, row) => {
+      const cells = [values.ownerDetails, values.natureOfWork, values.description, values.percentage, values.awardCompletion, values.dates]
+        .map(value => String(value ?? 'NONE').replace(/\s+/g, ' ').trim() || 'NONE')
+      const rowTop = startTop + row * rowHeight
+      const rowBottom = rowTop + rowHeight
+
+      drawHeaderText([type], labelLeft, edges[0], rowTop, rowHeight, 8.5, bold)
+
+      for (let index = 0; index < 6; index += 1) {
+        const cellWidth = edges[index + 1] - edges[index]
+        const cellHeight = rowBottom - rowTop
+        const value = cells[index]
+        const availableWidth = cellWidth - 8
+        let size = 7.5
+        while (size > 4.5 && regular.widthOfTextAtSize(value, size) > availableWidth) size -= 0.25
+        const textWidth = regular.widthOfTextAtSize(value, size)
+        page.drawText(value, {
+          x: Math.max(edges[index] + 4, edges[index] + (cellWidth - textWidth) / 2),
+          y: pageHeight - rowTop - (cellHeight + size) / 2 + 1,
+          size,
+          font: regular,
+          color: black,
+        })
+      }
+    })
+  }
+
   // ==========================================================
-  // CLEAR ONLY THE PARTS TO EDIT
-  // DO NOT TOUCH THE TABLE
+  // CLEAR THE ORIGINAL TEMPLATE FIELDS. The table itself is replaced below
+  // with the same clean grid used for every editable government/private row.
   // ==========================================================
 
   // top info
@@ -98,9 +219,9 @@ export async function generateOngoingContractsPreview(project) {
   // footer info
   page.drawRectangle({
     x: 28,
-    y: 48,
+    y: 8,
     width: 485,
-    height: 134,
+    height: 174,
     color: white,
   })
 
@@ -148,33 +269,33 @@ export async function generateOngoingContractsPreview(project) {
   const footerColonX = 126
   const footerValueX = 154
 
-  text('Submitted by', footerLabelX, 157, 10.5, regular)
-  text(':', footerColonX, 157, 10.5, regular)
-  text(submittedBy, footerValueX, 157, 10.5, bold)
+  text('Submitted by', footerLabelX, 157 - footerOffset, 10.5, regular)
+  text(':', footerColonX, 157 - footerOffset, 10.5, regular)
+  text(submittedBy, footerValueX, 157 - footerOffset, 10.5, bold)
 
   const submittedWidth = bold.widthOfTextAtSize(submittedBy, 10.5)
   page.drawLine({
-    start: { x: footerValueX, y: 155 },
-    end: { x: footerValueX + submittedWidth, y: 155 },
+    start: { x: footerValueX, y: 155 - footerOffset },
+    end: { x: footerValueX + submittedWidth, y: 155 - footerOffset },
     thickness: 0.6,
     color: black,
   })
 
-  text('(Printed Name & Signature)', footerValueX, 142, 8, regular)
+  text('(Printed Name & Signature)', footerValueX, 142 - footerOffset, 8, regular)
 
-  text('Designation', footerLabelX, 119, 10.5, regular)
-  text(':', footerColonX, 119, 10.5, regular)
-  text(designation, footerValueX, 119, 10.5, regular)
+  text('Designation', footerLabelX, 119 - footerOffset, 10.5, regular)
+  text(':', footerColonX, 119 - footerOffset, 10.5, regular)
+  text(designation, footerValueX, 119 - footerOffset, 10.5, regular)
 
-  text('Name of Firm', footerLabelX, 99, 10.5, regular)
-  text(':', footerColonX, 99, 10.5, regular)
-  text(bidderName, footerValueX, 99, 10.5, bold)
+  text('Name of Firm', footerLabelX, 99 - footerOffset, 10.5, regular)
+  text(':', footerColonX, 99 - footerOffset, 10.5, regular)
+  text(bidderName, footerValueX, 99 - footerOffset, 10.5, bold)
 
-  text('Date', footerLabelX, 79, 10.5, regular)
-  text(':', footerColonX, 79, 10.5, regular)
-  text(date, footerValueX, 79, 10.5, regular)
+  text('Date', footerLabelX, 79 - footerOffset, 10.5, regular)
+  text(':', footerColonX, 79 - footerOffset, 10.5, regular)
+  text(date, footerValueX, 79 - footerOffset, 10.5, regular)
 
-  await fillBuiltechTable(pdfDoc, project, 'ongoing')
+  drawOngoingRows()
   const bytes = await pdfDoc.save()
   const blob = new Blob([bytes], {
     type: 'application/pdf',

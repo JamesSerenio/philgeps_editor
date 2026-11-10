@@ -1,4 +1,5 @@
 import { getBidderCompany } from '../../lib/bidderAssets'
+import { getOngoingContractEntries } from '../../lib/ongoingContracts'
 import { templateWord } from './templateWord'
 
 import {
@@ -504,6 +505,7 @@ function ongoingRow(kind, row) {
 
       gridCell(
         get(
+          'awardCompletion',
           'amountOfAward',
           'amountAwarded',
           'amount'
@@ -518,6 +520,7 @@ function ongoingRow(kind, row) {
 
       gridCell(
         get(
+          'dates',
           'dateCompleted',
           'dateAwarded',
           'date'
@@ -537,7 +540,7 @@ function ongoingRow(kind, row) {
 // COMPLETE ONGOING CONTRACTS TABLE
 // ============================================
 
-function contractsTable(ongoing) {
+function contractsTable(setup) {
   const VSTART = VerticalMergeType.RESTART
   const VCONT = VerticalMergeType.CONTINUE
 
@@ -710,16 +713,11 @@ function contractsTable(ongoing) {
       ],
     }),
 
-    ongoingRow(
-      'GOVERNMENT',
-      ongoing?.government ??
-      ongoing?.gov
-    ),
+    ...getOngoingContractEntries(setup, 'government')
+      .map(entry => ongoingRow('GOVERNMENT', entry)),
 
-    ongoingRow(
-      'PRIVATE',
-      ongoing?.private
-    ),
+    ...getOngoingContractEntries(setup, 'private')
+      .map(entry => ongoingRow('PRIVATE', entry)),
   ]
 
   return new Table({
@@ -853,13 +851,6 @@ export function ongoingContractsWord(
     return templateWord(options, options.sectionNumber ?? 7, { tables: true, tableExactGeometry: true, exactLineSpacing: true })
   }
 
-  const ongoing =
-    options.ongoingContracts ??
-    setup.ongoingContracts ??
-    options.ongoing ??
-    setup.ongoing ??
-    {}
-
   const children = [
     // Project information
     identityTable(setup, options.sectionNumber),
@@ -899,7 +890,7 @@ export function ongoingContractsWord(
     spacer(26),
 
     // Editable ongoing contracts table
-    contractsTable(ongoing),
+    contractsTable(setup),
 
     spacer(31),
 
