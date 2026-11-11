@@ -545,11 +545,11 @@ function contractsTable(setup) {
   const VCONT = VerticalMergeType.CONTINUE
 
   const rows = [
-    // First header row
-
+    // Preserve the official a./b./c. header arrangement used by the PDF.
+    // The cells are merged only where the printed form requires it.
     new TableRow({
       height: {
-        value: PT(16),
+        value: PT(20),
         rule: HeightRule.ATLEAST,
       },
       children: [
@@ -557,7 +557,7 @@ function contractsTable(setup) {
           'Name of Contract',
           0,
           0,
-          { verticalMerge: VSTART }
+          { verticalMerge: VSTART, centered: true, bold: true, fontSize: 9.5 }
         ),
 
         gridCell('', 1),
@@ -566,14 +566,14 @@ function contractsTable(setup) {
           'Nature of Work',
           2,
           2,
-          { verticalMerge: VSTART }
+          { verticalMerge: VSTART, centered: true, fontSize: 9.5 }
         ),
 
         gridCell(
           "Bidder's Role",
           3,
           4,
-          { centered: true }
+          { centered: true, bold: true, fontSize: 10 }
         ),
 
         gridCell('', 5),
@@ -581,11 +581,9 @@ function contractsTable(setup) {
       ],
     }),
 
-    // Second header row
-
     new TableRow({
       height: {
-        value: PT(37),
+        value: PT(30),
         rule: HeightRule.ATLEAST,
       },
       children: [
@@ -593,10 +591,7 @@ function contractsTable(setup) {
           verticalMerge: VCONT,
         }),
 
-        gridCell(
-          "a. Owner's Name",
-          1
-        ),
+        gridCell("a. Owner's Name", 1, 1, { fontSize: 9 }),
 
         gridCell('', 2, 2, {
           verticalMerge: VCONT,
@@ -608,6 +603,7 @@ function contractsTable(setup) {
           3,
           {
             centered: true,
+            fontSize: 9,
             verticalMerge: VSTART,
           }
         ),
@@ -618,98 +614,45 @@ function contractsTable(setup) {
           4,
           {
             centered: true,
+            fontSize: 10,
             verticalMerge: VSTART,
           }
         ),
 
-        gridCell(
-          'a. Amount of\nAward',
-          5
-        ),
-
-        gridCell(
-          'a. Date Awarded',
-          6
-        ),
+        gridCell('a. Amount of\nAward', 5, 5, { fontSize: 9 }),
+        gridCell('a. Date Awarded', 6, 6, { fontSize: 8.5 }),
       ],
     }),
 
-    // Third header row
-
     new TableRow({
       height: {
-        value: PT(37),
+        value: PT(30),
         rule: HeightRule.ATLEAST,
       },
       children: [
-        gridCell('', 0, 0, {
-          verticalMerge: VCONT,
-        }),
-
-        gridCell(
-          'b. Address\nTelephone',
-          1
-        ),
-
-        gridCell('', 2, 2, {
-          verticalMerge: VCONT,
-        }),
-
-        gridCell('', 3, 3, {
-          verticalMerge: VCONT,
-        }),
-
-        gridCell('', 4, 4, {
-          verticalMerge: VCONT,
-        }),
-
-        gridCell(
-          'b. Completion\nDuration',
-          5
-        ),
-
-        gridCell(
-          'b. Contract\nEffectivity',
-          6
-        ),
+        gridCell('', 0, 0, { verticalMerge: VCONT }),
+        gridCell('b. Address\nTelephone', 1, 1, { fontSize: 9 }),
+        gridCell('', 2, 2, { verticalMerge: VCONT }),
+        gridCell('', 3, 3, { verticalMerge: VCONT }),
+        gridCell('', 4, 4, { verticalMerge: VCONT }),
+        gridCell('b. Completion\nDuration', 5, 5, { fontSize: 9 }),
+        gridCell('b. Contract\nEffectivity', 6, 6, { fontSize: 8.5 }),
       ],
     }),
 
-    // Fourth header row
-
     new TableRow({
       height: {
-        value: PT(17),
+        value: PT(16),
         rule: HeightRule.ATLEAST,
       },
       children: [
-        gridCell('', 0, 0, {
-          verticalMerge: VCONT,
-        }),
-
-        gridCell(
-          'c. Number',
-          1
-        ),
-
-        gridCell('', 2, 2, {
-          verticalMerge: VCONT,
-        }),
-
-        gridCell('', 3, 3, {
-          verticalMerge: VCONT,
-        }),
-
-        gridCell('', 4, 4, {
-          verticalMerge: VCONT,
-        }),
-
+        gridCell('', 0, 0, { verticalMerge: VCONT }),
+        gridCell('c. Number', 1, 1, { fontSize: 8.75 }),
+        gridCell('', 2, 2, { verticalMerge: VCONT }),
+        gridCell('', 3, 3, { verticalMerge: VCONT }),
+        gridCell('', 4, 4, { verticalMerge: VCONT }),
         gridCell('', 5),
-
-        gridCell(
-          'c. Date Completed',
-          6
-        ),
+        gridCell('c. Date Completed', 6, 6, { fontSize: 8.25 }),
       ],
     }),
 

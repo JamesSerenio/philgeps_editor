@@ -85,9 +85,12 @@ export async function generateOngoingContractsPreview(project) {
     const labelLeft = 35.25
     const edges = [139.83, 243.73, 346.43, 449.3, 551.85, 656.28, 759.88]
     const rowHeight = 16.5
-    const startTop = 362.25
+    const startTop = 367.25
     const tableTop = 255.25
-    const headerTopHeight = 28
+    // Preserve the official a./b./c. header arrangement while redrawing it
+    // as a single clean grid (instead of inheriting the uneven template).
+    const headerRows = [28, 34, 34, 16]
+    const headerTopHeight = headerRows[0]
     const tableRight = edges[edges.length - 1]
     const tableBottom = startTop + rowHeight * contractRows.length
 
@@ -141,12 +144,25 @@ export async function generateOngoingContractsPreview(project) {
       })
     })
 
-    page.drawLine({
-      start: { x: edges[2], y: pageHeight - (tableTop + headerTopHeight) },
-      end: { x: edges[4], y: pageHeight - (tableTop + headerTopHeight) },
+    const drawPartialRule = (top, from, to) => page.drawLine({
+      start: { x: from, y: pageHeight - top },
+      end: { x: to, y: pageHeight - top },
       color: black,
       thickness: 0.7,
     })
+
+    // Header-only lines: Name/Nature stay merged; Owner, Amount and Date
+    // keep their required a., b., c. sub-fields.
+    const secondTop = tableTop + headerRows[0]
+    const thirdTop = secondTop + headerRows[1]
+    const fourthTop = thirdTop + headerRows[2]
+    drawPartialRule(secondTop, edges[0], edges[1])
+    drawPartialRule(secondTop, edges[2], edges[4])
+    drawPartialRule(thirdTop, edges[0], edges[1])
+    drawPartialRule(thirdTop, edges[4], edges[5])
+    drawPartialRule(thirdTop, edges[5], edges[6])
+    drawPartialRule(fourthTop, edges[0], edges[1])
+    drawPartialRule(fourthTop, edges[5], edges[6])
     contractRows.forEach((_, index) => {
       const top = startTop + index * rowHeight
       page.drawLine({
@@ -157,14 +173,19 @@ export async function generateOngoingContractsPreview(project) {
       })
     })
 
-    drawHeaderText(['Name of', 'Contract'], labelLeft, edges[0], tableTop, startTop - tableTop, 9.5, bold)
-    drawHeaderText(['Owner / Address', '/ Telephone'], edges[0], edges[1], tableTop, startTop - tableTop, 8.5)
-    drawHeaderText(['Nature of', 'Work'], edges[1], edges[2], tableTop, startTop - tableTop, 9.5)
-    drawHeaderText(["Bidder's Role"], edges[2], edges[4], tableTop, headerTopHeight, 10, bold)
-    drawHeaderText(['Description'], edges[2], edges[3], tableTop + headerTopHeight, startTop - tableTop - headerTopHeight, 9)
-    drawHeaderText(['%'], edges[3], edges[4], tableTop + headerTopHeight, startTop - tableTop - headerTopHeight, 10)
-    drawHeaderText(['Amount of Award', '/ Completion', '/ Duration'], edges[4], edges[5], tableTop, startTop - tableTop, 8.5)
-    drawHeaderText(['Date Awarded', '/ Contract', 'Effectivity', '/ Date Completed'], edges[5], edges[6], tableTop, startTop - tableTop, 8.25)
+    drawHeaderText(['Name of Contract'], labelLeft, edges[0], tableTop, startTop - tableTop, 10.5, bold)
+    drawHeaderText(["a. Owner's Name"], edges[0], edges[1], secondTop, headerRows[1], 9.5)
+    drawHeaderText(['b. Address', 'Telephone'], edges[0], edges[1], thirdTop, headerRows[2], 9.5)
+    drawHeaderText(['c. Number'], edges[0], edges[1], fourthTop, headerRows[3], 9.25)
+    drawHeaderText(['Nature of Work'], edges[1], edges[2], tableTop, startTop - tableTop, 10.5)
+    drawHeaderText(["Bidder's Role"], edges[2], edges[4], tableTop, headerTopHeight, 10.5, bold)
+    drawHeaderText(['Description'], edges[2], edges[3], secondTop, startTop - secondTop, 10)
+    drawHeaderText(['%'], edges[3], edges[4], secondTop, startTop - secondTop, 10.5)
+    drawHeaderText(['a. Amount of', 'Award'], edges[4], edges[5], secondTop, headerRows[1], 9.5)
+    drawHeaderText(['b. Completion', 'Duration'], edges[4], edges[5], thirdTop, headerRows[2], 9.5)
+    drawHeaderText(['a. Date Awarded'], edges[5], edges[6], secondTop, headerRows[1], 9.25)
+    drawHeaderText(['b. Contract', 'Effectivity'], edges[5], edges[6], thirdTop, headerRows[2], 9.25)
+    drawHeaderText(['c. Date Completed'], edges[5], edges[6], fourthTop, headerRows[3], 8.75)
 
     contractRows.forEach(({ type, entry: values }, row) => {
       const cells = [values.ownerDetails, values.natureOfWork, values.description, values.percentage, values.awardCompletion, values.dates]
