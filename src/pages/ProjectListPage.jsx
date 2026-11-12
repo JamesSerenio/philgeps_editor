@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getBiddingProjects } from '../services/projectService'
+import { createBlankBiddingProject, getBiddingProjects } from '../services/projectService'
 import ProjectCard from '../components/ProjectCard'
 import DashboardIcon from '../components/DashboardIcon'
 
@@ -14,6 +14,7 @@ export default function ProjectListPage() {
   }, [])
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
@@ -29,9 +30,25 @@ export default function ProjectListPage() {
       setProjects(data ?? [])
     } catch (err) {
       console.error(err)
-      setError(err.message || 'Failed to load projects')
+      setError(`Unable to load projects: ${err.message || 'Failed to load projects'}`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function openBlankEditor() {
+    setCreating(true)
+    setError('')
+
+    try {
+      const { data, error: createError } = await createBlankBiddingProject()
+      if (createError) throw createError
+      navigate(`/project/${data.id}`)
+    } catch (err) {
+      console.error(err)
+      setError(`Unable to create a blank editor: ${err.message || 'Failed to create a blank bidding document project'}`)
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -54,7 +71,7 @@ export default function ProjectListPage() {
         console.error(err)
 
         if (!cancelled) {
-          setError(err.message || 'Failed to load projects')
+          setError(`Unable to load projects: ${err.message || 'Failed to load projects'}`)
         }
       } finally {
         if (!cancelled) {
@@ -82,7 +99,10 @@ export default function ProjectListPage() {
       <header className="header">
         <div className="header-inner">
           <div><span className="eyebrow">PhilGEPS • BID DOCS EDITOR</span><h1>Bidding Documents</h1><p>Projects selected for bidding document preparation</p></div>
-          <button className="button-secondary refresh-button" onClick={loadProjects} disabled={loading}><DashboardIcon name="refresh" />{loading ? 'Refreshing…' : 'Refresh'}</button>
+          <div className="header-actions">
+            <button className="button-primary new-editor-button" onClick={openBlankEditor} disabled={creating}><DashboardIcon name="document" />{creating ? 'Opening…' : 'New Blank Editor'}</button>
+            <button className="button-secondary refresh-button" onClick={loadProjects} disabled={loading || creating}><DashboardIcon name="refresh" />{loading ? 'Refreshing…' : 'Refresh'}</button>
+          </div>
         </div>
       </header>
       <main className="project-content" aria-busy={loading}>
@@ -92,7 +112,7 @@ export default function ProjectListPage() {
           <div className="search-field"><DashboardIcon name="search" /><input type="search" aria-label="Search bidding document projects" placeholder="Search project title, LGU, reference no., procuring entity…" value={search} onChange={(event) => setSearch(event.target.value)} /></div>
         </section>
         {loading && <div className="message" role="status">Loading projects…</div>}
-        {error && <div className="error" role="alert">Unable to load projects: {error}</div>}
+        {error && <div className="error" role="alert">{error}</div>}
         {!loading && !error && <p className="results-summary" role="status">Showing <span>Bidding Documents</span> {visibleProjects.length} {visibleProjects.length === 1 ? 'result' : 'results'}</p>}
         <div className="section-heading"><div><h2>Projects for preparation</h2><p>Prepare bidding documents for your selected projects</p></div><span>All times in Philippine time</span></div>
         {!loading && !error && projects.length === 0 && <div className="message bidding-empty" role="status"><h2>No projects selected for bidding document preparation.</h2><p>Select a project using the thumbs-up button in the PhilGEPS monitoring app. It will appear here automatically.</p></div>}
