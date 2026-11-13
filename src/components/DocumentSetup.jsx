@@ -1,6 +1,10 @@
+
 import { useRef } from 'react'
 import TemplateSelector from './TemplateSelector'
-import { changeBidderAddress, selectBidder } from '../lib/bidderAddresses'
+import {
+  changeBidderAddress,
+  selectBidder,
+} from '../lib/bidderAddresses'
 
 import {
   bidders,
@@ -13,11 +17,29 @@ export default function DocumentSetup({
   onChange,
   templateVariant = 'old_default',
   onTemplateChange,
+  isBlankEditor = false,
 }) {
   const dateInputRef = useRef(null)
-  const selectedBidder = bidders.find(bidder =>
-    bidder.id === value.bidderId || bidder.name === value.bidderName || bidder.aliases.includes(value.bidderName),
+const deadlineInputRef = useRef(null)
+
+  const selectedBidder = bidders.find(
+    (bidder) =>
+      bidder.id === value.bidderId ||
+      bidder.name === value.bidderName ||
+      (bidder.aliases || []).includes(value.bidderName),
   )
+
+  // Supports the saved flag or the project-level prop.
+const showBlankDeadline = isBlankEditor === true
+
+  const closingDate = String(
+    value.closingDate ?? '',
+  ).slice(0, 10)
+
+  const validClosingDate =
+    /^\d{4}-\d{2}-\d{2}$/.test(closingDate)
+      ? closingDate
+      : ''
 
   const textFields = [
     ['province', 'Province'],
@@ -27,41 +49,77 @@ export default function DocumentSetup({
     ['procuringEntity', 'Procuring Entity'],
   ]
 
+  function updateField(key, fieldValue) {
+    onChange({
+      ...value,
+      [key]: fieldValue,
+    })
+  }
+
   function openDatePicker() {
     const input = dateInputRef.current
 
     if (!input) return
 
+    try {
+      if (typeof input.showPicker === 'function') {
+        input.showPicker()
+      } else {
+        input.click()
+      }
+    } catch {
+      input.focus()
+    }
+  }
+
+
+function openDeadlinePicker() {
+  const input = deadlineInputRef.current
+
+  if (!input) return
+
+  try {
     if (typeof input.showPicker === 'function') {
       input.showPicker()
     } else {
       input.click()
     }
+  } catch {
+    input.focus()
   }
+}
+
 
   function handleBidderChange(event) {
-    onChange(selectBidder(value, event.target.value))
+    onChange(
+      selectBidder(value, event.target.value),
+    )
   }
 
-  function handleRepresentativeChange(
-    event,
-  ) {
-    const submittedBy =
-      event.target.value
+  function handleRepresentativeChange(event) {
+    const submittedBy = event.target.value
 
-    const representative =
-      representatives.find(
-        (person) =>
-          person.name ===
-          submittedBy,
-      )
+    const representative = representatives.find(
+      (person) => person.name === submittedBy,
+    )
 
     onChange({
       ...value,
       submittedBy,
       designation:
-        representative?.designation ||
-        '',
+        representative?.designation || '',
+    })
+  }
+
+  function handleClosingDateChange(event) {
+    const nextDate = event.target.value
+
+    // Keep the value date-only (YYYY-MM-DD).
+    // Do not convert it to a UTC timestamp here.
+    onChange({
+      ...value,
+      isBlankEditor: true,
+      closingDate: nextDate,
     })
   }
 
@@ -69,46 +127,52 @@ export default function DocumentSetup({
     <section className="document-setup">
       <div className="document-setup-heading">
         <h2>Document Setup</h2>
-        {onTemplateChange && <TemplateSelector value={templateVariant} onChange={onTemplateChange} />}
+
+        {onTemplateChange && (
+          <TemplateSelector
+            value={templateVariant}
+            onChange={onTemplateChange}
+          />
+        )}
       </div>
 
       <h3>Project Information</h3>
 
-      {textFields.map(
-        ([key, label]) => (
-          <label key={key}>
-            {label}
+      {/* PROJECT INFORMATION */}
 
-            {key === 'projectTitle' ? (
-              <textarea
-                aria-label={label}
-                rows={2}
-                value={value[key] || ''}
-                onChange={(event) =>
-                  onChange({
-                    ...value,
-                    [key]:
-                      event.target.value,
-                  })
-                }
-              />
-            ) : (
-              <input
-                aria-label={label}
-                type="text"
-                value={value[key] || ''}
-                onChange={(event) =>
-                  onChange({
-                    ...value,
-                    [key]:
-                      event.target.value,
-                  })
-                }
-              />
-            )}
-          </label>
-        ),
-      )}
+      {textFields.map(([key, label]) => (
+        <label key={key}>
+          {label}
+
+          {key === 'projectTitle' ? (
+            <textarea
+              aria-label={label}
+              rows={2}
+              value={value[key] || ''}
+              onChange={(event) =>
+                updateField(
+                  key,
+                  event.target.value,
+                )
+              }
+            />
+          ) : (
+            <input
+              aria-label={label}
+              type="text"
+              value={value[key] || ''}
+              onChange={(event) =>
+                updateField(
+                  key,
+                  event.target.value,
+                )
+              }
+            />
+          )}
+        </label>
+      ))}
+
+      {/* BIDDER NAME */}
 
       <label>
         Bidder Name
@@ -122,18 +186,18 @@ export default function DocumentSetup({
             Select bidder
           </option>
 
-          {bidders.map(
-            (bidder) => (
-              <option
-                key={bidder.name}
-                value={bidder.name}
-              >
-                {bidder.name}
-              </option>
-            ),
-          )}
+          {bidders.map((bidder) => (
+            <option
+              key={bidder.name}
+              value={bidder.name}
+            >
+              {bidder.name}
+            </option>
+          ))}
         </select>
       </label>
+
+      {/* BUSINESS ADDRESS */}
 
       <label>
         Business Address
@@ -141,14 +205,19 @@ export default function DocumentSetup({
         <textarea
           aria-label="Business Address"
           rows={2}
-          value={
-            value.businessAddress || ''
-          }
+          value={value.businessAddress || ''}
           onChange={(event) =>
-            onChange(changeBidderAddress(value, event.target.value))
+            onChange(
+              changeBidderAddress(
+                value,
+                event.target.value,
+              ),
+            )
           }
         />
       </label>
+
+      {/* DOCUMENT DATE */}
 
       <label>
         Date
@@ -162,8 +231,7 @@ export default function DocumentSetup({
             aria-label="Date"
             type="text"
             value={
-              formatLongDate(value.date) ||
-              ''
+              formatLongDate(value.date) || ''
             }
             readOnly
             onClick={openDatePicker}
@@ -182,11 +250,9 @@ export default function DocumentSetup({
               position: 'absolute',
               right: '6px',
               top: '50%',
-              transform:
-                'translateY(-50%)',
+              transform: 'translateY(-50%)',
               border: 'none',
-              background:
-                'transparent',
+              background: 'transparent',
               cursor: 'pointer',
               padding: '4px 6px',
               fontSize: '16px',
@@ -201,11 +267,10 @@ export default function DocumentSetup({
             type="date"
             value={value.date || ''}
             onChange={(event) =>
-              onChange({
-                ...value,
-                date:
-                  event.target.value,
-              })
+              updateField(
+                'date',
+                event.target.value,
+              )
             }
             tabIndex={-1}
             aria-hidden="true"
@@ -220,6 +285,97 @@ export default function DocumentSetup({
         </div>
       </label>
 
+
+{/* NEW BLANK EDITOR DEADLINE */}
+{/* LONG DATE FORMAT - REQUIRED */}
+
+{showBlankDeadline && (
+  <label>
+    Closing / Deadline (Required)
+
+    <div
+      style={{
+        position: 'relative',
+      }}
+    >
+      <input
+        aria-label="Closing / Deadline"
+        type="text"
+        value={
+          validClosingDate
+            ? formatLongDate(validClosingDate)
+            : ''
+        }
+        placeholder="Select deadline"
+        readOnly
+        onClick={openDeadlinePicker}
+        aria-required="true"
+        style={{
+          cursor: 'pointer',
+          paddingRight: '38px',
+          width: '100%',
+          boxSizing: 'border-box',
+        }}
+      />
+
+      <button
+        type="button"
+        aria-label="Choose closing deadline"
+        title="Choose closing deadline"
+        onClick={openDeadlinePicker}
+        style={{
+          position: 'absolute',
+          right: '6px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          border: 'none',
+          background: 'transparent',
+          cursor: 'pointer',
+          padding: '4px 6px',
+          fontSize: '16px',
+          lineHeight: 1,
+        }}
+      >
+        📅
+      </button>
+
+      <input
+        ref={deadlineInputRef}
+        type="date"
+        aria-label="Choose closing deadline date"
+        value={validClosingDate}
+        onChange={handleClosingDateChange}
+        required
+        tabIndex={-1}
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
+      />
+    </div>
+
+    {!validClosingDate && (
+      <small
+        style={{
+          display: 'block',
+          marginTop: '5px',
+          color: '#b45309',
+          fontSize: '11px',
+        }}
+      >
+        Please select a closing date before
+        generating bid documents.
+      </small>
+    )}
+  </label>
+)}
+
+
+      {/* SUBMITTED BY */}
+
       <label>
         Submitted By
 
@@ -231,8 +387,16 @@ export default function DocumentSetup({
           <option value="">
             Select Submitted By
           </option>
-          {value.submittedBy && !representatives.some(person => person.name === value.submittedBy) &&
-            <option value={value.submittedBy}>{value.submittedBy}</option>}
+
+          {value.submittedBy &&
+            !representatives.some(
+              (person) =>
+                person.name === value.submittedBy,
+            ) && (
+              <option value={value.submittedBy}>
+                {value.submittedBy}
+              </option>
+            )}
 
           <option value="JHO ANN Q. CLEOPAS">
             JHO ANN Q. CLEOPAS
@@ -248,15 +412,15 @@ export default function DocumentSetup({
         </select>
       </label>
 
+      {/* DESIGNATION */}
+
       <label>
         Designation
 
         <input
           aria-label="Designation"
           type="text"
-          value={
-            value.designation || ''
-          }
+          value={value.designation || ''}
           readOnly
         />
       </label>

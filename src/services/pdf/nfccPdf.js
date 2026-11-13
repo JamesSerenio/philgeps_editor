@@ -1,89 +1,281 @@
-import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
+
+import {
+  getTemplatePath,
+  fetchAsset,
+  getBidderCompany,
+} from '../../lib/bidderAssets'
+
 import { fillBuiltechTable } from './builtechDataPdf'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { formatLongDate } from '../../lib/documentSetup'
+import { nfccDefaults } from '../../lib/nfccDefaults'
 import { clean } from './pdfHelpers'
 
+// ==========================================
+// COMPUTED NFCC - FINAL TABLE ROW
+// ==========================================
+
+async function drawComputedNfccRow(pdfDoc, project) {
+  const page = pdfDoc.getPage(0)
+
+  const bold = await pdfDoc.embedFont(
+    StandardFonts.HelveticaBold
+  )
+
+  const white = rgb(1, 1, 1)
+  const black = rgb(0, 0, 0)
+
+  const company = getBidderCompany(project)
+
+  const financials = project?.financials ?? {}
+  const nfcc = project?.nfcc ?? {}
+
+  function readAmount(raw) {
+    if (
+      raw === null ||
+      raw === undefined ||
+      String(raw).trim() === ''
+    ) {
+      return null
+    }
+
+    const amount = Number(
+      String(raw).replace(/,/g, '').trim()
+    )
+
+    return Number.isFinite(amount) && amount >= 0
+      ? amount
+      : null
+  }
+
+  // Preserve bidder-specific financial data.
+  const fallback =
+    company.id === 'mikata' ? nfccDefaults : {}
+
+  const assets = readAmount(
+    financials.currentAssets ??
+    nfcc.currentAssets ??
+    fallback.currentAssets
+  )
+
+  const liabilities = readAmount(
+    financials.currentLiabilities ??
+    nfcc.currentLiabilities ??
+    fallback.currentLiabilities
+  )
+
+  const outstanding = readAmount(
+    financials.outstandingContracts ??
+    nfcc.outstandingContracts ??
+    fallback.outstandingContracts
+  )
+
+  const rawMultiplier =
+    company.id === 'mega-pluto'
+      ? (
+          financials.multiplier ??
+          nfcc.multiplier ??
+          project?.multiplier ??
+          15
+        )
+      : 15
+
+  const multiplier = Number(rawMultiplier)
+
+  if (
+    !Number.isFinite(multiplier) ||
+    multiplier <= 0
+  ) {
+    throw new Error(
+      'NFCC multiplier must be a positive number.'
+    )
+  }
+
+  const computed =
+    assets !== null &&
+    liabilities !== null &&
+    outstanding !== null
+      ? (assets - liabilities) * multiplier - outstanding
+      : null
+
+  // ======================================
+  // ORIGINAL NFCC TABLE COORDINATES
+  // ======================================
+
+  const left = 54.48
+  const middle = 300.77
+  const right = 521.38
+
+  const top = 288.77
+  const bottom = 268.37
+
+  // ======================================
+  // FIX: CLEAR ONLY THE FINAL TABLE ROW
+  // ======================================
+  // IMPORTANT:
+  // Do not use x:18, y:120, height:167.
+  // That rectangle removes the signature
+  // details drawn beneath the NFCC table.
+
+  page.drawRectangle({
+    x: left,
+    y: bottom,
+    width: right - left,
+    height: top - bottom,
+    color: white,
+  })
+
+  // Horizontal table borders
+  for (const y of [top, bottom]) {
+    page.drawLine({
+      start: { x: left, y },
+      end: { x: right, y },
+      thickness: 0.6,
+      color: black,
+    })
+  }
+
+  // Vertical table borders
+  for (const x of [left, middle, right]) {
+    page.drawLine({
+      start: { x, y: bottom },
+      end: { x, y: top },
+      thickness: 0.6,
+      color: black,
+    })
+  }
+
+  // Computed NFCC label
+  page.drawText('Computed NFCC', {
+    x: 60.024,
+    y: 274,
+    size: 10,
+    font: bold,
+    color: black,
+  })
+
+  // Automatically calculated amount
+  if (computed !== null) {
+    const amount = computed.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+
+    let size = 13
+
+    while (
+      size > 8 &&
+      bold.widthOfTextAtSize(amount, size) >
+        right - middle - 12
+    ) {
+      size -= 0.25
+    }
+
+    page.drawText(amount, {
+      x:
+        right -
+        5.57 -
+        bold.widthOfTextAtSize(amount, size),
+      y: 273.2,
+      size,
+      font: bold,
+      color: black,
+    })
+  }
+}
+
+// ==========================================
+// GENERATE NFCC PDF
+// ==========================================
+
 export async function generateNfccPreview(project) {
-  const response = await fetchAsset(getTemplatePath("NFCC_Template.pdf", project))
+  const response = await fetchAsset(
+    getTemplatePath('NFCC_Template.pdf', project)
+  )
 
   if (!response.ok) {
     throw new Error('Unable to load NFCC_Template.pdf')
   }
 
   const sourceBytes = await response.arrayBuffer()
+
   const pdfDoc = await PDFDocument.load(sourceBytes)
 
-  if (pdfDoc.getPageCount() === 0) {
+  if (!pdfDoc.getPageCount()) {
     throw new Error('NFCC_Template.pdf has no pages.')
   }
 
   const page = pdfDoc.getPage(0)
 
+  // ======================================
+  // FONTS
+  // ======================================
+
   const regular = await pdfDoc.embedFont(
-    StandardFonts.Helvetica,
+    StandardFonts.Helvetica
   )
 
   const bold = await pdfDoc.embedFont(
-    StandardFonts.HelveticaBold,
+    StandardFonts.HelveticaBold
   )
 
   const italic = await pdfDoc.embedFont(
-    StandardFonts.HelveticaOblique,
+    StandardFonts.HelveticaOblique
   )
 
   const white = rgb(1, 1, 1)
   const black = rgb(0, 0, 0)
   const red = rgb(0.85, 0, 0)
 
-  // =========================================================
-  // VALUES FROM DOCUMENT SETUP
-  // =========================================================
+  // ======================================
+  // PROJECT INFORMATION
+  // ======================================
 
   const procuringEntity = clean(
-    project?.procuringEntity,
+    project?.procuringEntity
   ).toUpperCase()
 
   const referenceNumber = clean(
-    project?.referenceNumber,
+    project?.referenceNumber
   )
 
   const projectTitle = clean(
-    project?.projectTitle,
+    project?.projectTitle
   ).toUpperCase()
 
   const bidderName = clean(
-    project?.bidderName,
+    project?.bidderName
   ).toUpperCase()
 
   const businessAddress = clean(
-    project?.businessAddress,
+    project?.businessAddress
   ).toUpperCase()
 
   const submittedBy = clean(
-    project?.submittedBy,
+    project?.submittedBy
   ).toUpperCase()
 
   const designation = clean(
-    project?.designation,
+    project?.designation
   )
 
   const date = formatLongDate(
-    project?.date,
+    project?.date
   )
 
-  // =========================================================
-  // LOCAL HELPERS
-  // =========================================================
+  // ======================================
+  // TEXT HELPERS
+  // ======================================
 
   const headerText = []
+
   function drawText(
     value,
     x,
     y,
     size = 9,
     font = regular,
-    color = black,
+    color = black
   ) {
     const text = clean(value)
 
@@ -96,8 +288,15 @@ export async function generateNfccPreview(project) {
       font,
       color,
     }
+
     page.drawText(text, options)
-    if (y >= 677) headerText.push({ text, options })
+
+    if (y >= 677) {
+      headerText.push({
+        text,
+        options,
+      })
+    }
   }
 
   function fitFontSize(
@@ -105,30 +304,21 @@ export async function generateNfccPreview(project) {
     font,
     startSize,
     maxWidth,
-    minSize = 6,
+    minSize = 6
   ) {
+    let size = startSize
     const text = clean(value)
 
-    if (!text) {
-      return startSize
-    }
-
-    let size = startSize
+    if (!text) return size
 
     while (
       size > minSize &&
-      font.widthOfTextAtSize(
-        text,
-        size,
-      ) > maxWidth
+      font.widthOfTextAtSize(text, size) > maxWidth
     ) {
       size -= 0.15
     }
 
-    return Math.max(
-      size,
-      minSize,
-    )
+    return Math.max(size, minSize)
   }
 
   function drawFitText({
@@ -145,31 +335,85 @@ export async function generateNfccPreview(project) {
 
     if (!text) return
 
-    const finalSize = fitFontSize(
-      text,
-      font,
-      size,
-      width,
-      minSize,
-    )
-
     const options = {
       x,
       y,
-      size: finalSize,
+      size: fitFontSize(
+        text,
+        font,
+        size,
+        width,
+        minSize
+      ),
       font,
       color,
     }
+
     page.drawText(text, options)
-    if (y >= 677) headerText.push({ text, options })
+
+    if (y >= 677) {
+      headerText.push({
+        text,
+        options,
+      })
+    }
   }
 
-  // =========================================================
-  // CLEAR OLD HEADER ONLY
-  //
-  // IMPORTANT:
-  // Hindi gagalawin ang paragraph/body/table.
-  // =========================================================
+  // ======================================
+  // WRAP LONG HEADER VALUES
+  // ======================================
+
+  function wrapHeaderValue(value) {
+    const lines = []
+    let line = ''
+
+    for (
+      const word of String(value ?? '')
+        .split(/\s+/)
+        .filter(Boolean)
+    ) {
+      const next = line
+        ? line + ' ' + word
+        : word
+
+      if (
+        line &&
+        bold.widthOfTextAtSize(next, 10.2) > 345
+      ) {
+        lines.push(line)
+        line = ''
+      }
+
+      for (
+        const character of (
+          line ? ' ' : ''
+        ) + word
+      ) {
+        if (
+          line &&
+          bold.widthOfTextAtSize(
+            line + character,
+            10.2
+          ) > 345
+        ) {
+          lines.push(line)
+          line = ''
+        }
+
+        line += character
+      }
+    }
+
+    if (line) {
+      lines.push(line)
+    }
+
+    return lines
+  }
+
+  // ======================================
+  // CLEAR OLD HEADER
+  // ======================================
 
   page.drawRectangle({
     x: 18,
@@ -179,454 +423,460 @@ export async function generateNfccPreview(project) {
     color: white,
   })
 
-  // =========================================================
-  // NEW HEADER
-  //
-  // SAME LABELS AS YOUR FIRST PDF:
-  //
-  // NAME OF THE PROCURING ENTITY
-  // PROJECT TITLE
-  // REFERENCE NUMBER
-  // CONTRACTOR
-  // ADDRESS
-  //
-  // Values = RED
-  // Labels = BLACK
-  // =========================================================
-
   const labelX = 29
   const colonX = 203
   const valueX = 220
+
   const valueWidth = 345
 
   const labelSize = 9.4
   const valueSize = 10.2
 
-  // ---------------------------------------------------------
-  // NAME OF THE PROCURING ENTITY
-  // ---------------------------------------------------------
+  function drawHeaderRow(
+    label,
+    value,
+    y,
+    minSize = 7.4
+  ) {
+    drawText(
+      label,
+      labelX,
+      y,
+      labelSize,
+      regular,
+      black
+    )
 
-  drawText(
+    drawText(
+      ':',
+      colonX,
+      y,
+      labelSize,
+      regular,
+      black
+    )
+
+    if (value !== null) {
+      drawFitText({
+        value,
+        x: valueX,
+        y,
+        width: valueWidth,
+        size: valueSize,
+        minSize,
+        font: bold,
+        color: red,
+      })
+    }
+  }
+
+  // ======================================
+  // HEADER INFORMATION
+  // ======================================
+
+  drawHeaderRow(
     'NAME OF THE PROCURING ENTITY',
-    labelX,
-    760,
-    labelSize,
-    regular,
-    black,
+    procuringEntity,
+    760
   )
 
-  drawText(
-    ':',
-    colonX,
-    760,
-    labelSize,
-    regular,
-    black,
-  )
-
-  drawFitText({
-    value: procuringEntity,
-    x: valueX,
-    y: 760,
-    width: valueWidth,
-    size: valueSize,
-    minSize: 7.4,
-    font: bold,
-    color: red,
-  })
-
-  // ---------------------------------------------------------
-  // PROJECT TITLE
-  // ---------------------------------------------------------
-
-  drawText(
+  drawHeaderRow(
     'PROJECT TITLE',
-    labelX,
-    741,
-    labelSize,
-    regular,
-    black,
+    null,
+    741
   )
 
-  drawText(
-    ':',
-    colonX,
-    741,
-    labelSize,
-    regular,
-    black,
-  )
-
-  // Draw after moving the body, keeping long titles at a readable size.
   const titleLines = wrapHeaderValue(projectTitle)
 
-  // ---------------------------------------------------------
-  // REFERENCE NUMBER
-  // ---------------------------------------------------------
-
-  drawText(
+  drawHeaderRow(
     'REFERENCE NUMBER',
-    labelX,
+    referenceNumber,
     715,
-    labelSize,
-    regular,
-    black,
+    8
   )
 
-  drawText(
-    ':',
-    colonX,
-    715,
-    labelSize,
-    regular,
-    black,
-  )
-
-  drawFitText({
-    value: referenceNumber,
-    x: valueX,
-    y: 715,
-    width: valueWidth,
-    size: valueSize,
-    minSize: 8,
-    font: bold,
-    color: red,
-  })
-
-  // ---------------------------------------------------------
-  // CONTRACTOR
-  // ---------------------------------------------------------
-
-  drawText(
+  drawHeaderRow(
     'CONTRACTOR',
-    labelX,
-    696,
-    labelSize,
-    regular,
-    black,
+    bidderName,
+    696
   )
 
-  drawText(
-    ':',
-    colonX,
-    696,
-    labelSize,
-    regular,
-    black,
+  drawHeaderRow(
+    'ADDRESS',
+    null,
+    677
   )
 
-  drawFitText({
-    value: bidderName,
-    x: valueX,
-    y: 696,
-    width: valueWidth,
-    size: valueSize,
-    minSize: 7.4,
-    font: bold,
-    color: red,
+  const addressLines = wrapHeaderValue(
+    businessAddress
+  )
+
+  // ======================================
+  // CLEAR OLD SIGNATURE
+  // ======================================
+  // This clears the old footer and the
+  // original final NFCC row.
+  // Both will be redrawn below.
+
+  page.drawRectangle({
+    x: 18,
+    y: 155,
+    width: 560,
+    height: 132,
+    color: white,
   })
 
-  // ---------------------------------------------------------
-  // ADDRESS
-  // ---------------------------------------------------------
+  // ======================================
+  // SIGNATURE / FOOTER POSITION
+  // ======================================
 
-  drawText(
-    'ADDRESS',
-    labelX,
-    677,
-    labelSize,
-    regular,
-    black,
-  )
+  const footerLabelX = 32
+  const footerColonX = 128
+  const footerValueX = 155
 
-  drawText(
-    ':',
-    colonX,
-    677,
-    labelSize,
-    regular,
-    black,
-  )
+  const footerLabelSize = 10
+  const footerValueSize = 10.3
 
-  // Keep the address as readable as the other header values. Wrap even a
-  // single long token instead of squeezing the entire address into one line.
-  function wrapHeaderValue(value) {
-    const addressLines = []
-    let addressLine = ''
-    for (const word of value.split(/\s+/).filter(Boolean)) {
-      const next = addressLine ? addressLine + ' ' + word : word
-      if (addressLine && bold.widthOfTextAtSize(next, valueSize) > valueWidth) {
-        addressLines.push(addressLine)
-        addressLine = ''
-      }
-      for (const character of (addressLine ? ' ' : '') + word) {
-        if (bold.widthOfTextAtSize(addressLine + character, valueSize) > valueWidth) {
-          addressLines.push(addressLine)
-          addressLine = ''
-        }
-        addressLine += character
-      }
-    }
-    if (addressLine) addressLines.push(addressLine)
-    return addressLines
-    }
-    const addressLines = wrapHeaderValue(businessAddress)
-  
-    // =========================================================
-    // REMOVE OLD SIGNATORY ONLY
-    //
-    // Hindi gagalawin ang NFCC computation table.
-    // =========================================================
-  
-    page.drawRectangle({
-      x: 18,
-      y: 155,
-      width: 560,
-      height: 132,
-      color: white,
-    })
-  
-    // =========================================================
-    // NEW SIGNATORY
-    // =========================================================
-  
-    const footerLabelX = 32
-    const footerColonX = 128
-    const footerValueX = 155
-  
-    const footerLabelSize = 10
-    const footerValueSize = 10.3
-  
-    // ---------------------------------------------------------
-    // SUBMITTED
-    // ---------------------------------------------------------
-  
-    const submittedY = 258
-  
+  function drawFooterRow(
+    label,
+    value,
+    y,
+    {
+      font = regular,
+      boldName = false,
+    } = {}
+  ) {
     drawText(
-      'Submitted',
+      label,
       footerLabelX,
-      submittedY,
+      y,
       footerLabelSize,
       regular,
-      black,
+      black
     )
-  
+
     drawText(
       ':',
       footerColonX,
-      submittedY,
+      y,
       footerLabelSize,
       regular,
-      black,
+      black
     )
-  
-    const submittedSize = fitFontSize(
-      submittedBy,
-      bold,
+
+    const size = fitFontSize(
+      value,
+      font,
       footerValueSize,
       300,
-      8,
+      8
     )
-  
+
     drawText(
-      submittedBy,
+      value,
       footerValueX,
-      submittedY,
-      submittedSize,
-      bold,
-      black,
+      y,
+      size,
+      font,
+      black
     )
-  
-    if (submittedBy) {
-      const submittedWidth =
-        bold.widthOfTextAtSize(
-          submittedBy,
-          submittedSize,
-        )
-  
+
+    if (boldName && value) {
+      const width = font.widthOfTextAtSize(
+        clean(value),
+        size
+      )
+
       page.drawLine({
         start: {
           x: footerValueX,
-          y: submittedY - 2,
+          y: y - 2,
         },
         end: {
-          x:
-            footerValueX +
-            submittedWidth,
-          y: submittedY - 2,
+          x: footerValueX + width,
+          y: y - 2,
         },
         thickness: 0.7,
         color: black,
       })
     }
-  
-    drawText(
-      '(Printed Name & Signature)',
-      footerValueX,
-      246,
-      6.3,
-      regular,
-      black,
-    )
-  
-    // ---------------------------------------------------------
-    // DESIGNATION
-    // ---------------------------------------------------------
-  
-    drawText(
-      'Designation',
-      footerLabelX,
-      223,
-      footerLabelSize,
-      regular,
-      black,
-    )
-  
-    drawText(
-      ':',
-      footerColonX,
-      223,
-      footerLabelSize,
-      regular,
-      black,
-    )
-  
-    drawFitText({
-      value: designation,
-      x: footerValueX,
-      y: 223,
-      width: 300,
-      size: footerValueSize,
-      minSize: 8,
+  }
+
+  // ======================================
+  // SIGNATURE DETAILS - LOWER POSITION
+  // ======================================
+  // These coordinates are BELOW the
+  // Computed NFCC table row.
+  //
+  // Higher Y = higher on the PDF page.
+  // Lower Y = lower on the PDF page.
+  // ======================================
+
+  // SUBMITTED BY
+  drawFooterRow(
+    'Submitted',
+    submittedBy,
+    226,
+    {
+      font: bold,
+      boldName: true,
+    }
+  )
+
+  // PRINTED NAME & SIGNATURE
+  drawText(
+    '(Printed Name & Signature)',
+    footerValueX,
+    214,
+    6.3,
+    regular,
+    black
+  )
+
+  // DESIGNATION
+  drawFooterRow(
+    'Designation',
+    designation,
+    191,
+    {
       font: italic,
-      color: black,
+    }
+  )
+
+  // NAME OF FIRM
+  drawFooterRow(
+    'Name of Firm',
+    bidderName,
+    168,
+    {
+      font: bold,
+    }
+  )
+
+  // DATE
+  drawFooterRow(
+    'Date',
+    date,
+    145
+  )
+
+  // ======================================
+  // COMPANY-SPECIFIC NFCC DATA
+  // ======================================
+
+  await fillBuiltechTable(
+    pdfDoc,
+    project,
+    'nfcc'
+  )
+
+  // ======================================
+  // RESTORE FINAL COMPUTED NFCC ROW
+  // ======================================
+  // The helper now clears ONLY the row,
+  // not the whole signature section.
+
+  await drawComputedNfccRow(
+    pdfDoc,
+    project
+  )
+
+  // ======================================
+  // LONG HEADER HANDLING
+  // ======================================
+
+  const addressLeading = 14
+
+  const titleExtraHeight = Math.max(
+    0,
+    titleLines.length - 1
+  ) * addressLeading
+
+  const extraHeight =
+    titleExtraHeight +
+    Math.max(
+      0,
+      addressLines.length - 1
+    ) * addressLeading
+
+  if (extraHeight) {
+    // Keep original body, table,
+    // and signature together.
+
+    const bodyHeight = 668
+
+    const bodyDocument = await PDFDocument.create()
+
+    const [bodyPage] =
+      await bodyDocument.copyPages(
+        pdfDoc,
+        [0]
+      )
+
+    bodyDocument.addPage(bodyPage)
+
+    bodyPage.drawRectangle({
+      x: 0,
+      y: bodyHeight,
+      width: page.getWidth(),
+      height:
+        page.getHeight() - bodyHeight,
+      color: white,
     })
-  
-    // ---------------------------------------------------------
-    // NAME OF FIRM
-    // ---------------------------------------------------------
-  
-    drawText(
-      'Name of Firm',
-      footerLabelX,
-      200,
-      footerLabelSize,
-      regular,
-      black,
+
+    const body = await pdfDoc.embedPage(
+      bodyPage,
+      {
+        left: 0,
+        bottom: 0,
+        right: page.getWidth(),
+        top: bodyHeight,
+      }
     )
-  
-    drawText(
-      ':',
-      footerColonX,
-      200,
-      footerLabelSize,
-      regular,
-      black,
-    )
-  
-    drawFitText({
-      value: bidderName,
-      x: footerValueX,
-      y: 200,
-      width: 300,
-      size: footerValueSize,
-      minSize: 8,
+
+    await pdfDoc.flush()
+
+    page.drawRectangle({
+      x: 0,
+      y: 0,
+      width: page.getWidth(),
+      height: bodyHeight,
+      color: white,
+    })
+
+    if (extraHeight <= 120) {
+      page.drawPage(body, {
+        x: 0,
+        y: -extraHeight,
+        width: page.getWidth(),
+        height: bodyHeight,
+      })
+    } else {
+      const continuation =
+        pdfDoc.addPage([
+          page.getWidth(),
+          page.getHeight(),
+        ])
+
+      continuation.drawPage(body, {
+        x: 0,
+        y:
+          continuation.getHeight() -
+          bodyHeight -
+          36,
+        width: page.getWidth(),
+        height: bodyHeight,
+      })
+    }
+
+    // ====================================
+    // RESTORE HEADER AFTER BODY MOVEMENT
+    // ====================================
+
+    page.drawRectangle({
+      x: 0,
+      y: bodyHeight,
+      width: page.getWidth(),
+      height:
+        page.getHeight() - bodyHeight,
+      color: white,
+    })
+
+    const heading =
+      'NET FINANCIAL CONTRACTING CAPACITY (NFCC)'
+
+    page.drawText(heading, {
+      x:
+        (
+          page.getWidth() -
+          bold.widthOfTextAtSize(
+            heading,
+            12
+          )
+        ) / 2,
+      y: page.getHeight() - 45,
+      size: 12,
       font: bold,
       color: black,
     })
-  
-    // ---------------------------------------------------------
-    // DATE
-    // ---------------------------------------------------------
-  
-    drawText(
-      'Date',
-      footerLabelX,
-      177,
-      footerLabelSize,
-      regular,
-      black,
-    )
-  
-    drawText(
-      ':',
-      footerColonX,
-      177,
-      footerLabelSize,
-      regular,
-      black,
-    )
-  
-    drawFitText({
-      value: date,
-      x: footerValueX,
-      y: 177,
-      width: 300,
-      size: footerValueSize,
-      minSize: 8,
-      font: regular,
+
+    page.drawLine({
+      start: {
+        x: 18,
+        y: page.getHeight() - 49,
+      },
+      end: {
+        x: page.getWidth() - 18,
+        y: page.getHeight() - 49,
+      },
+      thickness: 1,
       color: black,
     })
-  
-    // =========================================================
-    // SAVE
-    // =========================================================
-  
-    await fillBuiltechTable(pdfDoc, project, 'nfcc')
-    const addressLeading = 14
-    const titleExtraHeight = Math.max(0, titleLines.length - 1) * addressLeading
-    const extraHeight = titleExtraHeight + Math.max(0, addressLines.length - 1) * addressLeading
-    if (extraHeight) {
-      // Translate the complete existing body, table and signature together so
-      // extra address lines never cover the original NFCC paragraph.
-      const bodyHeight = 668
-      // Mask the copied header as well as clipping it. Text extraction for Word
-      // can otherwise read invisible header text outside a PDF form's clip box.
-      const bodyDocument = await PDFDocument.create()
-      const [bodyPage] = await bodyDocument.copyPages(pdfDoc, [0])
-      bodyDocument.addPage(bodyPage)
-      bodyPage.drawRectangle({ x: 0, y: bodyHeight, width: page.getWidth(),
-        height: page.getHeight() - bodyHeight, color: white })
-      const body = await pdfDoc.embedPage(bodyPage, { left: 0, bottom: 0, right: page.getWidth(), top: bodyHeight })
-      await pdfDoc.flush()
-      page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: bodyHeight, color: white })
-      if (extraHeight <= 120) {
-        page.drawPage(body, { x: 0, y: -extraHeight, width: page.getWidth(), height: bodyHeight })
-      } else {
-        const continuation = pdfDoc.addPage([page.getWidth(), page.getHeight()])
-        continuation.drawPage(body, { x: 0, y: continuation.getHeight() - bodyHeight - 36,
-          width: page.getWidth(), height: bodyHeight })
-      }
-      // Draw the header last so editable Word extraction honors the same paint
-      // order as the PDF, including the copied body's invisible header mask.
-      page.drawRectangle({ x: 0, y: bodyHeight, width: page.getWidth(),
-        height: page.getHeight() - bodyHeight, color: white })
-      const title = 'NET FINANCIAL CONTRACTING CAPACITY (NFCC)'
-      drawText(title, (page.getWidth() - bold.widthOfTextAtSize(title, 12)) / 2,
-        page.getHeight() - 45, 12, bold, black)
-      page.drawLine({ start: { x: 18, y: page.getHeight() - 49 },
-        end: { x: page.getWidth() - 18, y: page.getHeight() - 49 }, thickness: 1, color: black })
-      // Use a snapshot: drawText above also recorded the new title.
-      for (const { text, options } of headerText.slice(0, -1)) {
-        page.drawText(text, { ...options,
-          y: options.y <= 715 ? options.y - titleExtraHeight : options.y })
-      }
+
+    for (
+      const {
+        text,
+        options,
+      } of headerText
+    ) {
+      page.drawText(text, {
+        ...options,
+        y:
+          options.y <= 715
+            ? options.y -
+              titleExtraHeight
+            : options.y,
+      })
     }
-    titleLines.forEach((line, index) => drawText(line, valueX, 741 - index * addressLeading, valueSize, bold, red))
-    addressLines.forEach((line, index) => drawText(line, valueX, 677 - titleExtraHeight - index * addressLeading, valueSize, bold, red))
-    const bytes =
-      await pdfDoc.save()
-  
-    const blob =
-      new Blob(
-        [bytes],
-        {
-          type: 'application/pdf',
-        },
-      )
-  
-    return URL.createObjectURL(
-      blob,
-    )
   }
+
+  // ======================================
+  // RESTORE PROJECT TITLE
+  // ======================================
+
+  titleLines.forEach(
+    (line, index) =>
+      drawText(
+        line,
+        valueX,
+        741 -
+          index * addressLeading,
+        valueSize,
+        bold,
+        red
+      )
+  )
+
+  // ======================================
+  // RESTORE BUSINESS ADDRESS
+  // ======================================
+
+  addressLines.forEach(
+    (line, index) =>
+      drawText(
+        line,
+        valueX,
+        677 -
+          titleExtraHeight -
+          index * addressLeading,
+        valueSize,
+        bold,
+        red
+      )
+  )
+
+  // ======================================
+  // SAVE GENERATED PDF
+  // ======================================
+
+  const bytes = await pdfDoc.save()
+
+  const blob = new Blob(
+    [bytes],
+    {
+      type: 'application/pdf',
+    }
+  )
+
+  return URL.createObjectURL(blob)
+}

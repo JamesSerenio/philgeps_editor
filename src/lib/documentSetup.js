@@ -1,5 +1,18 @@
-import { bidderCompanies, documentBidderName, normalizeBidderSetup } from './bidderCompanies'
-import { getDefaultBidderAddress } from './bidderAddresses'
+
+import {
+  bidderCompanies,
+  documentBidderName,
+  normalizeBidderSetup,
+} from './bidderCompanies'
+
+import {
+  getDefaultBidderAddress,
+} from './bidderAddresses'
+
+// ==========================================
+// AUTHORIZED REPRESENTATIVES
+// ==========================================
+
 export const representatives = [
   {
     name: 'JHO ANN Q. CLEOPAS',
@@ -15,20 +28,50 @@ export const representatives = [
   },
 ]
 
-// ============================================================
-// BIDDER / COMPANY OPTIONS
-// ============================================================
+// ==========================================
+// COMPANY / BIDDER OPTIONS
+// ==========================================
 
-export const bidders = bidderCompanies.filter(bidder =>
-  ['mega-pluto', 'manotech', 'builtech', 'mikata'].includes(bidder.id),
-).map(bidder => ({
+// Use the existing company registry.
+// Do not hard-code addresses from other bidders.
+
+export const bidders = bidderCompanies.map((bidder) => ({
   ...bidder,
-  address: getDefaultBidderAddress(bidder.id) || bidder.address,
+  aliases: bidder.aliases ?? [],
+  address:
+    getDefaultBidderAddress(bidder.id) ||
+    bidder.address ||
+    '',
 }))
 
-// ============================================================
-// DATE FORMAT
-// ============================================================
+// ==========================================
+// PHILIPPINE DATE HELPERS
+// ==========================================
+
+export function dateOnly(value) {
+  if (value == null || value === '') {
+    return ''
+  }
+
+  const text = String(value).trim()
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    return text
+  }
+
+  const date = new Date(text)
+
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
 
 export function formatLongDate(value) {
   const text = String(value ?? '').trim()
@@ -65,47 +108,155 @@ export function formatLongDate(value) {
         return text
       }
 
-      year = parsed.getFullYear()
-      month = parsed.getMonth() + 1
-      day = parsed.getDate()
+      const parts = new Intl.DateTimeFormat(
+        'en-US',
+        {
+          timeZone: 'Asia/Manila',
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+        },
+      ).formatToParts(parsed)
+
+      const getPart = (type) =>
+        Number(
+          parts.find((part) => part.type === type)
+            ?.value,
+        )
+
+      year = getPart('year')
+      month = getPart('month')
+      day = getPart('day')
     }
   }
 
   const date = new Date(
-    year,
-    month - 1,
-    day,
+    Date.UTC(year, month - 1, day),
   )
 
-  return new Intl.DateTimeFormat(
-    'en-US',
-    {
-      month: 'long',
-      day: '2-digit',
-      year: 'numeric',
-    },
-  ).format(date)
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return text
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'UTC',
+    month: 'long',
+    day: '2-digit',
+    year: 'numeric',
+  }).format(date)
 }
 
-// ============================================================
-// DOCUMENT SETUP
-// ============================================================
+// ==========================================
+// IDENTIFY NEW BLANK EDITOR PROJECT
+// ==========================================
+
+export function isManualBiddingProject(project = {}) {
+  return (
+    project?.is_manual === true ||
+    project?.isBlankEditor === true ||
+    project?.project_source === 'manual' ||
+    project?.source === 'manual'
+  )
+}
+
+// ==========================================
+// DEADLINE VALIDATION
+// ==========================================
+
+export function hasValidManualDeadline(setup = {}) {
+  if (!setup.isBlankEditor) {
+    return true
+  }
+
+  const deadline = String(
+    setup.closingDate ?? '',
+  )
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(deadline)) {
+    return false
+  }
+
+  const date = new Date(
+    `${deadline}T00:00:00Z`,
+  )
+
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.toISOString().slice(0, 10) === deadline
+  )
+}
+
+export function validateDocumentSetup(setup = {}) {
+  if (
+    setup.isBlankEditor &&
+    !hasValidManualDeadline(setup)
+  ) {
+    throw new Error(
+      'Closing / Deadline is required. ' +
+      'Please select a date in Document Setup.',
+    )
+  }
+
+  return true
+}
+
+// ==========================================
+// CREATE DOCUMENT SETUP
+// ==========================================
 
 export function createDocumentSetup(
-  project,
+  project = {},
   bid = {},
   omnibus = {},
 ) {
-  if (bid.documentSetup) {
-    return normalizeBidderSetup(bid.documentSetup)
-  }
+  const savedSetup = bid?.documentSetup
+    ? normalizeBidderSetup(bid.documentSetup)
+    : null
 
   const prior = (key) =>
-    bid[key] ||
-    omnibus[key] ||
+    bid?.[key] ||
+    omnibus?.[key] ||
     ''
 
-  return {
+  // Read the persistent manual-project marker.
+  const isBlankEditor =
+    isManualBiddingProject(project) ||
+    (
+      project.is_manual !== false &&
+      savedSetup?.isBlankEditor === true
+    )
+
+  // Manual deadline is a date-only value.
+  // Imported projects keep their source timestamp.
+  const closingDate = isBlankEditor
+    ? dateOnly(
+        savedSetup?.closingDate ||
+        project.manual_deadline ||
+        project.closing_date ||
+        '',
+      )
+    : (
+        savedSetup?.closingDate ??
+        project.closing_date ??
+        ''
+      )
+
+  const today = new Intl.DateTimeFormat(
+    'sv-SE',
+    {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    },
+  ).format(new Date())
+
+  const defaults = {
     province:
       prior('province') ||
       project.area_of_delivery ||
@@ -140,42 +291,60 @@ export function createDocumentSetup(
 
     date:
       prior('date') ||
-      new Intl.DateTimeFormat(
-        'en-CA',
-        {
-          timeZone: 'Asia/Manila',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        },
-      ).format(new Date()),
+      today,
 
-    bidderName:
-      documentBidderName({ bidderName: prior('bidderName') }),
+    bidderName: documentBidderName({
+      bidderName: prior('bidderName'),
+    }),
 
     businessAddress:
-      bid.businessAddress ?? bid.companyAddress ??
-      omnibus.businessAddress ?? omnibus.companyAddress ??
-      getDefaultBidderAddress(prior('bidderName')),
+      bid.businessAddress ??
+      bid.companyAddress ??
+      omnibus.businessAddress ??
+      omnibus.companyAddress ??
+      getDefaultBidderAddress(
+        prior('bidderName'),
+      ) ??
+      '',
 
     submittedBy:
+      prior('submittedBy') ||
       prior('authorizedRepresentative'),
 
     designation:
       bid.representativeDesignation ||
       omnibus.designation ||
+      prior('designation') ||
       '',
   }
+
+  // Preserve all previously saved company fields,
+  // variants, representatives and editor settings.
+  return normalizeBidderSetup({
+    ...defaults,
+    ...(savedSetup || {}),
+    isBlankEditor,
+    closingDate,
+  })
 }
 
-// ============================================================
-// SHARED PROJECT
-// ============================================================
+// ==========================================
+// SHARED PROJECT INFORMATION
+// ==========================================
 
-export function setupProject(setup) {
+export function setupProject(setup = {}) {
+  const manual =
+    setup.isBlankEditor === true
+
+  const closingDate = manual
+    ? dateOnly(setup.closingDate)
+    : setup.closingDate || ''
+
   return {
     ...setup,
+
     bidderId: setup.bidderId,
+
     province:
       setup.province || '',
 
@@ -206,7 +375,17 @@ export function setupProject(setup) {
     designation:
       setup.designation || '',
 
-    // Legacy aliases
+    isBlankEditor: manual,
+
+    closingDate,
+
+    manual_deadline:
+      manual ? closingDate : null,
+
+    // ======================================
+    // LEGACY PROJECT FIELD ALIASES
+    // ======================================
+
     title:
       setup.projectTitle || '',
 
@@ -236,27 +415,35 @@ export function setupProject(setup) {
   }
 }
 
-// ============================================================
-// SCHEDULE
-// ============================================================
+// ==========================================
+// SCHEDULE ITEM ALIGNMENT
+// ==========================================
 
 export function alignScheduleItems(
-  technical,
-  schedule,
+  technical = [],
+  schedule = [],
 ) {
+  if (!Array.isArray(schedule)) {
+    return []
+  }
+
+  const technicalItems = Array.isArray(technical)
+    ? technical
+    : []
+
   return schedule.map((item) => {
     if (item.sharedItemId) {
       return item
     }
 
     const master =
-      technical.find(
-        (row) =>
-          row.id === item.id,
+      technicalItems.find(
+        (row) => row.id === item.id,
       ) ||
-      technical.find(
+      technicalItems.find(
         (row) =>
-          row.itemNo === item.itemNo,
+          String(row.itemNo) ===
+          String(item.itemNo),
       )
 
     return master
@@ -269,19 +456,35 @@ export function alignScheduleItems(
   })
 }
 
+// ==========================================
+// TECHNICAL / SCHEDULE SYNCHRONIZATION
+// ==========================================
+
 export function sharedScheduleItems(
-  technical,
-  schedule,
+  technical = [],
+  schedule = [],
 ) {
-  return technical.map((item) => ({
+  const technicalItems = Array.isArray(technical)
+    ? technical
+    : []
+
+  const scheduleItems = Array.isArray(schedule)
+    ? schedule
+    : []
+
+  return technicalItems.map((item) => ({
     id: item.id,
+
     sharedItemId: item.id,
+
     itemNo: item.itemNo,
+
     qty: item.qty,
+
     unit: item.unit,
 
     specificationLines:
-      item.specificationLines.map(
+      (item.specificationLines ?? []).map(
         ({ id, text }) => ({
           id,
           text,
@@ -289,9 +492,8 @@ export function sharedScheduleItems(
       ),
 
     deliveryPeriod:
-      schedule.find(
-        (row) =>
-          row.id === item.id,
+      scheduleItems.find(
+        (row) => row.id === item.id,
       )?.deliveryPeriod || '',
   }))
 }

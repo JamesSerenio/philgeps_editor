@@ -307,7 +307,10 @@ function ProjectEditorContent({ id }) {
   )
   const panelToggleRef = useRef(null)
   const editorShellRef = useRef(null)
+  const blankProjectSyncRef = useRef(null)
   const compactLayout = responsiveMode !== 'desktop'
+
+  useEffect(() => () => clearTimeout(blankProjectSyncRef.current), [])
 
   function closePanel() {
     setPanelOpen(false)
@@ -518,14 +521,36 @@ function ProjectEditorContent({ id }) {
   // DOCUMENT SETUP
   // ===================================================
 
-  const setup = project
-    ? documentSetup ??
-      createDocumentSetup(
-        project,
-        bidSecurity ?? {},
-        omnibus ?? {}
-      )
-    : null
+
+const isManualProject = project?.is_manual === true
+
+const baseSetup = project
+  ? documentSetup ??
+    createDocumentSetup(
+      project,
+      bidSecurity ?? {},
+      omnibus ?? {}
+    )
+  : null
+
+const setup = baseSetup
+  ? {
+      ...baseSetup,
+      isBlankEditor: isManualProject,
+      closingDate: isManualProject
+        ? String(
+            baseSetup.closingDate ||
+            project?.manual_deadline ||
+            ''
+          ).slice(0, 10)
+        : (
+            project?.closing_date ||
+            baseSetup.closingDate ||
+            ''
+          ),
+    }
+  : null
+
 
   const sharedProject = setup
     ? setupProject(setup)
@@ -1055,28 +1080,110 @@ function ProjectEditorContent({ id }) {
   // DOCUMENT SETUP SAVE
   // ===================================================
 
-  function changeSetup(value) {
-    const restored = restoreBidderVariants(setup, value, bidSecurity, omnibus)
-    setDocumentSetup(restored.setup)
 
-    const next = {
-      ...restored.bidSecurity,
-      templateVariant: normalizeVariant(restored.bidSecurity?.templateVariant),
-      documentSetup: restored.setup,
+function changeSetup(value) {
+  const restored = restoreBidderVariants(
+    setup,
+    value,
+    bidSecurity,
+    omnibus
+  )
+
+  const nextSetup = {
+    ...restored.setup,
+    isBlankEditor: isManualProject,
+
+    closingDate: isManualProject
+      ? String(
+          restored.setup.closingDate ?? ''
+        ).slice(0, 10)
+      : (
+          project?.closing_date ||
+          restored.setup.closingDate ||
+          ''
+        ),
+  }
+
+  setDocumentSetup(nextSetup)
+
+  // Save project-card information and manual
+  // deadline ONLY for New Blank Editor projects.
+  if (isManualProject && project?.id) {
+    const patch = {
+      title: nextSetup.projectTitle || '',
+      reference_number:
+        nextSetup.referenceNumber || '',
+      procuring_entity:
+        nextSetup.procuringEntity || '',
+      lgu: nextSetup.municipality || '',
+      area_of_delivery:
+        nextSetup.province || '',
+      manual_deadline:
+        nextSetup.closingDate || null,
     }
 
-    setBidSecurity(next)
+    setProject((current) =>
+      current
+        ? { ...current, ...patch }
+        : current
+    )
 
-    if (restored.omnibus !== omnibus) {
-      setOmnibus(restored.omnibus)
-      persistence.change('omnibus', restored.omnibus)
-    }
+    clearTimeout(blankProjectSyncRef.current)
 
-    persistence.change(
-      'bid_security',
-      next
+    blankProjectSyncRef.current = setTimeout(
+      async () => {
+        try {
+          const { error: syncError } =
+            await supabase
+              .from('philgeps_posts')
+              .update(patch)
+              .eq('id', project.id)
+              .eq('is_manual', true)
+
+          if (syncError) {
+            throw syncError
+          }
+        } catch (syncError) {
+          console.error(
+            'Failed to save manual project:',
+            syncError
+          )
+
+          setGenerateAllError(
+            syncError?.message ||
+            'Unable to save project information.'
+          )
+        }
+      },
+      250
     )
   }
+
+  const next = {
+    ...restored.bidSecurity,
+    templateVariant: normalizeVariant(
+      restored.bidSecurity?.templateVariant
+    ),
+    documentSetup: nextSetup,
+  }
+
+  setBidSecurity(next)
+
+  if (restored.omnibus !== omnibus) {
+    setOmnibus(restored.omnibus)
+
+    persistence.change(
+      'omnibus',
+      restored.omnibus
+    )
+  }
+
+  persistence.change(
+    'bid_security',
+    next
+  )
+}
+
 
   // ===================================================
   // TECHNICAL SPECIFICATIONS SAVE
@@ -1198,8 +1305,38 @@ function ProjectEditorContent({ id }) {
 const exportDocumentCount = getBidPackageDocuments({ setup: setup ?? { referenceNumber: id }, omnibus, bidSecurity }).length
 const exportContentKey = JSON.stringify({ closingDate: project?.closing_date ?? project?.closingDate, setup, technical, schedule: scheduleItems, bidSecurity, omnibus, priceValues })
 
+
 async function handleGenerateAll(format = 'pdf') {
   if (exportBusyRef.current || !setup) return
+
+  if (isManualProject) {
+    const deadline = String(
+      setup.closingDate ?? ''
+    ).trim()
+
+    const validFormat =
+      /^\d{4}-\d{2}-\d{2}$/.test(deadline)
+
+    const parsed = validFormat
+      ? new Date(`${deadline}T00:00:00Z`)
+      : null
+
+    const validDate =
+      parsed &&
+      !Number.isNaN(parsed.getTime()) &&
+      parsed.toISOString().slice(0, 10) === deadline
+
+    if (!validDate) {
+      setGenerateAllError(
+        'Closing / Deadline is required. ' +
+        'Please select a valid date in Document Setup.'
+      )
+
+      setGenerateModalOpen(true)
+      return
+    }
+  }
+
 
   exportBusyRef.current = true
   setExportProgress({
@@ -1811,12 +1948,24 @@ async function handleGenerateAll(format = 'pdf') {
           }
           renderEditor={renderEditor}
         >
-          <DocumentSetup
-            value={setup}
-            onChange={changeSetup}
-            templateVariant={omnibus?.templateVariant === 'initao_lgu' ? 'initao_lgu' : 'old_default'}
-            onTemplateChange={nextVariant => changeOmnibus({ ...omnibus, templateVariant: nextVariant })}
-          />
+
+        <DocumentSetup
+          value={setup}
+          onChange={changeSetup}
+          isBlankEditor={isManualProject}
+          templateVariant={
+            omnibus?.templateVariant === 'initao_lgu'
+              ? 'initao_lgu'
+              : 'old_default'
+          }
+          onTemplateChange={(nextVariant) =>
+            changeOmnibus({
+              ...omnibus,
+              templateVariant: nextVariant,
+            })
+          }
+        />
+
         </ProjectSidebar>
 
         <main className="pdf-preview-workspace" inert={responsiveMode === 'mobile' && panelOpen}>
