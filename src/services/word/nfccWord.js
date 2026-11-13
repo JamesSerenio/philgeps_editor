@@ -1,3 +1,4 @@
+
 import { getBidderCompany } from '../../lib/bidderAssets'
 import { templateWord } from './templateWord'
 import {
@@ -18,6 +19,7 @@ import {
 } from 'docx'
 
 import { formatLongDate } from '../../lib/documentSetup'
+import { nfccDefaults } from '../../lib/nfccDefaults'
 import { sectionMarker } from './wordHelpers'
 
 // ============================================
@@ -75,7 +77,11 @@ function text(value, fallback = '') {
 
 function firstValue(...values) {
   for (const value of values) {
-    if (value !== null && value !== undefined && String(value).trim() !== '') {
+    if (
+      value !== null &&
+      value !== undefined &&
+      String(value).trim() !== ''
+    ) {
       return value
     }
   }
@@ -84,11 +90,17 @@ function firstValue(...values) {
 }
 
 function numeric(value, fallback = 0) {
-  if (value === undefined || value === null || value === '') {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ''
+  ) {
     return fallback
   }
 
-  const result = Number(String(value).replace(/[₱,\s]/g, ''))
+  const result = Number(
+    String(value).replace(/[₱,\s]/g, '')
+  )
 
   return Number.isFinite(result) ? result : fallback
 }
@@ -105,7 +117,6 @@ function run(content, options = {}) {
     text: String(content ?? ''),
     font: options.font ?? FONT,
     size: Math.round((options.size ?? 9.5) * 2),
-    // PDF uses Arial/Helvetica at these sizes; Word stores half-point sizes.
     color: options.color ?? BLACK,
     bold: options.bold ?? false,
     italics: options.italic ?? false,
@@ -137,7 +148,11 @@ function paragraph(content = '', options = {}) {
   const children = []
 
   if (bookmark) {
-    children.push(sectionMarker(typeof bookmark === 'number' ? bookmark : 11))
+    children.push(
+      sectionMarker(
+        typeof bookmark === 'number' ? bookmark : 11
+      )
+    )
   }
 
   String(content ?? '')
@@ -152,7 +167,7 @@ function paragraph(content = '', options = {}) {
           break: index ? 1 : 0,
           underline,
           font,
-        }),
+        })
       )
     })
 
@@ -164,8 +179,12 @@ function paragraph(content = '', options = {}) {
       indent || firstLine || hanging
         ? {
             left: PT(indent),
-            firstLine: firstLine ? PT(firstLine) : undefined,
-            hanging: hanging ? PT(hanging) : undefined,
+            firstLine: firstLine
+              ? PT(firstLine)
+              : undefined,
+            hanging: hanging
+              ? PT(hanging)
+              : undefined,
           }
         : undefined,
     spacing: {
@@ -187,7 +206,9 @@ function blank(height = 9) {
 }
 
 function cell(content, width, options = {}) {
-  const children = Array.isArray(content) ? content : [content]
+  const children = Array.isArray(content)
+    ? content
+    : [content]
 
   return new TableCell({
     width: {
@@ -218,7 +239,10 @@ function informationTable(setup) {
   const widths = [PT(174), PT(17), PT(345)]
 
   const entries = [
-    ['NAME OF THE PROCURING ENTITY', setup.procuringEntity],
+    [
+      'NAME OF THE PROCURING ENTITY',
+      setup.procuringEntity,
+    ],
     ['PROJECT TITLE', setup.projectTitle],
     ['REFERENCE NUMBER', setup.referenceNumber],
     ['CONTRACTOR', setup.bidderName],
@@ -227,7 +251,7 @@ function informationTable(setup) {
       firstValue(
         setup.businessAddress,
         setup.bidderAddress,
-        setup.companyAddress,
+        setup.companyAddress
       ),
     ],
   ]
@@ -240,31 +264,42 @@ function informationTable(setup) {
       },
 
       children: [
-        cell(paragraph('', { size: 1, line: 1 }), PT(9), { left: 0, right: 0 }),
+        cell(
+          paragraph('', { size: 1, line: 1 }),
+          PT(9),
+          { left: 0, right: 0 }
+        ),
+
         cell(
           paragraph(label, {
             size: 9.4,
             line: 11,
           }),
-          widths[0],
+          widths[0]
         ),
 
         cell(
           paragraph(':', {
             size: 9,
           }),
-          widths[1],
+          widths[1]
         ),
 
         cell(
-          paragraph(text(value).toUpperCase(), {
-            size:
-              label === 'PROJECT TITLE' || label === 'ADDRESS' ? 9.5 : 10.2,
-            bold: true,
-            color: RED,
-            line: 11,
-          }),
-          widths[2],
+          paragraph(
+            text(value).toUpperCase(),
+            {
+              size:
+                label === 'PROJECT TITLE' ||
+                label === 'ADDRESS'
+                  ? 9.5
+                  : 10.2,
+              bold: true,
+              color: RED,
+              line: 11,
+            }
+          ),
+          widths[2]
         ),
       ],
     })
@@ -272,7 +307,10 @@ function informationTable(setup) {
 
   return new Table({
     width: {
-      size: PT(9) + widths.reduce((a, b) => a + b, 0),
+      size: PT(9) + widths.reduce(
+        (a, b) => a + b,
+        0
+      ),
       type: WidthType.DXA,
     },
 
@@ -296,14 +334,17 @@ function financialData(options, setup) {
     ...(options.nfccValues ?? {}),
   }
 
-  // Existing PDF sample values for reference
-  // number 13261581 only.
-  // For other projects, values must come from
-  // the provided NFCC/financial data.
-  const sample = String(setup.referenceNumber ?? '') === '13261581'
+  // Mirror the existing MIKATA PDF defaults.
+  // Other bidders use their separate generator.
+  const defaultAssets = numeric(
+    nfccDefaults.currentAssets,
+    0
+  )
 
-  const defaultAssets = sample ? 2441561 : 0
-  const defaultLiabilities = sample ? 566693 : 0
+  const defaultLiabilities = numeric(
+    nfccDefaults.currentLiabilities,
+    0
+  )
 
   const currentAssets = numeric(
     firstValue(
@@ -311,9 +352,9 @@ function financialData(options, setup) {
       values.current_assets,
       values.assets,
       options.currentAssets,
-      setup.currentAssets,
+      setup.currentAssets
     ),
-    defaultAssets,
+    defaultAssets
   )
 
   const currentLiabilities = numeric(
@@ -322,23 +363,24 @@ function financialData(options, setup) {
       values.current_liabilities,
       values.liabilities,
       options.currentLiabilities,
-      setup.currentLiabilities,
+      setup.currentLiabilities
     ),
-    defaultLiabilities,
+    defaultLiabilities
   )
 
-  const netWorkingCapital = numeric(
-    firstValue(
-      values.netWorkingCapital,
-      values.net_working_capital,
-      options.netWorkingCapital,
-    ),
-    currentAssets - currentLiabilities,
-  )
+  // Calculate from actual assets and liabilities
+  // to prevent mismatched saved totals.
+  const netWorkingCapital =
+    currentAssets - currentLiabilities
 
   const multiplier = numeric(
-    firstValue(values.multiplier, values.k, values.K, options.multiplier),
-    15,
+    firstValue(
+      values.multiplier,
+      values.k,
+      values.K,
+      options.multiplier
+    ),
+    15
   )
 
   const outstanding = numeric(
@@ -347,19 +389,25 @@ function financialData(options, setup) {
       values.outstanding,
       values.outstandingWorks,
       values.outstanding_contracts,
-      options.outstandingContracts,
+      options.outstandingContracts
     ),
-    0,
+    numeric(nfccDefaults.outstandingContracts, 0)
   )
+
+  const multipliedAmount =
+    netWorkingCapital * multiplier
+
+  const computedNfcc =
+    multipliedAmount - outstanding
 
   return {
     currentAssets,
     currentLiabilities,
     netWorkingCapital,
     multiplier,
-    multipliedAmount: netWorkingCapital * multiplier,
+    multipliedAmount,
     outstanding,
-    computedNfcc: netWorkingCapital * multiplier - outstanding,
+    computedNfcc,
   }
 }
 
@@ -380,6 +428,10 @@ function amountTable(data) {
 
     const amountParagraph = paragraph(peso(amount), {
       size: options.numberSize ?? 16,
+
+      // Allow final computed amount to be bold.
+      bold: options.boldAmount ?? false,
+
       line: 16.5,
       align: AlignmentType.RIGHT,
     })
@@ -393,19 +445,27 @@ function amountTable(data) {
       },
 
       children: [
-        cell(labelParagraph, widths[0], {
-          borders: ALL_BORDERS,
-          left: 4,
-          top: 1,
-          bottom: 1,
-        }),
+        cell(
+          labelParagraph,
+          widths[0],
+          {
+            borders: ALL_BORDERS,
+            left: 4,
+            top: 1,
+            bottom: 1,
+          }
+        ),
 
-        cell(amountParagraph, widths[1], {
-          borders: ALL_BORDERS,
-          right: 6,
-          top: 1,
-          bottom: 1,
-        }),
+        cell(
+          amountParagraph,
+          widths[1],
+          {
+            borders: ALL_BORDERS,
+            right: 6,
+            top: 1,
+            bottom: 1,
+          }
+        ),
       ],
     })
   }
@@ -420,13 +480,19 @@ function amountTable(data) {
 
     children: [
       cell(
-        paragraph('Net Financial Contracting Capacity', {
-          size: 10,
-          bold: true,
-          line: 11,
-        }),
+        paragraph(
+          'Net Financial Contracting Capacity',
+          {
+            size: 10,
+            bold: true,
+            line: 11,
+          }
+        ),
         widths[0],
-        { borders: ALL_BORDERS, left: 4 },
+        {
+          borders: ALL_BORDERS,
+          left: 4,
+        }
       ),
 
       cell(
@@ -437,7 +503,9 @@ function amountTable(data) {
           align: AlignmentType.CENTER,
         }),
         widths[1],
-        { borders: ALL_BORDERS },
+        {
+          borders: ALL_BORDERS,
+        }
       ),
     ],
   })
@@ -445,17 +513,37 @@ function amountTable(data) {
   const rows = [
     header,
 
-    amountRow('Current Assets', data.currentAssets, { bold: true }),
+    amountRow(
+      'Current Assets',
+      data.currentAssets,
+      {
+        bold: true,
+      }
+    ),
 
-    amountRow('Current Liabilities', data.currentLiabilities, { bold: true }),
+    amountRow(
+      'Current Liabilities',
+      data.currentLiabilities,
+      {
+        bold: true,
+      }
+    ),
 
-    amountRow('Net Working Capital (6)', data.netWorkingCapital, {
-      bold: true,
-    }),
+    amountRow(
+      'Net Working Capital (6)',
+      data.netWorkingCapital,
+      {
+        bold: true,
+      }
+    ),
 
-    amountRow(`Multiply by ${data.multiplier}`, data.multipliedAmount, {
-      bold: true,
-    }),
+    amountRow(
+      `Multiply by ${data.multiplier}`,
+      data.multipliedAmount,
+      {
+        bold: true,
+      }
+    ),
 
     amountRow(
       'Less: Value of all outstanding and uncompleted\n' +
@@ -468,7 +556,22 @@ function amountTable(data) {
         bold: true,
         italic: true,
         height: 52,
-      },
+      }
+    ),
+
+    // ======================================
+    // FINAL COMPUTED NFCC ROW
+    // ======================================
+
+    amountRow(
+      'Computed NFCC',
+      data.computedNfcc,
+      {
+        bold: true,
+        boldAmount: true,
+        numberSize: 13,
+        height: 20,
+      }
     ),
   ]
 
@@ -476,7 +579,10 @@ function amountTable(data) {
     alignment: AlignmentType.CENTER,
 
     width: {
-      size: widths.reduce((a, b) => a + b, 0),
+      size: widths.reduce(
+        (a, b) => a + b,
+        0
+      ),
       type: WidthType.DXA,
     },
 
@@ -495,7 +601,10 @@ function signatureTable(setup) {
   const widths = [PT(96), PT(27), PT(400)]
 
   const signatory = text(
-    firstValue(setup.submittedBy, setup.authorizedRepresentative),
+    firstValue(
+      setup.submittedBy,
+      setup.authorizedRepresentative
+    )
   )
 
   const entries = [
@@ -509,11 +618,14 @@ function signatureTable(setup) {
           line: 12,
         }),
 
-        paragraph('(Printed Name & Signature)', {
-          size: 6.3,
-          line: 9,
-          indent: 0,
-        }),
+        paragraph(
+          '(Printed Name & Signature)',
+          {
+            size: 6.3,
+            line: 9,
+            indent: 0,
+          }
+        ),
       ],
       35,
     ],
@@ -522,12 +634,15 @@ function signatureTable(setup) {
       'Designation',
       [
         paragraph(
-          firstValue(setup.designation, setup.representativeDesignation) ?? '',
+          firstValue(
+            setup.designation,
+            setup.representativeDesignation
+          ) ?? '',
           {
             size: 10.3,
             italic: true,
             line: 12,
-          },
+          }
         ),
       ],
       23,
@@ -536,11 +651,14 @@ function signatureTable(setup) {
     [
       'Name of Firm',
       [
-        paragraph(text(setup.bidderName), {
-          size: 10.3,
-          bold: true,
-          line: 12,
-        }),
+        paragraph(
+          text(setup.bidderName),
+          {
+            size: 10.3,
+            bold: true,
+            line: 12,
+          }
+        ),
       ],
       23,
     ],
@@ -548,10 +666,13 @@ function signatureTable(setup) {
     [
       'Date',
       [
-        paragraph(formatLongDate(setup.date) || '', {
-          size: 10.3,
-          line: 12,
-        }),
+        paragraph(
+          formatLongDate(setup.date) || '',
+          {
+            size: 10.3,
+            line: 12,
+          }
+        ),
       ],
       23,
     ],
@@ -566,17 +687,28 @@ function signatureTable(setup) {
         },
 
         children: [
-          cell(paragraph('', { size: 1, line: 1 }), PT(14), {
-            left: 0,
-            right: 0,
-          }),
+          cell(
+            paragraph('', {
+              size: 1,
+              line: 1,
+            }),
+            PT(14),
+            {
+              left: 0,
+              right: 0,
+            }
+          ),
+
           cell(
             paragraph(label, {
               size: 10,
               line: 12,
             }),
             widths[0],
-            { left: 0, right: 0 },
+            {
+              left: 0,
+              right: 0,
+            }
           ),
 
           cell(
@@ -585,17 +717,30 @@ function signatureTable(setup) {
               line: 12,
             }),
             widths[1],
-            { left: 0, right: 0 },
+            {
+              left: 0,
+              right: 0,
+            }
           ),
 
-          cell(contents, widths[2], { left: 0, right: 0 }),
+          cell(
+            contents,
+            widths[2],
+            {
+              left: 0,
+              right: 0,
+            }
+          ),
         ],
-      }),
+      })
   )
 
   return new Table({
     width: {
-      size: PT(14) + widths.reduce((a, b) => a + b, 0),
+      size: PT(14) + widths.reduce(
+        (a, b) => a + b,
+        0
+      ),
       type: WidthType.DXA,
     },
 
@@ -611,34 +756,56 @@ function signatureTable(setup) {
 // ============================================
 
 export function nfccWord(options = {}) {
-  if (getBidderCompany(options.setup ?? options).id !== 'mikata') {
-    return templateWord(options, options.sectionNumber ?? 11, { tables: true, tableExactGeometry: true, exactLineSpacing: true, positionedGaps: true })
+  // Preserve the existing company-specific
+  // Word conversion path for other bidders.
+  if (
+    getBidderCompany(options.setup ?? options).id !==
+    'mikata'
+  ) {
+    return templateWord(
+      options,
+      options.sectionNumber ?? 11,
+      {
+        tables: true,
+        tableExactGeometry: true,
+        exactLineSpacing: true,
+        positionedGaps: true,
+      }
+    )
   }
+
   const setup = options.setup ?? options
-  const finance = financialData(options, setup)
+
+  const finance = financialData(
+    options,
+    setup
+  )
 
   const children = [
     // ========================================
     // DOCUMENT TITLE
     // ========================================
 
-    paragraph('NET FINANCIAL CONTRACTING CAPACITY (NFCC)', {
-      size: 12,
-      bold: true,
-      align: AlignmentType.CENTER,
-      line: 16,
-      after: 12,
-      bookmark: options.sectionNumber ?? 11,
+    paragraph(
+      'NET FINANCIAL CONTRACTING CAPACITY (NFCC)',
+      {
+        size: 12,
+        bold: true,
+        align: AlignmentType.CENTER,
+        line: 16,
+        after: 12,
+        bookmark: options.sectionNumber ?? 11,
 
-      border: {
-        bottom: {
-          style: BorderStyle.SINGLE,
-          color: BLACK,
-          size: 7,
-          space: 3,
+        border: {
+          bottom: {
+            style: BorderStyle.SINGLE,
+            color: BLACK,
+            size: 7,
+            space: 3,
+          },
         },
-      },
-    }),
+      }
+    ),
 
     // ========================================
     // PROJECT DETAILS
@@ -666,7 +833,7 @@ export function nfccWord(options = {}) {
         line: 13.8,
         firstLine: 36,
         after: 13,
-      },
+      }
     ),
 
     // ========================================
@@ -685,7 +852,7 @@ export function nfccWord(options = {}) {
         indent: 32,
         hanging: 18,
         after: 13,
-      },
+      }
     ),
 
     // ========================================
@@ -702,7 +869,7 @@ export function nfccWord(options = {}) {
         line: 16,
         indent: 36,
         after: 0,
-      },
+      }
     ),
 
     paragraph(
@@ -715,30 +882,38 @@ export function nfccWord(options = {}) {
         line: 13.8,
         indent: 36,
         after: 3,
-      },
+      }
     ),
 
     paragraph(
-      'Where K = 10 for a contract duration of ' + 'one (1) year or less',
+      'Where K = 10 for a contract duration of ' +
+        'one (1) year or less',
       {
         size: 12,
         line: 13.8,
         indent: 36,
-      },
+      }
     ),
 
-    paragraph('15 for more than one (1) year up to ' + 'two (2) years', {
-      size: 12,
-      line: 13.8,
-      indent: 92,
-    }),
+    paragraph(
+      '15 for more than one (1) year up to ' +
+        'two (2) years',
+      {
+        size: 12,
+        line: 13.8,
+        indent: 92,
+      }
+    ),
 
-    paragraph('20 for more than two (2) years', {
-      size: 12,
-      line: 13.8,
-      indent: 92,
-      after: 17,
-    }),
+    paragraph(
+      '20 for more than two (2) years',
+      {
+        size: 12,
+        line: 13.8,
+        indent: 92,
+        after: 17,
+      }
+    ),
 
     // ========================================
     // FINANCIAL TABLE
@@ -746,7 +921,11 @@ export function nfccWord(options = {}) {
 
     amountTable(finance),
 
-    blank(14),
+    // ========================================
+    // EXTRA SPACE BEFORE SIGNATURES
+    // ========================================
+
+    blank(28),
 
     // ========================================
     // SIGNATURES
@@ -768,7 +947,8 @@ export function nfccWord(options = {}) {
           size: {
             width: PAGE_WIDTH,
             height: PAGE_HEIGHT,
-            orientation: PageOrientation.PORTRAIT,
+            orientation:
+              PageOrientation.PORTRAIT,
           },
 
           margin: {
