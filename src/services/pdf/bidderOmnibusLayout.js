@@ -87,7 +87,7 @@ export async function drawBidderOmnibusBody(pdf, data) {
   if (top + 170 > page.getHeight() - 62) advancePage()
   top += 12
   paragraph([normal('IN WITNESS WHEREOF, I have hereunto set my hand this '), strong(`${data.day} day of ${data.month} ${data.year}`),
-    normal(' at '), strong(`Municipality of ${data.municipality}, ${data.province}`), normal(', Philippines.')])
+    normal(' at '), strong('Municipality of ____________, ____________'), normal(', Philippines.')])
   paragraph([normal('Duly authorized to sign the Bid for and behalf of:')], { firstX: 252, nextX: 252, gap: 12 })
   paragraph([company()], { firstX: 252, nextX: 252, gap: 24 })
   paragraph([strong(data.representative.displayName)], { firstX: 252, nextX: 252, gap: 0 })

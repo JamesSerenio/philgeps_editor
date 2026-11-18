@@ -823,7 +823,7 @@ function replaceInlineCompany({
 
         {
           text:
-            `Municipality of ${municipality}, ${province}`,
+              'Municipality of ____________, ____________',
           font: boldItalic,
         },
 
@@ -938,7 +938,7 @@ function replaceInlineCompany({
 
         {
           text:
-            `Municipality of ${municipality}, ${province}`,
+              'Municipality of ____________, ____________',
           font: boldItalic,
         },
 

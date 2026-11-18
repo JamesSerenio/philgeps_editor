@@ -473,7 +473,7 @@ export async function generateSecretaryCertificatePreview(
   )
 
   line(
-    `${entity} ) S.S.`
+      'MUNICIPALITY OF ____________, ____________ ) S.S.'
   )
 
   y -= 37

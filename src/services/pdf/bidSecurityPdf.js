@@ -209,7 +209,7 @@ export async function generateBidSecurityPreview(project) {
 
     draw(
       page1,
-      `Municipality of ${municipality}, ${province}.`,
+        'Municipality of ____________, ____________.',
       36,
       37,
       boldItalic,
@@ -300,7 +300,7 @@ export async function generateBidSecurityPreview(project) {
 
     draw(
       page1,
-      `MUNICIPALITY OF ${municipality.toUpperCase()}`,
+        'MUNICIPALITY OF ____________',
       72,
       692,
       timesBold,
@@ -348,7 +348,7 @@ export async function generateBidSecurityPreview(project) {
 
     draw(
       page2,
-      `Municipality of ${municipality}.`,
+        'Municipality of ____________.',
       72,
       692,
       timesBoldItalic,
@@ -423,7 +423,7 @@ export async function generateBidSecurityPreview(project) {
 
     draw(
       page2,
-      `Municipality of ${municipality},`,
+        'Municipality of ____________,',
       408.7,
       485,
       timesBoldItalic,
