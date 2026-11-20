@@ -1,6 +1,7 @@
 import { rgb, StandardFonts } from 'pdf-lib'
 import { getBidderCompany, getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { getDefaultBidderAddress } from '../../lib/bidderAddresses'
+import { MEGA_PLUTO_DISPLAY_NAME } from '../../lib/bidderCompanies'
 
 export async function applyBidderLetterhead(document, page, setup, geometry, suppliedLogo) {
   const company = getBidderCompany(setup)
@@ -30,11 +31,22 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
     const regular = await document.embedFont(StandardFonts.Helvetica)
     const width = page.getWidth() - 96
     const gold = rgb(.68, .55, .27), green = rgb(.06, .34, .23)
-    const titleSize = 26
-    const x = (page.getWidth() - font.widthOfTextAtSize('MEGA PLUTO', titleSize)) / 2
-    page.drawText('MEGA ', { x, y: page.getHeight() - 82, size: titleSize, font, color: green })
-    page.drawText('PLUTO', { x: x + font.widthOfTextAtSize('MEGA ', titleSize),
-      y: page.getHeight() - 82, size: titleSize, font, color: gold })
+    const brand = 'Megapluto'
+    const suffix = MEGA_PLUTO_DISPLAY_NAME.slice(brand.length)
+    const maxTitleWidth = page.getWidth() - 48
+    let titleSize = 26
+    while (titleSize > 8 && font.widthOfTextAtSize(MEGA_PLUTO_DISPLAY_NAME, titleSize) > maxTitleWidth) {
+      titleSize -= 0.25
+    }
+    const x = (page.getWidth() - font.widthOfTextAtSize(MEGA_PLUTO_DISPLAY_NAME, titleSize)) / 2
+    page.drawText(brand, { x, y: page.getHeight() - 82, size: titleSize, font, color: green })
+    page.drawText(suffix, {
+      x: x + font.widthOfTextAtSize(brand, titleSize),
+      y: page.getHeight() - 82,
+      size: titleSize,
+      font,
+      color: gold,
+    })
     let top = 97
     for (const [label, value] of [['Business Address: ', setup.businessAddress ?? setup.companyAddress ?? company.address],
       ['Email Address: ', setup.email || company.email], ['Mobile Number: ', setup.phone || company.phone]]) {

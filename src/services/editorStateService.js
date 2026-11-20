@@ -1,5 +1,6 @@
 
 import { supabase } from '../supabase'
+import { assertSharedMetadata } from '../lib/projectMetadata'
 
 // =====================================================
 // SUPABASE CONFIGURATION
@@ -330,6 +331,17 @@ export async function getEditorState(
     }
   }
 
+  const setup = restored.bid_security?.documentSetup
+  if (setup) {
+    try {
+      const result = await supabase.from('philgeps_posts').select('*').eq('id',String(projectId)).single()
+      if (result.error || !result.data) throw Error('Shared project information could not be verified.')
+      assertSharedMetadata(result.data,setup)
+    } catch (error) {
+      restored.__metadataPending = true
+      restored.__metadataError = error.message
+    }
+  }
   return restored
 }
 
@@ -339,7 +351,8 @@ export async function getEditorState(
 
 export async function saveEditorState(
   projectId,
-  patch
+  patch,
+  options = {}
 ) {
   if (
     projectId == null ||
@@ -403,22 +416,22 @@ export async function saveEditorState(
   // SAVE OR UPDATE PROJECT RECORD
   // =====================================
 
-  const { error } = await supabase
-    .from(TABLE)
-    .upsert(
-      payload,
-      {
-        onConflict: 'project_id',
-
-        // Keep other database columns
-        // when saving only one section.
-        defaultToNull: false,
-      }
-    )
-
-  if (error) {
-    throw error
-  }
+  let expected = options.expectedUpdatedAt
+  if (!Object.hasOwn(options,'expectedUpdatedAt')) expected = (await getEditorState(projectId))?.updated_at ?? null
+  const request = expected == null
+    ? supabase.from(TABLE).insert(payload)
+    : supabase.from(TABLE).update(payload).eq('project_id',String(projectId)).eq('updated_at',expected)
+  const { data, error } = await request.select('*').single()
+  if (error || !data) throw Error(error?.code === 'PGRST116' || error?.code === '23505'
+    ? 'No editor row updated: another tab changed it or UPDATE access is missing. Your draft is retained. Reload the saved version and check editor permissions before retrying.'
+    : error?.message || 'No editor row was saved. Check this project’s editor INSERT/UPDATE permissions.')
+  try { if (payload.bid_security?.documentSetup) {
+    const result = await supabase.from('philgeps_posts').select('*').eq('id',String(projectId)).single()
+    if (result.error || !result.data) throw Error('Document data saved, but the shared project row could not be verified. Check project read permissions and retry.')
+    assertSharedMetadata(result.data,payload.bid_security.documentSetup)
+  } } catch (error) { error.savedRevision=data.updated_at; throw error }
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('project-metadata-saved'))
+  return data
 }
 
 // =====================================================

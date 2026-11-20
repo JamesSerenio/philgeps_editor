@@ -1,16 +1,17 @@
 import DashboardIcon from './DashboardIcon'
+import { firstProjectText } from '../lib/projectMetadata'
 import { getDeadline, getTimeRemaining, formatDateTime, formatPeso } from '../lib/projectFormatters'
 
 export default function ProjectCard({ project, onOpenEditor, now }) {
-  const title = project.title || project.project_title || project.projectTitle || 'Untitled Project'
-  const reference = project.reference_number || project.reference_no || project.referenceNumber || '—'
-  const entity = project.procuring_entity || project.entity || '—'
+  const title = firstProjectText(project,['title','project_title','projectTitle'],'Untitled Project')
+  const reference = firstProjectText(project,['reference_number','reference_no','referenceNumber'],'—')
+  const entity = firstProjectText(project,['procuring_entity','procuringEntity','entity'],'—')
   const deadline = getDeadline(project)
   const countdown = getTimeRemaining(deadline, now)
   const tags = [
-    { label: 'Municipality / LGU', value: project.lgu, icon: 'folder', style: 'lgu-chip' },
+    { label: 'Municipality / LGU', value: firstProjectText(project,['lgu','municipality']), icon: 'folder', style: 'lgu-chip' },
     { label: 'Procurement category', value: project.classification, icon: null },
-    { label: 'Delivery area', value: project.area_of_delivery, icon: 'pin' },
+    { label: 'Delivery area', value: firstProjectText(project,['area_of_delivery','areaOfDelivery','province','location']), icon: 'pin' },
   ].filter((tag) => tag.value && String(tag.value).trim())
   return (
     <article className="project-card">

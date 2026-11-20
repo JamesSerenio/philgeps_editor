@@ -1,4 +1,4 @@
-import { bidderCompanies } from './bidderCompanies.js'
+import { bidderCompanies, MEGA_PLUTO_DISPLAY_NAME } from './bidderCompanies.js'
 import { selectBidderProfile } from './bidderProfiles.js'
 
 // Additional offices are retained for reference; only the primary/main office
@@ -9,7 +9,7 @@ export const bidderAddresses = {
     businessAddress: 'M. Vega St., Abarlos Compound, Consolacion, Cagayan de Oro City',
     additionalOffice: 'Jamille St., Maria Cristina Subdivision, Brgy. San Miguel, Iligan City',
   },
-  'mega-pluto': { name: 'MEGA PLUTO', businessAddress: 'Kihare, Bukidnon, 8703' },
+  'mega-pluto': { name: MEGA_PLUTO_DISPLAY_NAME, businessAddress: 'Kihare, Bukidnon, 8703' },
   manotech: { name: 'MANOTECH', businessAddress: 'Purok 4, Poblacion, Linamon, Lanao del Norte' },
   mikata: {
     name: 'MIKATA PRIME CORPORATION',

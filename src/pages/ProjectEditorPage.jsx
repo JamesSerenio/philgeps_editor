@@ -307,10 +307,8 @@ function ProjectEditorContent({ id }) {
   )
   const panelToggleRef = useRef(null)
   const editorShellRef = useRef(null)
-  const blankProjectSyncRef = useRef(null)
   const compactLayout = responsiveMode !== 'desktop'
 
-  useEffect(() => () => clearTimeout(blankProjectSyncRef.current), [])
 
   function closePanel() {
     setPanelOpen(false)
@@ -1106,58 +1104,7 @@ function changeSetup(value) {
 
   setDocumentSetup(nextSetup)
 
-  // Save project-card information and manual
-  // deadline ONLY for New Blank Editor projects.
-  if (isManualProject && project?.id) {
-    const patch = {
-      title: nextSetup.projectTitle || '',
-      reference_number:
-        nextSetup.referenceNumber || '',
-      procuring_entity:
-        nextSetup.procuringEntity || '',
-      lgu: nextSetup.municipality || '',
-      area_of_delivery:
-        nextSetup.province || '',
-      manual_deadline:
-        nextSetup.closingDate || null,
-    }
-
-    setProject((current) =>
-      current
-        ? { ...current, ...patch }
-        : current
-    )
-
-    clearTimeout(blankProjectSyncRef.current)
-
-    blankProjectSyncRef.current = setTimeout(
-      async () => {
-        try {
-          const { error: syncError } =
-            await supabase
-              .from('philgeps_posts')
-              .update(patch)
-              .eq('id', project.id)
-              .eq('is_manual', true)
-
-          if (syncError) {
-            throw syncError
-          }
-        } catch (syncError) {
-          console.error(
-            'Failed to save manual project:',
-            syncError
-          )
-
-          setGenerateAllError(
-            syncError?.message ||
-            'Unable to save project information.'
-          )
-        }
-      },
-      250
-    )
-  }
+  // Shared fields commit atomically with editor JSON through the database trigger.
 
   const next = {
     ...restored.bidSecurity,

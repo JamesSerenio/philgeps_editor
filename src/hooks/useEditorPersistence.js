@@ -75,7 +75,7 @@ function cleanPatch(patch) {
   }
 
   return Object.fromEntries(
-    Object.entries(patch).map(([key, value]) => [
+    Object.entries(patch).filter(([key]) => SECTIONS.includes(key)).map(([key, value]) => [
       key,
       cleanSection(key, value),
     ])
@@ -122,6 +122,7 @@ function readLocal(projectId) {
     }
 
     return {
+      remoteUpdatedAt: data.remoteUpdatedAt ?? data.values?.updated_at ?? null,
       values: cleanPatch(data.values),
       pending: cleanPatch(data.pending),
     }
@@ -141,6 +142,7 @@ function writeLocal(ctx) {
       keyFor(ctx.id),
       JSON.stringify({
         version: 4,
+        remoteUpdatedAt: ctx.remoteUpdatedAt,
 
         values: cleanPatch(ctx.values),
 
@@ -243,8 +245,10 @@ export default function useEditorPersistence(
         }
 
         try {
-          await saveEditorState(ctx.id, patch)
+          const saved = await saveEditorState(ctx.id, patch, {expectedUpdatedAt:ctx.remoteUpdatedAt})
+          ctx.remoteUpdatedAt = saved.updated_at
         } catch (error) {
+          if (error.savedRevision) ctx.remoteUpdatedAt = error.savedRevision
           ctx.pending = cleanPatch({
             ...patch,
             ...ctx.pending,
@@ -519,6 +523,7 @@ export default function useEditorPersistence(
       const pending = {
         ...(backup?.pending || {}),
       }
+      if (remote?.__metadataPending && remote?.bid_security && !Object.hasOwn(pending,'bid_security')) pending.bid_security=remote.bid_security
 
       // Recover unsynced data if remote is
       // empty or temporarily unavailable.
@@ -560,6 +565,11 @@ export default function useEditorPersistence(
       })
 
       ctx.pending = cleanPatch(pending)
+      // A recovered draft must retain the revision it was edited against.
+      // Otherwise reopening an old tab could silently overwrite a newer save.
+      ctx.remoteUpdatedAt = Object.keys(backup?.pending || {}).length && Object.hasOwn(backup,'remoteUpdatedAt')
+        ? backup.remoteUpdatedAt
+        : remote?.updated_at ?? backup?.remoteUpdatedAt ?? null
       ctx.loaded = true
 
       writeLocal(ctx)
