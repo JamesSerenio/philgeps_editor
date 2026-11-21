@@ -254,17 +254,38 @@ export async function generateOngoingContractsPreview(project) {
   const topColonX = 275
   const topValueX = 300
 
-  text('NAME OF THE PROCURING ENTITY', topLabelX, 550, 11.5, regular)
-  text(':', topColonX, 550, 11.5, regular)
-  wrapped(procuringEntity, topValueX, 550, 455, 11.5, bold, 13)
-
-  text('PROJECT TITLE', topLabelX, 527, 11.5, regular)
-  text(':', topColonX, 527, 11.5, regular)
-  wrapped(projectTitle, topValueX, 527, 455, 11.5, bold, 13)
-
-  text('REFERENCE NUMBER', topLabelX, 492, 11.5, regular)
-  text(':', topColonX, 492, 11.5, regular)
-  text(referenceNumber, topValueX, 492, 11.5, bold)
+  // Fit the complete header above the unchanged statement heading. Long
+  // project titles move the reference row down rather than drawing over it.
+  const headerWidth = page.getWidth() - topValueX - 36
+  const headerLayout = size => {
+    const lineHeight = size * 1.15
+    const entity = wrapText(procuringEntity, bold, size, headerWidth)
+    const title = wrapText(projectTitle, bold, size, headerWidth)
+    const reference = wrapText(referenceNumber, bold, size, headerWidth)
+    const titleTop = 34 + Math.max(22, entity.length * lineHeight + 6)
+    const referenceTop = titleTop + Math.max(24, title.length * lineHeight + 3)
+    return { lineHeight, rows: [
+      { label: 'NAME OF THE PROCURING ENTITY', top: 34, lines: entity },
+      { label: 'PROJECT TITLE', top: titleTop, lines: title },
+      { label: 'REFERENCE NUMBER', top: referenceTop, lines: reference },
+    ], bottom: referenceTop + Math.max(0, reference.length - 1) * lineHeight }
+  }
+  let headerSize = 11.5
+  let header = headerLayout(headerSize)
+  while (headerSize > 6 && (header.bottom > 108 || header.rows.some(row =>
+    row.lines.some(line => bold.widthOfTextAtSize(line, headerSize) > headerWidth)))) {
+    headerSize -= .25
+    header = headerLayout(headerSize)
+  }
+  if (header.bottom > 108 || header.rows.some(row => row.lines.some(line => bold.widthOfTextAtSize(line, headerSize) > headerWidth))) {
+    throw new Error('Ongoing Contracts: project information is too long to fit above the statement heading.')
+  }
+  for (const row of header.rows) {
+    const y = page.getHeight() - row.top
+    text(row.label, topLabelX, y, 11.5, regular)
+    text(':', topColonX, y, 11.5, regular)
+    row.lines.forEach((line, index) => text(line, topValueX, y - index * header.lineHeight, headerSize, bold))
+  }
 
   // ==========================================================
   // BIDDER INFO - BIGGER
