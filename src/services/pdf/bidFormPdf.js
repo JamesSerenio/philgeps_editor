@@ -129,6 +129,7 @@ function fitted(
   width,
   maxLines = 1,
   minSize = 9.5,
+  maxHeight = Infinity,
 ) {
   for (
     let size = 12;
@@ -144,7 +145,8 @@ function fitted(
 
     if (
       lines &&
-      lines.length <= maxLines
+      lines.length <= maxLines &&
+      size * 1.04 + Math.max(0, lines.length - 1) * size * 1.15 <= maxHeight
     ) {
       return {
         lines,
@@ -167,6 +169,7 @@ function drawWrapped(
   font,
   width,
   maxLines = 2,
+  maxHeight = Infinity,
 ) {
   const {
     lines,
@@ -176,6 +179,8 @@ function drawWrapped(
     font,
     width,
     maxLines,
+    9.5,
+    maxHeight,
   )
 
   lines.forEach(
@@ -184,7 +189,7 @@ function drawWrapped(
         page,
         line,
         x,
-        top + index * 13.8,
+        top + index * size * 1.15,
         font,
         size,
       )
@@ -647,7 +652,8 @@ export async function generateBidFormPreview(
     246.5,
     boldItalic,
     435,
-    2,
+    3,
+    35,
   )
 
   // ===================================================
