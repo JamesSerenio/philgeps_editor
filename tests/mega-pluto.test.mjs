@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import { after, test } from 'node:test'
 import { createServer } from 'vite'
 import { selectBidder } from '../src/lib/bidderAddresses.js'
-import { documentBidderName } from '../src/lib/bidderCompanies.js'
+import { documentBidderName, normalizeBidderSetup, MEGA_PLUTO_DISPLAY_NAME } from '../src/lib/bidderCompanies.js'
 import { restoreBidderVariants } from '../src/lib/bidderProfiles.js'
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
 after(() => server.close())
@@ -21,8 +21,37 @@ test('all 22 independent Mega Pluto templates preserve source geometry and hashe
     assert.ok(assets.getTemplatePath(filename, 'mega-pluto').startsWith('/pdf/templates/MEGA_PLUTO/'))
   }
   assert.ok(assets.getLogoPath('mega-pluto').endsWith('/MEGA_PLUTO-logo-transparent.png'))
-  assert.throws(() => assets.getTemplatePath('missing.pdf', 'mega-pluto'), /Missing MEGA PLUTO template/)
+  assert.throws(() => assets.getTemplatePath('missing.pdf', 'mega-pluto'), /Missing Megapluto Electrical Supply & Hardware Materials Trading template/)
   assert.equal(assets.getMissingBidderAssets('mega-pluto').length, 7)
+})
+
+test('legacy company identifiers, profiles, addresses, variants and certificate ownership migrate without data loss', () => {
+  for (const id of ['mega-pluto', 'MEGA_PLUTO', 'MEGA PLUTO', 'MEGAPLUTO', MEGA_PLUTO_DISPLAY_NAME]) {
+    const saved = { bidderId: id, bidderName: id, businessAddress: 'Saved address',
+      bidderProfiles: { [id]: { submittedBy: 'Saved representative' } },
+      bidderBusinessAddresses: { [id]: 'Saved address' },
+      bidderTemplateVariants: { [id]: { omnibus: 'initao_lgu' } },
+      certificateUploads: { 'SEC Registration Certificate.pdf': { bidderId: id, dataUrl: 'data:application/pdf;base64,JVBERg==' } } }
+    const setup = normalizeBidderSetup(saved)
+    assert.equal(setup.bidderId, 'MEGA_PLUTO')
+    assert.equal(setup.bidderName, MEGA_PLUTO_DISPLAY_NAME)
+    assert.equal(setup.bidderProfiles.MEGA_PLUTO.submittedBy, 'Saved representative')
+    assert.equal(setup.bidderBusinessAddresses.MEGA_PLUTO, 'Saved address')
+    assert.equal(setup.bidderTemplateVariants.MEGA_PLUTO.omnibus, 'initao_lgu')
+    assert.equal(setup.certificateUploads['SEC Registration Certificate.pdf'].bidderId, 'MEGA_PLUTO')
+    assert.equal(saved.bidderId, id)
+    assert.equal(assets.getTemplatePath('TABLE OF CONTENTS.pdf', saved), assets.getTemplatePath('TABLE OF CONTENTS.pdf', setup))
+    assert.equal(assets.getStaticDocumentPath(saved, 'SEC Registration Certificate.pdf'), 'data:application/pdf;base64,JVBERg==')
+    assert.equal(documentBidderName(saved), MEGA_PLUTO_DISPLAY_NAME)
+  }
+  const other = { bidderId: 'manotech', bidderName: 'MANOTECH', bidderProfiles: { 'mega-pluto': { submittedBy: 'Saved representative' } },
+    bidderBusinessAddresses: { 'mega-pluto': 'Saved office' }, bidderTemplateVariants: { 'mega-pluto': { omnibus: 'initao_lgu', bidSecurity: 'with_table' } } }
+  const selected = selectBidder(other, 'MEGA_PLUTO')
+  assert.equal(selected.submittedBy, 'Saved representative')
+  assert.equal(selected.businessAddress, 'Saved office')
+  const restored = restoreBidderVariants(other, selected, {}, {})
+  assert.equal(restored.omnibus.templateVariant, 'initao_lgu')
+  assert.equal(restored.bidSecurity.templateVariant, 'with_table')
 })
 
 test('Mega Pluto profile, legal name, custom address and variants survive company switching and serialization', async () => {

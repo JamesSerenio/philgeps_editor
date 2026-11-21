@@ -3,7 +3,7 @@ import { ImageRun, TextWrappingType } from 'docx'
 // PDF.js can merge adjacent same-font title runs despite different ink colors.
 // Restore the two editable brand runs for this header only.
 export function prepareMegaPlutoHeader(page, logo) {
-  if (logo.companyId !== 'mega-pluto') return
+  if (logo.companyId !== 'MEGA_PLUTO') return
   page.fragments = page.fragments.flatMap(part => {
     if (!/^MEGA\s*PLUTO$/i.test(part.str.trim()) || part.size < 20) return [part]
     const offset = part.size * 3.278

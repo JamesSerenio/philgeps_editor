@@ -42,7 +42,7 @@ export async function generateTabbingPreview(data = {}) {
       logo: { x: 43.45, y: height - 25.8 - 86.95, width: 104.19, height: 86.95 },
       text: { x: 152.47, y: height - 55.7, addressY: height - 75.62, width: 414, size: 25.92 },
     }, logo)
-    if (!['builtech', 'manotech', 'mega-pluto'].includes(company.id)) {
+    if (!['builtech', 'manotech', 'MEGA_PLUTO'].includes(company.id)) {
       erase(151, 29, 420, 34)
       draw(documentBidderName(data), 152.47, 55.7, 414, 25.92)
       erase(154, 65, 417, 14)

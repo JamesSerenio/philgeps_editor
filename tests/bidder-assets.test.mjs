@@ -36,7 +36,7 @@ test('all inventoried company and shared asset paths still exist after cleanup',
   }
   for (const company of bidderCompanies) {
     for (const filename of templates) {
-      if (!['mikata', 'builtech', 'manotech', 'mega-pluto'].includes(company.id) && ['NFCC_Template.pdf', 'Manpower Requirements.pdf', 'Statement of Ongoing Government and Private Contracts,.pdf', 'SLCC_table_cctv.pdf', 'SLCC_table_streetlight.pdf'].includes(filename)) continue
+      if (!['mikata', 'builtech', 'manotech', 'MEGA_PLUTO'].includes(company.id) && ['NFCC_Template.pdf', 'Manpower Requirements.pdf', 'Statement of Ongoing Government and Private Contracts,.pdf', 'SLCC_table_cctv.pdf', 'SLCC_table_streetlight.pdf'].includes(filename)) continue
       const resolved = getTemplatePath(filename, company.id)
       assert.ok(fs.existsSync('public' + decodeURIComponent(resolved)), resolved)
     }
@@ -55,7 +55,7 @@ test('missing bidder certificates never fall back to Mikata or shared legal orig
 })
 test('only generic templates may use shared fallback; history and staff require company files', () => {
   for (const company of bidderCompanies.slice(1)) {
-    if (['builtech', 'manotech', 'mega-pluto'].includes(company.id)) {
+    if (['builtech', 'manotech', 'MEGA_PLUTO'].includes(company.id)) {
       assert.ok(getTemplatePath('TABBING.pdf', company.id).includes('/' + company.folder + '/'))
       assert.ok(decodeURIComponent(getLogoPath(company.id)).endsWith(company.logoFilename))
       continue
@@ -67,7 +67,7 @@ test('only generic templates may use shared fallback; history and staff require 
   }
 })
 test('public URLs safely encode company names and reject traversal', () => {
-  const path = expectedBidderAssetPath('mega-pluto', 'static', 'SEC Registration Certificate.pdf')
+  const path = expectedBidderAssetPath('MEGA_PLUTO', 'static', 'SEC Registration Certificate.pdf')
   assert.ok(assets.encodeAssetUrl('/images/A&B test.png').includes('A&B'))
   assert.ok(!assets.encodeAssetUrl(path).includes(' '))
   assert.throws(() => expectedBidderAssetPath('mikata', 'static', '../private.pdf'), /Invalid asset filename/)

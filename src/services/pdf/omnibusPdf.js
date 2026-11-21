@@ -950,7 +950,7 @@ function replaceInlineCompany({
 
         {
           text:
-            ['mega-pluto'].includes(getBidderCompany(project).id) ? clean(project.identityDocumentType) || '________________' : 'National ID',
+            ['MEGA_PLUTO'].includes(getBidderCompany(project).id) ? clean(project.identityDocumentType) || '________________' : 'National ID',
           font: boldItalic,
         },
 
@@ -1059,7 +1059,7 @@ function replaceInlineCompany({
       municipality, province, day, month, year, fullDate, designation, numbered: variant === 'initao_lgu' })
     drawJurat(pdfDoc.getPage(pdfDoc.getPageCount() - 1))
   }
-  if (['mikata', 'mega-pluto'].includes(getBidderCompany(project).id)) {
+  if (['mikata', 'MEGA_PLUTO'].includes(getBidderCompany(project).id)) {
     await drawReflowedBody()
     return URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }))
   }

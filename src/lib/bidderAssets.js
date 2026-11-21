@@ -63,7 +63,9 @@ export function requireAsset(path, label = 'asset') {
 export function getStaticDocumentPath(value, filename, { required = true } = {}) {
   const company = getBidderCompany(value)
   const uploaded = typeof value === 'object' && value?.certificateUploads?.[filename]
-  if (uploaded?.bidderId === company.id && /^data:application\/pdf;base64,[A-Za-z0-9+/=]+$/.test(uploaded.dataUrl)) return uploaded.dataUrl
+  const uploadBelongsToCompany = uploaded?.bidderId && [company.id, company.folder, company.name, ...company.aliases]
+    .some(id => id.toUpperCase() === String(uploaded.bidderId).trim().toUpperCase())
+  if (uploadBelongsToCompany && /^data:application\/pdf;base64,[A-Za-z0-9+/=]+$/.test(uploaded.dataUrl)) return uploaded.dataUrl
   let path = encodeAssetUrl(expectedBidderAssetPath(company.id, 'static', filename))
   // Only Mikata may use its unchanged legacy originals.
   if (!assetExists(path) && company.id === 'mikata' && assetExists(sharedAssetPath('static', filename))) path = sharedAssetPath('static', filename)
@@ -72,7 +74,7 @@ export function getStaticDocumentPath(value, filename, { required = true } = {})
 export function getTemplatePath(filename, value, { required = true } = {}) {
   const company = getBidderCompany(value)
   let path = encodeAssetUrl(expectedBidderAssetPath(company.id, 'templates', filename))
-  if (['mega-pluto'].includes(company.id)) return required ? requireAsset(path, company.name + ' template: ' + filename) : path
+  if (['MEGA_PLUTO'].includes(company.id)) return required ? requireAsset(path, company.name + ' template: ' + filename) : path
   if (!assetExists(path) && (company.id === 'mikata' || !companyOnlyTemplates.has(filename))) path = sharedAssetPath('templates', filename)
   // Generic layouts live with the original Mikata templates. Other bidders
   // may reuse layouts, but must supply their own history, staff and financials.
@@ -137,7 +139,7 @@ export function fitBidderLogo(logo, width, height) {
 }
 
 export function letterheadLogoLayout(logo, slot) {
-  if (logo.companyId === 'mega-pluto') {
+  if (logo.companyId === 'MEGA_PLUTO') {
     const fitted = fitBidderLogo(logo, 58, 48)
     return { ...fitted, x: ((slot.pageWidth ?? 612) - fitted.width) / 2, top: 10 }
   }

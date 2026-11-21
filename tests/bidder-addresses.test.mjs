@@ -62,7 +62,7 @@ test('existing setup persistence and PDF/Word data adapters retain the current a
     const setup = changeBidderAddress(selectBidder({}, 'BUILTECH SOLUTIONS'), 'Saved custom office')
     const stored = copyEditorItems({ documentSetup: setup, templateVariant: 'initao_lgu' }, 'bid_security')
     const restored = createDocumentSetup({}, stored)
-    assert.deepEqual(restored, setup)
+    assert.deepEqual(Object.fromEntries(Object.keys(setup).map(key => [key, restored[key]])), setup)
     assert.equal(setupProject(restored).businessAddress, 'Saved custom office')
     assert.equal(stored.templateVariant, 'initao_lgu')
     assert.equal(createDocumentSetup({}, { bidderName: 'MANOTECH' }).businessAddress, bidderAddresses.manotech.businessAddress)

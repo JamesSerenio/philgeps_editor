@@ -70,5 +70,6 @@ test('existing editor-state serialization retains Manotech profile fields and ce
   const setup = { ...selectBidder({}, 'MANOTECH'), phone: 'Saved contact', corporateSecretaryName: 'Saved secretary',
     certificateUploads: { 'SEC Registration Certificate.pdf': { bidderId: 'manotech', name: 'actual.pdf', dataUrl: 'data:application/pdf;base64,JVBERi0xLjQ=' } } }
   const stored = JSON.parse(JSON.stringify(copyEditorItems({ documentSetup: setup }, 'bid_security')))
-  assert.deepEqual(createDocumentSetup({}, stored), setup)
+  const restored = createDocumentSetup({}, stored)
+  assert.deepEqual(Object.fromEntries(Object.keys(setup).map(key => [key, restored[key]])), setup)
 })

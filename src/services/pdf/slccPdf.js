@@ -834,7 +834,7 @@ export async function generateSlccPreview(
 ) {
   const variant = getSlccVariant(data)
 
-  if (!['mikata', 'builtech', 'manotech', 'mega-pluto'].includes(getBidderCompany(data).id)) {
+  if (!['mikata', 'builtech', 'manotech', 'MEGA_PLUTO'].includes(getBidderCompany(data).id)) {
     // Historical contract values belong to the selected company, never to Mikata.
     const response = await fetchAsset(getTemplatePath('SLCC_table_' + (variant === 'none' ? 'streetlight' : variant) + '.pdf', data))
     return URL.createObjectURL(await response.blob())

@@ -71,7 +71,7 @@ async function drawComputedNfccRow(pdfDoc, project) {
   )
 
   const rawMultiplier =
-    company.id === 'mega-pluto'
+    company.id === 'MEGA_PLUTO'
       ? (
           financials.multiplier ??
           nfcc.multiplier ??

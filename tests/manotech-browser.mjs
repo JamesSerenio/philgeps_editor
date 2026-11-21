@@ -9,11 +9,25 @@ const modulePath = process.env.PLAYWRIGHT_MODULE
 const { webkit } = await import(modulePath ? pathToFileURL(modulePath).href : 'playwright')
 const browser = await webkit.launch({ headless: true, ...(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {}) })
 const company = process.env.TEST_BIDDER === 'mega-pluto'
-  ? { id: 'mega-pluto', name: 'MEGA PLUTO', address: 'Kihare, Bukidnon, 8703', logo: 'public/images/MEGA_PLUTO/MEGA_PLUTO-logo-transparent.png' }
+  ? { id: 'mega-pluto', name: 'Megapluto Electrical Supply & Hardware Materials Trading', address: 'Kihare, Bukidnon, 8703', logo: 'public/images/MEGA_PLUTO/MEGA_PLUTO-logo-transparent.png' }
   : { id: 'manotech', name: 'MANOTECH', address: 'Purok 4, Poblacion, Linamon, Lanao del Norte', logo: 'public/images/MANOTECH/MANOTECH-logo.png' }
-const output = '.tmp/' + company.id + '-validation'
+company.packageVariant = process.env.TEST_PACKAGE_VARIANT || 'old_default'
+const output = '.tmp/' + company.id + (company.packageVariant === 'initao_lgu' ? '-initao' : '') + '-validation'
 const artifact = company.id + '-test'
 fs.mkdirSync(output, { recursive: true })
+// Transfer binary files as base64 rather than millions of protocol array items.
+async function browserBlobBytes(page, format) {
+  const base64 = await page.evaluate(async format => {
+    const blob = format === 'docx' ? window.testDocx : await (await fetch(window.testUrls.package)).blob()
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result.slice(reader.result.indexOf(',') + 1))
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(blob)
+    })
+  }, format)
+  return Buffer.from(base64, 'base64')
+}
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } })
   page.on('console', msg => { if (msg.type() === 'error' || msg.text().startsWith('VALIDATE')) console.log(msg.text()) })
@@ -65,8 +79,8 @@ try {
         if (variant === 'old_default' && /Omnibus|NFCC|After Sales|Manpower|SECRETARY/.test(entry.name)) urls[entry.name] = url
         else URL.revokeObjectURL(url)
       }
-      if (variant === 'old_default') {
-        const pdfUrl = await generateFullBidPackagePdf(opts)
+      if (variant === company.packageVariant) {
+        const pdfUrl = await generateFullBidPackagePdf({ ...opts, onProgress: p => console.log('VALIDATE PDF ' + variant + ' ' + p.message) })
         urls.package = pdfUrl
         const word = await generateFullBidPackageWord({ ...opts, onProgress: progress => console.log('VALIDATE WORD ' + progress.message) })
         window.testDocx = word.blob
@@ -74,12 +88,13 @@ try {
         if (!document.querySelector('#preview .docx-wrapper')) throw new Error('Word preview failed')
         window.testManifest = word.manifest
       }
+
     }
     window.testUrls = urls
     return { reports, urls, manifest: window.testManifest, wordPreviewPages: document.querySelectorAll('#preview section.docx').length }
   }, company)
   assert.ok(result.wordPreviewPages > 0)
-  const docx = Buffer.from(await page.evaluate(async () => Array.from(new Uint8Array(await window.testDocx.arrayBuffer()))))
+  const docx = await browserBlobBytes(page, 'docx')
   fs.writeFileSync(output + '/' + artifact + '.docx', docx)
   const zip = await JSZip.loadAsync(docx)
   const xml = await zip.file('word/document.xml').async('string')
@@ -94,7 +109,7 @@ try {
     if ((await entry.async('nodebuffer')).equals(logo)) ownLogo = true
   }
   assert.ok(ownLogo, 'DOCX embeds the supplied company logo')
-  const pdf = Buffer.from(await page.evaluate(async () => Array.from(new Uint8Array(await (await fetch(window.testUrls.package)).arrayBuffer()))))
+  const pdf = await browserBlobBytes(page, 'pdf')
   fs.writeFileSync(output + '/' + artifact + '.pdf', pdf)
   await page.screenshot({ path: output + '/word-preview.png', fullPage: false })
   for (const format of ['pdf', 'docx']) {
@@ -110,5 +125,5 @@ try {
     assert.ok(fs.readFileSync(output + '/downloaded.' + format).equals(format === 'pdf' ? pdf : docx))
   }
   fs.writeFileSync(output + '/report.json', JSON.stringify(result, null, 2))
-  console.log('PASS: both template variants, company isolation, PDF package, editable DOCX, Word preview, logo and identical preview/download bytes.')
+  console.log('PASS: both template variants, company isolation, selected PDF package, editable DOCX, Word preview, logo and identical preview/download bytes.')
 } finally { await browser.close() }

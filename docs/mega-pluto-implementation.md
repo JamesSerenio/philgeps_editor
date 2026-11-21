@@ -1,5 +1,7 @@
 # MEGA PLUTO PDF and Word support
 
+Current filenames, company-ID migration, title layout and validation results: [2026-11-21 template fixes](mega-pluto-template-fix.md). The implementation notes below include historical behavior.
+
 Implemented 2026-10-24 in the existing React/Vite editor.
 
 ## Implemented behavior
@@ -56,28 +58,28 @@ No live Supabase save/reopen, desktop Microsoft Word round-trip or live Vercel d
 - docs/mega-pluto-template-conversion.json
 - docs/mega-pluto-implementation.md
 - public/images/MEGA_PLUTO/MEGA_PLUTO-logo.png (user-supplied; unchanged)
-- public/pdf/templates/MEGA_PLUTO/INITAO/MEGA PLUTO - TABLE OF CONTENTS-INITAO.pdf
-- public/pdf/templates/MEGA_PLUTO/INITAO/MEGA PLUTO - TECHNICAL COMPONENT ENVELOPE.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - After Sales.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Bid Security with table.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Bid Security without table.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - BID_FORM_CLEAN_TEMPLATE.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Manpower Requirements.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - New_tab_and_pages_Initao_LGU_template.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - NFCC_Template.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Omnibus Sworn Statement Initao.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Omnibus Sworn Statement.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - PRICE SCHEDULE FOR GOODS.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Production Delivery Schedule.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - SECRETARY’S CERTIFICATE .pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - SLCC_table_cctv.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - SLCC_table_streetlight.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Statement of Ongoing Government and Private Contracts,.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - SUMMARY OF BID PRICES.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - TABBING.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - TABLE OF CONTENTS.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Technical Specifications.pdf
-- public/pdf/templates/MEGA_PLUTO/MEGA PLUTO - Warranty.pdf
+- public/pdf/templates/MEGA_PLUTO/INITAO/Megapluto Electrical Supply & Hardware Materials Trading - TABLE OF CONTENTS-INITAO.pdf
+- public/pdf/templates/MEGA_PLUTO/INITAO/Megapluto Electrical Supply & Hardware Materials Trading - TECHNICAL COMPONENT ENVELOPE.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - After Sales.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Bid Security with table.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Bid Security without table.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - BID_FORM_CLEAN_TEMPLATE.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Manpower Requirements.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - New_tab_and_pages_Initao_LGU_template.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - NFCC_Template.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Omnibus Sworn Statement Initao.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Omnibus Sworn Statement.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - PRICE SCHEDULE FOR GOODS.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Production Delivery Schedule.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - SECRETARY’S CERTIFICATE .pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - SLCC_table_cctv.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - SLCC_table_streetlight.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Statement of Ongoing Government and Private Contracts,.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - SUMMARY OF BID PRICES.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - TABBING.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - TABLE OF CONTENTS.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Technical Specifications.pdf
+- public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Warranty.pdf
 
 ## Complete modified-file list
 

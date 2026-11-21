@@ -21,9 +21,9 @@ export async function applyBidderLetterhead(document, page, setup, geometry, sup
   const bold = await document.embedFont(StandardFonts.TimesRomanBold)
   const italic = await document.embedFont(StandardFonts.HelveticaBoldOblique)
   page.drawRectangle({ ...geometry.box,
-    ...(['mega-pluto'].includes(company.id) ? { width: page.getWidth() - geometry.box.x } : {}),
+    ...(['MEGA_PLUTO'].includes(company.id) ? { width: page.getWidth() - geometry.box.x } : {}),
     color: rgb(1, 1, 1) })
-  if (company.id === 'mega-pluto') {
+  if (company.id === 'MEGA_PLUTO') {
     const slot = geometry.logo
     const layout = letterheadLogoLayout(logo, { ...slot, pageWidth: page.getWidth() })
     page.drawImage(image, { x: layout.x, y: page.getHeight() - layout.top - layout.height, width: layout.width, height: layout.height })

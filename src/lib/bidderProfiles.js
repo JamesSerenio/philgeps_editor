@@ -1,3 +1,5 @@
+import { normalizeBidderSetup } from './bidderCompanies.js'
+
 export const bidderProfileFields = [
   'phone', 'email', 'submittedBy', 'designation', 'representativeResidence',
   'civilStatus', 'nationality', 'corporateSecretaryName', 'companyPresidentName',
@@ -12,12 +14,14 @@ export const bidderProfileFields = [
 // Declaration variants live outside Document Setup; snapshot them alongside the
 // bidder profiles so company switching and existing JSON persistence agree.
 export function restoreBidderVariants(previousSetup, nextSetup, bidSecurity, omnibus) {
+  previousSetup = normalizeBidderSetup(previousSetup)
+  nextSetup = normalizeBidderSetup(nextSetup)
   const previousId = previousSetup?.bidderId
   const nextId = nextSetup?.bidderId
   if (!previousId || !nextId || previousId === nextId) return { setup: nextSetup, bidSecurity, omnibus }
   const variants = { ...previousSetup.bidderTemplateVariants, ...nextSetup.bidderTemplateVariants,
     [previousId]: { bidSecurity: bidSecurity?.templateVariant ?? 'old_default', omnibus: omnibus?.templateVariant ?? 'old_default' } }
-  const selected = variants[nextId] ?? (['mega-pluto'].includes(previousId) || ['mega-pluto'].includes(nextId)
+  const selected = variants[nextId] ?? (['MEGA_PLUTO'].includes(previousId) || ['MEGA_PLUTO'].includes(nextId)
     ? { bidSecurity: 'old_default', omnibus: 'old_default' }
     : variants[previousId])
   return { setup: { ...nextSetup, bidderTemplateVariants: variants },

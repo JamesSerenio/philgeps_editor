@@ -8,7 +8,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('conversion', ROOT / 'scripts/create-manotech-templates.py')
 conversion = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(conversion)
-conversion.TARGET_NAME = 'MEGA PLUTO'
+conversion.TARGET_NAME = 'Megapluto Electrical Supply & Hardware Materials Trading'
 conversion.ADDRESS = 'Kihare, Bukidnon, 8703'
 conversion.LOGO = ROOT / 'public/images/MEGA_PLUTO/MEGA_PLUTO-logo.png'
 DEST = ROOT / 'public/pdf/templates/MEGA_PLUTO'
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     audit = []
     for source in sorted(conversion.SOURCE.rglob('*.pdf')):
         relative = source.relative_to(conversion.SOURCE)
-        target = DEST / relative.parent / source.name.replace('MIKATA CORPORATION - ', 'MEGA PLUTO - ', 1)
+        target = DEST / relative.parent / source.name.replace('MIKATA CORPORATION - ', 'Megapluto Electrical Supply & Hardware Materials Trading - ', 1)
         if target.exists():
             if not args.verify_existing:
                 raise FileExistsError('Refusing to overwrite ' + str(target))

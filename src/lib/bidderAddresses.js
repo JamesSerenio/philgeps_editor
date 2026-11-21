@@ -1,4 +1,4 @@
-import { bidderCompanies, MEGA_PLUTO_DISPLAY_NAME } from './bidderCompanies.js'
+import { bidderCompanies, MEGA_PLUTO_DISPLAY_NAME, normalizeBidderSetup } from './bidderCompanies.js'
 import { selectBidderProfile } from './bidderProfiles.js'
 
 // Additional offices are retained for reference; only the primary/main office
@@ -9,7 +9,7 @@ export const bidderAddresses = {
     businessAddress: 'M. Vega St., Abarlos Compound, Consolacion, Cagayan de Oro City',
     additionalOffice: 'Jamille St., Maria Cristina Subdivision, Brgy. San Miguel, Iligan City',
   },
-  'mega-pluto': { name: MEGA_PLUTO_DISPLAY_NAME, businessAddress: 'Kihare, Bukidnon, 8703' },
+  'MEGA_PLUTO': { name: MEGA_PLUTO_DISPLAY_NAME, businessAddress: 'Kihare, Bukidnon, 8703' },
   manotech: { name: 'MANOTECH', businessAddress: 'Purok 4, Poblacion, Linamon, Lanao del Norte' },
   mikata: {
     name: 'MIKATA PRIME CORPORATION',
@@ -21,11 +21,11 @@ const normalize = value => String(value ?? '').trim().replace(/\s+/g, ' ').toUpp
 
 function bidderKey(value) {
   const label = typeof value === 'object' && value !== null
-    ? value.bidderName || value.bidderId
+    ? value.bidderId || value.bidderName
     : value
   if (!normalize(label)) return ''
   const company = bidderCompanies.find(bidder =>
-    [bidder.id, bidder.name, ...bidder.aliases].some(name => normalize(name) === normalize(label)))
+    [bidder.id, bidder.folder, bidder.name, ...bidder.aliases].some(name => normalize(name) === normalize(label)))
   return company?.id || normalize(label)
 }
 
@@ -46,6 +46,7 @@ export function changeBidderAddress(setup, businessAddress) {
 }
 
 export function selectBidder(setup, bidderName) {
+  setup = normalizeBidderSetup(setup)
   const addresses = savedAddresses(setup)
   const previousKey = bidderKey(setup)
   // Snapshot the address before leaving its company, including intentional blanks.

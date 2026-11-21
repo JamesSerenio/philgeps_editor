@@ -6,7 +6,7 @@ const { webkit } = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(pr
 const browser = await webkit.launch({ headless: true, ...(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {}) })
 const base = process.env.VITE_TEST_URL || 'http://127.0.0.1:5175'
 const company = process.env.TEST_BIDDER === 'mega-pluto'
-  ? { id: 'mega-pluto', name: 'MEGA PLUTO', address: 'Kihare, Bukidnon, 8703' }
+  ? { id: 'mega-pluto', name: 'Megapluto Electrical Supply & Hardware Materials Trading', address: 'Kihare, Bukidnon, 8703' }
   : { id: 'manotech', name: 'MANOTECH', address: 'Purok 4, Poblacion, Linamon, Lanao del Norte' }
 const output = '.tmp/' + company.id + '-validation'
 const artifact = company.id + '-test'
@@ -62,7 +62,7 @@ try {
   assert.equal(await page.getByLabel('MANOTECH Contact Number').count(), 0)
   await page.getByLabel('Submitted By', { exact: true }).selectOption('JHO ANN Q. CLEOPAS')
   assert.equal(await page.getByLabel('Designation', { exact: true }).inputValue(), 'Authorized Representative')
-  await page.getByLabel('Bidder Name', { exact: true }).selectOption('MIKATA CORPORATION')
+  await page.getByLabel('Bidder Name', { exact: true }).selectOption('MIKATA PRIME CORPORATION')
   assert.equal(await page.getByLabel('Submitted By', { exact: true }).inputValue(), 'CARLOS RAFAEL A. JAMILO')
   await page.getByLabel('Bidder Name', { exact: true }).selectOption(company.name)
   assert.equal(await page.getByLabel('Submitted By', { exact: true }).inputValue(), 'JHO ANN Q. CLEOPAS')

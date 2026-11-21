@@ -1,0 +1,80 @@
+# Megapluto template path and title fixes
+
+Validated locally on 2026-11-21.
+
+## Files renamed
+
+All 22 files below changed prefix from `MEGA PLUTO - ` to `Megapluto Electrical Supply & Hardware Materials Trading - `. Exact suffixes, extensions, PDF bytes and logo files were preserved. Folder and canonical company ID: `MEGA_PLUTO`.
+
+- `public/pdf/templates/MEGA_PLUTO/INITAO/Megapluto Electrical Supply & Hardware Materials Trading - TABLE OF CONTENTS-INITAO.pdf`
+- `public/pdf/templates/MEGA_PLUTO/INITAO/Megapluto Electrical Supply & Hardware Materials Trading - TECHNICAL COMPONENT ENVELOPE.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - After Sales.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Bid Security with table.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Bid Security without table.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - BID_FORM_CLEAN_TEMPLATE.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Manpower Requirements.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - New_tab_and_pages_Initao_LGU_template.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - NFCC_Template.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Omnibus Sworn Statement Initao.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Omnibus Sworn Statement.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - PRICE SCHEDULE FOR GOODS.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Production Delivery Schedule.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - SECRETARY’S CERTIFICATE .pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - SLCC_table_cctv.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - SLCC_table_streetlight.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Statement of Ongoing Government and Private Contracts,.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - SUMMARY OF BID PRICES.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - TABBING.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - TABLE OF CONTENTS.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Technical Specifications.pdf`
+- `public/pdf/templates/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Warranty.pdf`
+
+## References and compatibility
+
+- Synchronized `src/lib/bidderAssetManifest.json` with `npm run assets:sync`.
+- `bidderCompanies.js`: full display name, canonical MEGA_PLUTO ID, legacy mega-pluto/MEGA PLUTO/MEGAPLUTO aliases; migrated saved profile, address, variant and uploaded-certificate ownership keys. Saved registered legal-name overrides are preserved.
+- `bidderAssets.js`: common PDF/Word path resolution, strict own-company template lookup, encoded spaces and Unicode punctuation; literal ampersands and commas preserved for Vite public middleware.
+- Updated company-ID checks in PDF letterhead, data forms, NFCC, Omnibus, SLCC and tabbing, and Word letterhead, After Sales, Manpower, Tabbing and Warranty. Word template services resolve the same generated PDFs.
+- Updated template creation script and conversion audit paths; original/output SHA-256 checks pass.
+- Table of Contents uses normalized company text and expands long titles into the available header space. Date and bidder labels/values move together. The actual project title fits four lines at 12 pt in both default and Initao variants; short titles retain 12 pt.
+
+## Validation
+
+- Opened `/project/-112705` read-only. Table of Contents template returned HTTP 200, application/pdf, %PDF- header, 176645 bytes. Generated PDF parsed and rendered to canvas, one page, with the complete project title and full company name. Remote saves were blocked during browser validation.
+- Short/long title browser tests: both variants rendered, complete text, 12 pt, no overlap, aligned labels. Images: `.tmp/mega-pluto-validation/toc-old_default-long.png` and `toc-initao_lgu-long.png`.
+- Individual generated documents passed for default/Initao, both SLCC templates, both Bid Security layouts, Initao divider variants and tabbing.
+- Default PDF/DOCX package and actual Generate Documents modal previews/downloads passed; downloaded bytes match generated bytes. Logo bytes in DOCX match the supplied unchanged logo.
+- 34 automated tests pass. Two persistence tests now compare all saved fields while permitting the existing setup adapter to add defaults.
+- Production build passes. All 103 production asset URLs return HTTP 200 and exact source bytes, including all renamed templates.
+- Lint has zero errors and one existing react-hooks/exhaustive-deps warning at PriceScheduleEditor.jsx:354. Build retains the existing large-chunk advisory.
+
+## Inputs and limitations
+
+Complete package validation uses fictional project inputs and in-memory TEST FIXTURE certificate PDFs. These fixtures are never installed as official assets. Genuine Megapluto SEC Registration Certificate, Mayor?s Permit / Municipal License, TAX_template, Certificate of Registration (COR), Latest Income and Business Tax Returns, PhilGEPS Platinum Certificate and Audited Financial Statements remain absent unless uploaded for the company.
+
+Exact outstanding asset errors:
+
+- Missing Megapluto Electrical Supply & Hardware Materials Trading document: SEC Registration Certificate.pdf. Expected file: public/pdf/static/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - SEC Registration Certificate.pdf. Copy the actual company file there, then run npm run assets:sync and rebuild.
+- Missing Megapluto Electrical Supply & Hardware Materials Trading document: Mayor’s Permit  Municipal License (CY 2026).pdf. Expected file: public/pdf/static/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Mayor’s Permit  Municipal License (CY 2026).pdf. Copy the actual company file there, then run npm run assets:sync and rebuild.
+- Missing Megapluto Electrical Supply & Hardware Materials Trading document: TAX_template.pdf. Expected file: public/pdf/static/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - TAX_template.pdf. Copy the actual company file there, then run npm run assets:sync and rebuild.
+- Missing Megapluto Electrical Supply & Hardware Materials Trading document: Certificate of Registration (COR).pdf. Expected file: public/pdf/static/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Certificate of Registration (COR).pdf. Copy the actual company file there, then run npm run assets:sync and rebuild.
+- Missing Megapluto Electrical Supply & Hardware Materials Trading document: Latest Income and Business Tax Returns.pdf. Expected file: public/pdf/static/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Latest Income and Business Tax Returns.pdf. Copy the actual company file there, then run npm run assets:sync and rebuild.
+- Missing Megapluto Electrical Supply & Hardware Materials Trading document: PhilGEPS Platinum Certificate.pdf. Expected file: public/pdf/static/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - PhilGEPS Platinum Certificate.pdf. Copy the actual company file there, then run npm run assets:sync and rebuild.
+- Missing Megapluto Electrical Supply & Hardware Materials Trading document: Audited Financial Statements.pdf. Expected file: public/pdf/static/MEGA_PLUTO/Megapluto Electrical Supply & Hardware Materials Trading - Audited Financial Statements.pdf. Copy the actual company file there, then run npm run assets:sync and rebuild.
+
+## Initao export verification
+
+Isolated Initao Word export passed: 39 rendered pages, 26 sections, zero missing sections, 1,292,646-byte DOCX using in-memory test certificates. Default Word preview renders 36 pages. Full Initao PDF assembly processed all 26 sections without placeholders.
+
+Reproduce browser checks with `PLAYWRIGHT_MODULE`, `PLAYWRIGHT_EXECUTABLE` and optional `VITE_TEST_URL` set for the local installation:
+
+```powershell
+$env:TEST_BIDDER = 'mega-pluto'
+node tests/toc-layout-browser.mjs
+node tests/manotech-browser.mjs
+node tests/manotech-preview-browser.mjs
+$env:TEST_PACKAGE_VARIANT = 'initao_lgu'
+node tests/manotech-browser.mjs
+```
+
+Final Initao package check passed: 39 PDF pages, 39 Word preview pages, 0 missing sections, 22111160 PDF bytes and 1292646 DOCX bytes. Both downloaded files match generated bytes exactly. Test binary transfer now uses base64 to avoid sending millions of JavaScript array elements over the browser protocol. Final artifacts and report: `.tmp/mega-pluto-initao-validation`.

@@ -19,7 +19,7 @@ export async function manpowerWord(options) {
       if (index !== 0) return []
       return [
         new Paragraph({
-          style: logo.companyId === 'mega-pluto' ? 'MegaPlutoLogo' : 'ManpowerLogo',
+          style: logo.companyId === 'MEGA_PLUTO' ? 'MegaPlutoLogo' : 'ManpowerLogo',
           spacing: {
             before: 0,
             after: 0,
