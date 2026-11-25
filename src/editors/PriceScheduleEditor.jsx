@@ -8,6 +8,7 @@ import {
 
 import { supabase } from '../supabase'
 import { pastedAmount } from '../lib/pastedAmount'
+import { priceScheduleIdentity, loadPriceSchedule, readPriceScheduleCache } from '../lib/priceScheduleIdentity'
 
 // ==========================================
 // PRICE FORMATTING
@@ -88,6 +89,7 @@ export default function PriceScheduleEditor({
   exportSaveRef,
   items = [],
   referenceNumber = '',
+  projectId = '',
   onValuesChange,
 }) {
   const [values, setValues] = useState({})
@@ -114,8 +116,8 @@ export default function PriceScheduleEditor({
     notifyRef.current = onValuesChange
   }, [onValuesChange])
 
-  const storageKey =
-    `philgeps-price-schedule:${referenceNumber}`
+  const priceIdentity = priceScheduleIdentity(projectId, referenceNumber)
+  const storageKey = `philgeps-price-schedule:${priceIdentity}`
 
   // ========================================
   // SAVE PRICES TO SUPABASE
@@ -123,8 +125,8 @@ export default function PriceScheduleEditor({
 
   const persist = useCallback(
     (snapshot, version) => {
-      if (!referenceNumber) {
-        return Promise.resolve()
+      if (!priceIdentity) {
+        return Promise.reject(new Error('Missing project ID.'))
       }
 
       if (aliveRef.current) {
@@ -136,7 +138,7 @@ export default function PriceScheduleEditor({
         .then(async () => {
           const payload = {
             reference_number:
-              String(referenceNumber),
+              priceIdentity,
 
             total_prices_per_unit:
               snapshot,
@@ -221,7 +223,7 @@ export default function PriceScheduleEditor({
 
       return task
     },
-    [referenceNumber, storageKey]
+    [priceIdentity, storageKey]
   )
 
   // Export uses the same serialized save queue, including its pending debounce.
@@ -245,10 +247,10 @@ export default function PriceScheduleEditor({
     let cancelled = false
 
     async function load() {
-      if (!referenceNumber) {
+      if (!priceIdentity) {
         if (!cancelled) {
           setLoadError(
-            'Missing reference number.'
+            'Missing project ID.'
           )
         }
 
@@ -257,19 +259,7 @@ export default function PriceScheduleEditor({
 
       try {
         const { data, error } =
-          await supabase
-            .from('bid_price_schedules')
-            .select(
-              'id,total_prices_per_unit'
-            )
-            .eq(
-              'reference_number',
-              String(referenceNumber)
-            )
-            .order('updated_at', {
-              ascending: false,
-            })
-            .limit(1)
+          await loadPriceSchedule(supabase, projectId, referenceNumber)
 
         if (error) throw error
         if (cancelled) return
@@ -286,11 +276,7 @@ export default function PriceScheduleEditor({
         let cache
 
         try {
-          cache = JSON.parse(
-            window.localStorage.getItem(
-              storageKey
-            ) || 'null'
-          )
+          cache = readPriceScheduleCache(window.localStorage, projectId, referenceNumber)
         } catch {
           cache = null
         }
@@ -357,6 +343,8 @@ export default function PriceScheduleEditor({
     }
   }, [
     referenceNumber,
+    projectId,
+    priceIdentity,
     storageKey,
     persist,
   ])

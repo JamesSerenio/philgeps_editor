@@ -296,17 +296,20 @@ export async function generateBidSecurityPreview(project) {
     // Existing two-page template layout.
     // =================================================
 
-    erase(page1, 70, 687, 202, 18)
-
-    draw(
-      page1,
-        'MUNICIPALITY OF ____________',
-      72,
-      692,
-      timesBold,
-      11.04,
-      205
-    )
+    // Replace the complete venue block so the template's old parentheses
+    // cannot remain behind the longer city/municipality label.
+    erase(page1, 70, 684, 475, 38)
+    const venueSize = 11.04
+    const republic = 'REPUBLIC OF THE PHILIPPINES'
+    const venue = 'CITY/MUNICIPALITY OF ____________________'
+    const parenthesisX = 72 + Math.max(
+      timesBold.widthOfTextAtSize(republic, venueSize),
+      timesBold.widthOfTextAtSize(venue, venueSize),
+    ) + 12
+    draw(page1, republic, 72, 707, timesBold, venueSize)
+    draw(page1, ')', parenthesisX, 707, timesBold, venueSize)
+    draw(page1, venue, 72, 692, timesBold, venueSize)
+    draw(page1, ') S.S.', parenthesisX, 692, timesBold, venueSize)
 
     erase(page1, 341, 632, 65, 17)
 

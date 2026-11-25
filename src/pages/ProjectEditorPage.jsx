@@ -3,6 +3,7 @@ import { documentBidderName, normalizeBidderSetup } from '../lib/bidderCompanies
 import { restoreBidderVariants } from '../lib/bidderProfiles'
 import GenerateDocumentsModal from '../components/GenerateDocumentsModal'
 import { exportFilename } from '../lib/exportFilename'
+import { priceScheduleIdentity, loadPriceSchedule, readPriceScheduleCache } from '../lib/priceScheduleIdentity'
 import DashboardIcon from '../components/DashboardIcon'
 
 import { useEffect, useRef, useState } from 'react'
@@ -584,7 +585,7 @@ const setup = baseSetup
     activeDocument === BID_FORM_ID
 
   const pricingRequestKey =
-    `${referenceNumber}:${pricingRefresh}`
+    `${id}:${referenceNumber}:${pricingRefresh}`
 
   const pricingReady =
     pricingSaved.key === pricingRequestKey &&
@@ -593,7 +594,7 @@ const setup = baseSetup
   useEffect(() => {
     if (
       !isPricingDocument ||
-      !referenceNumber
+      !id
     ) {
       return undefined
     }
@@ -605,14 +606,7 @@ const setup = baseSetup
         const {
           data,
           error: queryError,
-        } = await supabase
-          .from('bid_price_schedules')
-          .select('total_prices_per_unit')
-          .eq('reference_number', referenceNumber)
-          .order('updated_at', {
-            ascending: false,
-          })
-          .limit(1)
+        } = await loadPriceSchedule(supabase, id, referenceNumber)
 
         if (queryError) {
           throw queryError
@@ -624,11 +618,7 @@ const setup = baseSetup
         let cache = null
 
         try {
-          cache = JSON.parse(
-            window.localStorage.getItem(
-              `philgeps-price-schedule:${referenceNumber}`
-            ) || 'null'
-          )
+          cache = readPriceScheduleCache(window.localStorage, id, referenceNumber)
         } catch {
           // Ignore invalid local backup.
         }
@@ -672,6 +662,7 @@ const setup = baseSetup
     }
   }, [
     isPricingDocument,
+    id,
     referenceNumber,
     pricingRequestKey,
   ])
@@ -1340,14 +1331,7 @@ async function handleGenerateAll(format = 'pdf') {
     const {
       data,
       error: priceError
-    } = await supabase
-      .from('bid_price_schedules')
-      .select('id,total_prices_per_unit')
-      .eq('reference_number', ref)
-      .order('updated_at', {
-        ascending: false
-      })
-      .limit(1)
+    } = await loadPriceSchedule(supabase, id, ref)
 
     if (priceError) {
       throw priceError
@@ -1363,11 +1347,7 @@ async function handleGenerateAll(format = 'pdf') {
     let cache = null
 
     try {
-      cache = JSON.parse(
-        window.localStorage.getItem(
-          `philgeps-price-schedule:${ref}`
-        ) || 'null'
-      )
+      cache = readPriceScheduleCache(window.localStorage, id, ref)
     } catch {
       // Ignore invalid local cache.
     }
@@ -1397,7 +1377,7 @@ async function handleGenerateAll(format = 'pdf') {
 
     if (cache?.dirty) {
       const payload = {
-        reference_number: ref,
+        reference_number: priceScheduleIdentity(id, ref),
         total_prices_per_unit: savedPrices,
         updated_at: new Date().toISOString()
       }
@@ -1423,7 +1403,7 @@ async function handleGenerateAll(format = 'pdf') {
 
       try {
         window.localStorage.setItem(
-          'philgeps-price-schedule:' + ref,
+          'philgeps-price-schedule:' + priceScheduleIdentity(id, ref),
           JSON.stringify({
             dirty: false,
             values: savedPrices
@@ -1617,7 +1597,8 @@ async function handleGenerateAll(format = 'pdf') {
       return (
         <PriceScheduleEditor
           exportSaveRef={exportSaveRef}
-          key={setup.referenceNumber}
+          key={id + ':' + (setup.referenceNumber ?? '')}
+          projectId={id}
           items={technical}
           referenceNumber={setup.referenceNumber}
           onValuesChange={setPriceValues}

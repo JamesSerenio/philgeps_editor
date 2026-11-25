@@ -13,7 +13,7 @@ export function bidSecurityWord(options) {
       preparePage(page, index) {
         if (index !== 0) return
         const venue = page.fragments.find((part) =>
-          /^MUNICIPALITY OF /i.test(part.str.trim()),
+          /^(?:CITY\/)?MUNICIPALITY OF /i.test(part.str.trim()),
         )
         if (!venue) return
         // The PDF overlay baseline differs slightly from the template's S.S.
