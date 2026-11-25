@@ -5,6 +5,6 @@ export function pastedAmount(value) {
     .replace(/^(?:PHP|₱|P)\s*/i, '')
     .replace(/\s*(?:PHP|₱)$/i, '')
     .trim()
-  if (!/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{0,2})?$|^\.\d{1,2}$/.test(text)) return null
+  if (!/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{0,5})?$|^\.\d{1,5}$/.test(text)) return null
   return text.replace(/,/g, '')
 }

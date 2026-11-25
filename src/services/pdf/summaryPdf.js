@@ -418,6 +418,7 @@ export async function generateSummaryPreview(
 
       for (const part of parts) {
         physicalLines.push({
+          sourceItemNumber: specification.sourceItemNumber || row.itemNo,
           part,
           font,
         })
@@ -432,7 +433,7 @@ export async function generateSummaryPreview(
     }
 
     let offset = 0
-    let firstFragment = true
+    const numberedItems = new Set()
 
     // =============================================
     // AUTOMATIC PAGE BREAKS
@@ -500,16 +501,23 @@ export async function generateSummaryPreview(
         })
       }
 
-      // Item number - one time per item.
-      if (firstFragment) {
-        centered(
-          row.itemNo,
-          MARGIN,
-          COL_ITEM,
-          cursor - height / 2 - 4,
-          regular,
-          10
-        )
+      // Each original item keeps its number and description cell. The price
+      // column remains one shared cell across all items in this group.
+      for (let i = 0; i < take.length;) {
+        const number = take[i].sourceItemNumber || row.itemNo
+        let next = i + 1
+        while (next < take.length && take[next].sourceItemNumber === take[i].sourceItemNumber) next++
+        const numberTop = i === 0 ? cursor : cursor - 5 - i * ROW_LINE
+        const numberBottom = next === take.length ? cursor - height : cursor - 5 - next * ROW_LINE
+        if (i > 0) page.drawLine({
+          start: { x: MARGIN, y: numberTop }, end: { x: priceX, y: numberTop },
+          color: GRID, thickness: 0.55,
+        })
+        if (!numberedItems.has(number)) {
+          centered(number, MARGIN, COL_ITEM, (numberTop + numberBottom) / 2 - 4, regular, 10)
+          numberedItems.add(number)
+        }
+        i = next
       }
 
       // Technical specification text.
@@ -542,7 +550,6 @@ export async function generateSummaryPreview(
       cursor -= height
 
       offset += take.length
-      firstFragment = false
 
       if (!lastFragment) {
         newPage()

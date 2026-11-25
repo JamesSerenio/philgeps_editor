@@ -902,6 +902,13 @@ export function getBidPackageDocuments({
   // Insert after ordering so existing section numbers and Initao dividers
   // still refer to the same generators. Supporting originals stay unchanged.
   const documents = [tabbing, ...orderedDocuments].flatMap(entry => {
+    if (entry.wordSection === 7 && setup.ongoingSupportingUpload?.dataUrl) {
+      return [entry, {
+        name: setup.ongoingSupportingUpload.name || 'ONGOING Supporting Docs.pdf',
+        wordSection: 'ongoingSupporting',
+        path: setup.ongoingSupportingUpload.dataUrl,
+      }]
+    }
     if (entry.wordSection === 8 && setup.slccSupportingUpload?.dataUrl) {
       return [entry, {
         name: setup.slccSupportingUpload.name || 'SLCC Supporting Docs.pdf',

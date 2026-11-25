@@ -9,6 +9,7 @@ export const bidderProfileFields = [
   'corporateSecretaryNationality',
   'slccVariant',
   'slccSupportingUpload',
+  'ongoingSupportingUpload',
   'registeredBusinessName', 'legalBusinessName',
 ]
 

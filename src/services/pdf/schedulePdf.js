@@ -5,6 +5,7 @@ import {
   rgb,
 } from 'pdf-lib'
 import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
+import { groupTechnicalItems } from '../../lib/technicalSpecs'
 
 // A4 PORTRAIT
 const PAGE_W = 595.28
@@ -366,6 +367,7 @@ function createRows(item, fonts, specificationWidth = DEFAULT_WIDTHS[1]) {
       )
 
       output.push({
+        sourceItemNumber: source.sourceItemNumber || item.itemNo,
         lines: part,
         marker: start === 0 ? marker : '',
         bold: source.bold === true,
@@ -406,9 +408,9 @@ export async function generateScheduleRequirementsPreview(
     ),
   }
 
-  const items = Array.isArray(data.items)
+  const items = groupTechnicalItems(Array.isArray(data.items)
     ? data.items
-    : []
+    : [])
 
   const projectTitle =
     data.projectTitle ?? ''
@@ -649,6 +651,24 @@ export async function generateScheduleRequirementsPreview(
 
     let cursorTop = top
 
+    let numberTop = top
+    for (let i = 0; i < rows.length;) {
+      const number = rows[i].sourceItemNumber
+      let numberHeight = 0
+      let next = i
+      while (next < rows.length && rows[next].sourceItemNumber === number) {
+        numberHeight += rows[next].height
+        next++
+      }
+      if (i > 0) drawLine(page, X[0], numberTop, X[1], numberTop)
+      if (!item.numberedItems.has(number)) {
+        drawCenteredLines(page, number, fonts.normal, 9.5, X[0], WIDTHS[0], numberTop - numberHeight / 2 - 3)
+        item.numberedItems.add(number)
+      }
+      numberTop -= numberHeight
+      i = next
+    }
+
     rows.forEach((row, rowIndex) => {
       if (rowIndex > 0) {
         // Row separator only inside
@@ -719,16 +739,6 @@ export async function generateScheduleRequirementsPreview(
 
       drawCenteredLines(
         page,
-        item.itemNo ?? '',
-        fonts.normal,
-        9.5,
-        X[0],
-        WIDTHS[0],
-        middle
-      )
-
-      drawCenteredLines(
-        page,
         quantityText(item, layout),
         fonts.normal,
         9.5,
@@ -773,9 +783,7 @@ export async function generateScheduleRequirementsPreview(
   ) {
     const item = {
       ...items[itemIndex],
-      itemNo: String(
-        itemIndex + 1
-      ),
+      numberedItems: new Set(),
     }
 
     const rows = createRows(

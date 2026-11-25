@@ -1,16 +1,8 @@
 
-function toCents(value) {
-  const n = Number(
-    String(value ?? '').replace(/,/g, '')
-  )
-
-  return Number.isFinite(n) && n > 0
-    ? Math.round(n * 100)
-    : 0
-}
+import { preciseCents as toCents, priceAmounts } from './pricePrecision.js'
 
 function priceRows(items, prices) {
-  return (Array.isArray(items) ? items : []).map(
+  return groupTechnicalItems(Array.isArray(items) ? items : []).map(
     (item, index) => {
       const key = String(
         item?.id ?? `item-${index + 1}`
@@ -62,9 +54,7 @@ function priceRows(items, prices) {
           hasPrice &&
           unitPriceCents > 0 &&
           quantity > 0
-            ? Math.round(
-                unitPriceCents * quantity
-              )
+            ? priceAmounts(rawPrice, entry.deduction, quantity).totalCents
             : null,
       }
     }
@@ -319,3 +309,4 @@ export function buildBidFormData(data = {}) {
     date: formatBidDate(data.date),
   }
 }
+import { groupTechnicalItems } from './technicalSpecs.js'

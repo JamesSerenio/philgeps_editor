@@ -4,8 +4,10 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react'
 import { quantityUnitLayout, quantityUnitLayouts } from '../lib/quantityUnitLayout'
+import { mergeTechnicalItems } from '../lib/technicalSpecs'
 
 // ==========================================
 // AVAILABLE SYMBOLS
@@ -201,6 +203,9 @@ export default function TechnicalSpecsEditor({
   onLayoutChange,
 }) {
   const layout = quantityUnitLayout(project.qtyUnitLayout)
+  const [mergeFrom, setMergeFrom] = useState('1')
+  const [mergeThrough, setMergeThrough] = useState('2')
+  const [undoMerge, setUndoMerge] = useState(null)
   const listId = useId().replace(/:/g, '_')
 
   const inputs = useRef({})
@@ -250,6 +255,7 @@ export default function TechnicalSpecsEditor({
   // ========================================
 
   function apply(nextItems) {
+    setUndoMerge(null)
     onChange?.(
       nextItems.map((item, index) => ({
         ...item,
@@ -611,6 +617,24 @@ export default function TechnicalSpecsEditor({
           {quantityUnitLayouts.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </label>}
+      {items.length > 1 && <div style={{ margin: '12px 0', padding: 10, border: '1px solid #c5d9cf', borderRadius: 6 }}>
+        <strong>Merge items</strong>
+        <label style={labelStyle}>From item
+          <input aria-label="Merge from item" type="number" min="1" max={items.length - 1} value={mergeFrom}
+            onChange={event => setMergeFrom(event.target.value)} style={inputStyle} />
+        </label>
+        <label style={labelStyle}>Through item
+          <input aria-label="Merge through item" type="number" min={Number(mergeFrom) + 1} max={items.length} value={mergeThrough}
+            onChange={event => setMergeThrough(event.target.value)} style={inputStyle} />
+        </label>
+        <p style={{ fontSize: 11 }}>Keeps each item number and its specifications. Shares the first item's quantity, unit, compliance, and price.</p>
+        <button type="button" style={buttonStyle}
+          disabled={!Number.isInteger(Number(mergeFrom)) || !Number.isInteger(Number(mergeThrough)) || Number(mergeFrom) < 1 || Number(mergeThrough) <= Number(mergeFrom) || Number(mergeThrough) > items.length}
+          onClick={() => { const previous = items; apply(mergeTechnicalItems(items, Number(mergeFrom), Number(mergeThrough))); setUndoMerge(previous) }}>
+          Merge selected items
+        </button>
+      </div>}
+      {undoMerge && <button type="button" style={buttonStyle} onClick={() => apply(undoMerge)}>Undo merge</button>}
       {items.map((item, itemIndex) => (
         <div
           key={item.id}
@@ -654,6 +678,13 @@ export default function TechnicalSpecsEditor({
             </button>
           </div>
 
+          {item.mergeGroup && items[itemIndex - 1]?.mergeGroup === item.mergeGroup && <p style={{ fontSize: 11 }}>Qty, unit, compliance, and price are shared with Item {items.findIndex(source => source.mergeGroup === item.mergeGroup) + 1}.</p>}
+          {(item.mergedCompliance || item.mergeGroup && items[itemIndex - 1]?.mergeGroup !== item.mergeGroup) && <label style={labelStyle}>Statement of Compliance (shared items)
+            <input aria-label={`Item ${itemIndex + 1} shared compliance`} style={inputStyle}
+              value={item.sharedCompliance ?? 'COMPLY'} onChange={event => updateItem(itemIndex, { sharedCompliance: event.target.value })} />
+          </label>}
+          {item.mergeGroup && items[itemIndex - 1]?.mergeGroup !== item.mergeGroup && <button type="button" style={buttonStyle}
+            onClick={() => apply(items.map(source => source.mergeGroup === item.mergeGroup ? { ...source, mergeGroup: null } : source))}>Unmerge shared values</button>}
           <label style={labelStyle}>
             Specification lines
           </label>
@@ -856,6 +887,7 @@ export default function TechnicalSpecsEditor({
                 {/* =========================== */}
 
                 <input
+                  hidden={item.mergedCompliance === true || Boolean(item.mergeGroup)}
                   type="text"
 
                   aria-label={
@@ -877,6 +909,8 @@ export default function TechnicalSpecsEditor({
 
                   style={{
                     ...inputStyle,
+
+                    display: item.mergedCompliance || item.mergeGroup ? 'none' : undefined,
 
                     padding: '8px 2px',
 
@@ -1009,9 +1043,10 @@ export default function TechnicalSpecsEditor({
                 type="text"
 
                 aria-label={`Item ${itemIndex + 1} quantity`}
+                disabled={Boolean(item.mergeGroup) && items[itemIndex - 1]?.mergeGroup === item.mergeGroup}
                 inputMode="decimal"
 
-                value={item.qty}
+                value={item.mergeGroup ? items.find(source => source.mergeGroup === item.mergeGroup)?.qty ?? '' : item.qty}
 
                 onChange={(event) =>
                   updateItem(
@@ -1055,7 +1090,8 @@ export default function TechnicalSpecsEditor({
                   'Leave blank or select unit'
                 }
 
-                value={item.unit}
+                disabled={Boolean(item.mergeGroup) && items[itemIndex - 1]?.mergeGroup === item.mergeGroup}
+                value={item.mergeGroup ? items.find(source => source.mergeGroup === item.mergeGroup)?.unit ?? '' : item.unit}
 
                 onChange={(event) =>
                   updateItem(

@@ -275,6 +275,7 @@ function mergeScheduleWithTechnical(
     return {
       id: String(existing?.id ?? technicalId),
       sharedItemId: technicalId,
+      mergeGroup: item.mergeGroup ?? null,
       itemNo: String(index + 1),
       qty: String(item?.qty ?? ''),
       unit: String(item?.unit ?? ''),

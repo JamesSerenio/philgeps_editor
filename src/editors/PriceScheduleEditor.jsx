@@ -8,6 +8,8 @@ import {
 
 import { supabase } from '../supabase'
 import { pastedAmount } from '../lib/pastedAmount'
+import { preciseCents, priceAmounts } from '../lib/pricePrecision'
+import { groupTechnicalItems } from '../lib/technicalSpecs'
 import { priceScheduleIdentity, loadPriceSchedule, readPriceScheduleCache } from '../lib/priceScheduleIdentity'
 
 // ==========================================
@@ -17,19 +19,10 @@ import { priceScheduleIdentity, loadPriceSchedule, readPriceScheduleCache } from
 const peso = (cents) =>
   `₱ ${new Intl.NumberFormat('en-PH', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 5,
   }).format(cents / 100)}`
 
-const centsOf = (value) => {
-  const number = Number(
-    String(value ?? '').replace(/,/g, '')
-  )
-
-  return Number.isFinite(number) &&
-    number > 0
-    ? Math.round(number * 100)
-    : 0
-}
+const centsOf = preciseCents
 
 const itemKey = (item, index) =>
   String(item?.id ?? `item-${index + 1}`)
@@ -87,11 +80,12 @@ const inputStyle = {
 
 export default function PriceScheduleEditor({
   exportSaveRef,
-  items = [],
+  items: sourceItems = [],
   referenceNumber = '',
   projectId = '',
   onValuesChange,
 }) {
+  const items = groupTechnicalItems(sourceItems)
   const [values, setValues] = useState({})
 
   const [loaded, setLoaded] =
@@ -375,7 +369,7 @@ export default function PriceScheduleEditor({
     text
   ) {
     if (
-      !/^\d*(?:\.\d{0,2})?$/.test(text)
+      !/^\d*(?:\.\d{0,5})?$/.test(text)
     ) {
       return
     }
@@ -563,24 +557,8 @@ export default function PriceScheduleEditor({
           centsOf(entry.deduction)
 
         // ADJUSTED UNIT PRICE
-        const adjustedCents = Math.max(
-          0,
-          priceCents - deductionCents
-        )
-
-        // AUTOMATIC BREAKDOWN
-        const cost50 = Math.round(
-          adjustedCents * 0.5
-        )
-
-        const transport20 = Math.round(
-          adjustedCents * 0.2
-        )
-
-        const tax30 =
-          adjustedCents -
-          cost50 -
-          transport20
+        const { adjustedCents, costCents: cost50, transportCents: transport20, taxCents: tax30 } =
+          priceAmounts(entry.price, entry.deduction, item.qty)
 
         const quantity = Math.max(
           0,
@@ -591,9 +569,7 @@ export default function PriceScheduleEditor({
         )
 
         // FINAL DELIVERED TOTAL
-        const finalCents = Math.round(
-          adjustedCents * quantity
-        )
+        const finalCents = priceAmounts(entry.price, entry.deduction, quantity).totalCents
 
         const hasPrice =
           entry.price.trim() !== ''
@@ -637,7 +613,7 @@ export default function PriceScheduleEditor({
                   borderRadius: 20,
                 }}
               >
-                ITEM {index + 1}
+                ITEM {item.itemNo || index + 1}
               </span>
 
               <span
@@ -727,7 +703,7 @@ export default function PriceScheduleEditor({
                 marginBottom: 11,
               }}
             >
-              Enter the 100% unit price
+              Enter the 100% unit price (up to 5 decimal places)
             </div>
 
             {/* OPTIONAL DEDUCTION */}
@@ -794,7 +770,7 @@ export default function PriceScheduleEditor({
             >
               {deductionTooLarge
                 ? 'Deduction cannot exceed the unit price.'
-                : 'Optional amount deducted from unit price'}
+                : 'Optional deduction (up to 5 decimal places)'}
             </div>
 
             {/* PRICE COMPUTATIONS */}

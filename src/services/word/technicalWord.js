@@ -14,6 +14,7 @@ import {
 import { PDFDocument, StandardFonts } from 'pdf-lib'
 import { section, sectionMarker } from './wordHelpers'
 import { complianceText } from './wordContent'
+import { groupTechnicalItems } from '../../lib/technicalSpecs'
 import { formatBidDate } from '../../lib/bidFormData'
 import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
 
@@ -199,14 +200,18 @@ function tableHeader(columns = widths, layout = 'separate') {
 function segmentRows(segment, widths, layout) {
   return segment.fragments.map((fragment, i) => {
     const children = []
-    if (!i)
+    const nextItemOffset = segment.fragments.slice(i).findIndex(part => part.sourceItemNumber !== fragment.sourceItemNumber)
+    const numberSpan = segment.mergedCompliance
+      ? nextItemOffset === -1 ? segment.fragments.length - i : nextItemOffset
+      : segment.fragments.length
+    if (!i || segment.mergedCompliance && fragment.sourceItemNumber !== segment.fragments[i - 1].sourceItemNumber)
       children.push(
         cell(
-          para(segment.first ? segment.number : '', {
+          para(segment.mergedCompliance ? (fragment.first ? fragment.sourceItemNumber : '') : (segment.first ? segment.number : ''), {
             align: AlignmentType.CENTER,
           }),
           widths[0],
-          { center: true, rowSpan: segment.fragments.length },
+          { center: true, rowSpan: numberSpan },
         ),
       )
     const mark =
@@ -244,16 +249,16 @@ function segmentRows(segment, widths, layout) {
         ),
       )
     }
-    children.push(
+    if (!segment.mergedCompliance || !i) children.push(
       cell(
-        para(fragment.first ? fragment.compliance : '', {
+        para(segment.mergedCompliance ? (segment.first ? segment.sharedCompliance : '') : (fragment.first ? fragment.compliance : ''), {
           size: 9.8,
           bold: true,
           align: AlignmentType.CENTER,
           line: 12,
         }),
         widths[4],
-        { center: true, left: 5, right: 5 },
+        { center: true, left: 5, right: 5, ...(segment.mergedCompliance ? { rowSpan: segment.fragments.length } : {}) },
       ),
     )
     return new TableRow({
@@ -351,7 +356,7 @@ export async function technicalWord({ setup = {}, technical = [], sectionNumber 
     pages.push(page)
     cursor = 66 + (includeTable ? 44 : 0)
   }
-  technical.forEach((item, index) => {
+  groupTechnicalItems(technical).forEach((item, index) => {
     const source =
       item.specificationLines ??
       item.lines ??
@@ -371,6 +376,7 @@ export async function technicalWord({ setup = {}, technical = [], sectionNumber 
           ? original.slice(leading[0].length)
           : original
       return {
+        sourceItemNumber: row.sourceItemNumber,
         marker,
         bold: row.bold === true,
         compliance: row.compliance == null ? 'COMPLY' : String(row.compliance),
@@ -426,9 +432,11 @@ export async function technicalWord({ setup = {}, technical = [], sectionNumber 
         continue
       }
       page.segments.push({
-        number: index + 1,
+        number: item.itemNo || index + 1,
         qty: item.qty ?? '',
         unit: item.unit ?? '',
+        mergedCompliance: item.mergedCompliance === true,
+        sharedCompliance: item.sharedCompliance ?? 'COMPLY',
         first,
         fragments,
       })

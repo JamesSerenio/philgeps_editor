@@ -21,6 +21,7 @@ export function scheduleWord(options) {
     exactLineSpacing: true,
     positionedGaps: true,
     tableExactGeometry: true,
+    tableMergedBorders: true,
     rightAllowance: 10,
     preparePage(page) {
       // PDF markers are vector shapes; retain their editable Word equivalents.

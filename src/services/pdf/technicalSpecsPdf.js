@@ -578,6 +578,7 @@ function normalizeItems(items) {
       )
 
       return {
+        sourceItemNumber: row.sourceItemNumber,
         marker:
           row.marker ??
           leading?.[1] ??
@@ -602,9 +603,11 @@ function normalizeItems(items) {
     })
 
     return {
-      number: index + 1,
+      number: item.itemNo || index + 1,
       qty: item?.qty ?? '',
       unit: item?.unit ?? '',
+      mergedCompliance: item?.mergedCompliance === true,
+      sharedCompliance: item?.sharedCompliance ?? 'COMPLY',
       rows,
     }
   })
@@ -985,6 +988,24 @@ async function makePdf(
 
     let rowTop = top
 
+    // Item numbers and specification rows remain separate inside the group.
+    if (item.mergedCompliance) {
+      let numberTop = top
+      for (let i = 0; i < fragments.length;) {
+        const number = fragments[i].sourceItemNumber
+        let numberBottom = numberTop
+        let j = i
+        while (j < fragments.length && fragments[j].sourceItemNumber === number) {
+          numberBottom += fragments[j].height
+          j++
+        }
+        if (numberTop > top) line(page, COL[0], numberTop, COL[1], numberTop)
+        if (fragments[i].first) center(page, regular, number, COL[0], COL[1], numberTop, numberBottom)
+        numberTop = numberBottom
+        i = j
+      }
+    }
+
     fragments.forEach(
       (fragment, index) => {
         // Each specification has
@@ -998,12 +1019,8 @@ async function makePdf(
             rowTop
           )
 
-          line(
-            page,
-            COL[4],
-            rowTop,
-            COL[5],
-            rowTop
+          if (!item.mergedCompliance) line(
+            page, COL[4], rowTop, COL[5], rowTop
           )
         }
 
@@ -1057,7 +1074,7 @@ async function makePdf(
         // ==================================
 
         if (
-          fragment.first &&
+          !item.mergedCompliance && fragment.first &&
           fragment.compliance
         ) {
           const complianceLines =
@@ -1117,7 +1134,10 @@ async function makePdf(
     // ====================================
 
     if (firstPart) {
-      center(
+      if (item.mergedCompliance) center(
+        page, bold, item.sharedCompliance, COL[4], COL[5], top, bottom
+      )
+      if (!item.mergedCompliance) center(
         page,
         regular,
         item.number,
@@ -1156,7 +1176,7 @@ async function makePdf(
   // ========================================
 
   const items =
-    normalizeItems(sourceItems)
+    normalizeItems(groupTechnicalItems(sourceItems))
 
   newPage(true)
 
@@ -1242,6 +1262,7 @@ async function makePdf(
           fullHeight <= available
         ) {
           fragments.push({
+            sourceItemNumber: row.sourceItemNumber,
             lines: rest,
 
             marker: row.marker,
@@ -1310,6 +1331,7 @@ async function makePdf(
         }
 
         fragments.push({
+          sourceItemNumber: row.sourceItemNumber,
           lines: chunk,
 
           marker: row.marker,
@@ -1545,3 +1567,4 @@ export async function generateTechnicalSpecsPreview(
     )
   )
 }
+import { groupTechnicalItems } from '../../lib/technicalSpecs'

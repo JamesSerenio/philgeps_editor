@@ -1,12 +1,9 @@
 
-export function toCents(value) {
-  const n = Number(
-    String(value ?? '').replace(/,/g, '').trim()
-  )
+import { groupTechnicalItems } from './technicalSpecs.js'
+import { preciseCents, priceAmounts } from './pricePrecision.js'
 
-  return Number.isFinite(n) && n > 0
-    ? Math.round(n * 100)
-    : 0
+export function toCents(value) {
+  return preciseCents(value)
 }
 
 export function peso(cents) {
@@ -20,7 +17,7 @@ export function summaryRows(
   items = [],
   priceValues = {}
 ) {
-  return (Array.isArray(items) ? items : []).map(
+  return groupTechnicalItems(Array.isArray(items) ? items : []).map(
     (item, index) => {
       const id = String(
         item?.id ?? `item-${index + 1}`
@@ -46,16 +43,6 @@ export function summaryRows(
       const hasPrice =
         String(rawPrice).trim() !== ''
 
-      const priceCents = toCents(rawPrice)
-      const deductionCents = toCents(
-        entry.deduction
-      )
-
-      const unitCents = Math.max(
-        0,
-        priceCents - deductionCents
-      )
-
       const quantity = Math.max(
         0,
         Number(
@@ -64,7 +51,7 @@ export function summaryRows(
       )
 
       const amountCents = hasPrice
-        ? Math.round(unitCents * quantity)
+        ? priceAmounts(rawPrice, entry.deduction, quantity).totalCents
         : null
 
       const specifications = (
@@ -73,6 +60,7 @@ export function summaryRows(
           : []
       )
         .map((line) => ({
+          sourceItemNumber: line.sourceItemNumber,
           text: String(
             line?.text ?? ''
           ).trim(),

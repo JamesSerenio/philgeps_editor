@@ -1,6 +1,7 @@
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
+import { preciseCents, priceAmounts } from '../../lib/pricePrecision'
 
 // =====================================================
 // PAGE CONFIGURATION - A4 LANDSCAPE
@@ -66,19 +67,13 @@ function safe(value) {
 // =====================================================
 
 function pesoCents(value) {
-  const n = Number(
-    String(value ?? '').replace(/,/g, '')
-  )
-
-  return Number.isFinite(n) && n > 0
-    ? Math.round(n * 100)
-    : 0
+  return preciseCents(value)
 }
 
 function money(cents) {
   return (cents / 100).toLocaleString('en-PH', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 5,
   })
 }
 
@@ -316,9 +311,9 @@ export async function generatePriceSchedulePreview(
     StandardFonts.TimesRomanBold
   )
 
-  const items = Array.isArray(data.items)
+  const items = groupTechnicalItems(Array.isArray(data.items)
     ? data.items
-    : []
+    : [])
 
   const values = data.priceValues ?? {}
 
@@ -489,31 +484,9 @@ export async function generatePriceSchedulePreview(
     // PRICE COMPUTATION
     // ===============================================
 
-    const adjusted = Math.max(
-      0,
-      entry.price - entry.deduction
-    )
-
-    const unit50 = Math.round(
-      adjusted * 0.5
-    )
-
-    const transport20 = Math.round(
-      adjusted * 0.2
-    )
-
-    const sales30 =
-      adjusted - unit50 - transport20
-
-    const qty = Math.max(
-      0,
-      Number(
-        String(item.qty ?? '').replace(/,/g, '')
-      ) || 0
-    )
-
-    const finalPrice = Math.round(
-      adjusted * qty
+    const { adjustedCents: adjusted, costCents: unit50, transportCents: transport20,
+      taxCents: sales30, totalCents: finalPrice } = priceAmounts(
+      entry.price / 100, entry.deduction / 100, item.qty
     )
 
     if (entry.hasPrice) {
@@ -552,6 +525,7 @@ export async function generatePriceSchedulePreview(
       )
 
       return {
+        sourceItemNumber: row.sourceItemNumber || item.itemNo || String(index + 1),
         parts,
         font: chosenFont,
         height: Math.max(
@@ -567,6 +541,7 @@ export async function generatePriceSchedulePreview(
 
     let rowPosition = 0
     let firstFragment = true
+    const numberedItems = new Set()
 
     while (rowPosition < specRows.length) {
       if (cursor < BOTTOM + 26) {
@@ -613,6 +588,7 @@ export async function generatePriceSchedulePreview(
         )
 
         specRows.splice(rowPosition, 0, {
+          sourceItemNumber: current.sourceItemNumber,
           parts: take,
           font: current.font,
           height: partialHeight,
@@ -663,6 +639,25 @@ export async function generatePriceSchedulePreview(
 
       let subTop = top
 
+      // Shared pricing spans the group; item numbers follow their own specs.
+      let numberTop = top
+      for (let i = start; i < rowPosition;) {
+        const number = specRows[i].sourceItemNumber
+        let numberHeight = 0
+        let next = i
+        while (next < rowPosition && specRows[next].sourceItemNumber === number) {
+          numberHeight += specRows[next].height
+          next++
+        }
+        if (i > start) line(page, EDGE[0], numberTop, EDGE[1], numberTop)
+        if (!numberedItems.has(number)) {
+          boxText(page, number, EDGE[0], numberTop, WIDTHS[0], numberHeight, regular, { size: 8.4 })
+          numberedItems.add(number)
+        }
+        numberTop -= numberHeight
+        i = next
+      }
+
       for (
         let i = start;
         i < rowPosition;
@@ -709,7 +704,7 @@ export async function generatePriceSchedulePreview(
             : ''
 
         const fields = [
-          safe(item.itemNo || index + 1),
+          null,
           null,
           safe(
             item.countryOfOrigin ||
@@ -919,3 +914,4 @@ export async function generatePriceSchedulePreview(
     })
   )
 }
+import { groupTechnicalItems } from '../../lib/technicalSpecs'

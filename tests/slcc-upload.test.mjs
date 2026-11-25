@@ -2,8 +2,9 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createServer } from 'vite'
 import { PDFDocument, degrees } from 'pdf-lib'
+import { selectBidderProfile } from '../src/lib/bidderProfiles.js'
 
-test('uploaded SLCC supporting pages use A4 and follow SLCC in both package orders', async () => {
+test('uploaded ongoing and SLCC supporting pages use A4 and follow their statements in both package orders', async () => {
   const server = await createServer({ server: { middlewareMode: true, ws: false } })
   try {
     const { appendPdfAsA4, getBidPackageDocuments } = await server.ssrLoadModule('/src/services/pdf/fullBidPackagePdf.js')
@@ -24,14 +25,33 @@ test('uploaded SLCC supporting pages use A4 and follow SLCC in both package orde
     const upload = { name: 'Custom supporting.pdf', dataUrl: 'data:application/pdf;base64,' + Buffer.from(await output.save()).toString('base64') }
     for (const omnibusVariant of ['old_default', 'initao_lgu']) {
       for (const slccVariant of ['none', 'cctv', 'streetlight']) {
-        const documents = getBidPackageDocuments({ setup: { bidderId: 'mikata', slccVariant, slccSupportingUpload: upload }, omnibusVariant })
+        const documents = getBidPackageDocuments({ setup: { bidderId: 'mikata', slccVariant, slccSupportingUpload: upload, ongoingSupportingUpload: upload }, omnibusVariant })
         const index = documents.findIndex(entry => entry.wordSection === 8)
         assert.equal(documents[index + 1].wordSection, 'slccSupporting')
         assert.equal(documents[index + 1].path, upload.dataUrl)
         assert.equal(documents.filter(entry => entry.wordSection === 'slccSupporting').length, 1)
+        const ongoingIndex = documents.findIndex(entry => entry.wordSection === 7)
+        assert.equal(documents[ongoingIndex + 1].wordSection, 'ongoingSupporting')
+        assert.equal(documents[ongoingIndex + 1].path, upload.dataUrl)
+        assert.equal(documents.filter(entry => entry.wordSection === 'ongoingSupporting').length, 1)
+        assert.equal(documents.find(entry => entry.wordSection === 9).name, 'PhilGEPS Platinum Certificate.pdf')
       }
+      const withoutUpload = getBidPackageDocuments({ setup: { bidderId: 'mikata', ongoingSupportingUpload: null }, omnibusVariant })
+      assert.equal(withoutUpload.filter(entry => entry.wordSection === 'ongoingSupporting').length, 0)
     }
+    const { copyEditorItems } = await server.ssrLoadModule('/src/services/editorStateService.js')
+    const restored = copyEditorItems({ documentSetup: { ongoingSupportingUpload: upload } }, 'bid_security')
+    assert.deepEqual(restored.documentSetup.ongoingSupportingUpload, upload)
   } finally {
     await server.close()
   }
+})
+
+test('ongoing supporting uploads stay with the selected bidder profile', () => {
+  const upload = { name: 'Ongoing.pdf', dataUrl: 'data:application/pdf;base64,dGVzdA==' }
+  const initial = { bidderId: 'mikata', ongoingSupportingUpload: upload }
+  const next = selectBidderProfile(initial, 'mikata', 'manotech')
+  assert.equal(next.ongoingSupportingUpload, '')
+  const restored = selectBidderProfile({ ...next, bidderId: 'manotech' }, 'manotech', 'mikata')
+  assert.deepEqual(restored.ongoingSupportingUpload, upload)
 })

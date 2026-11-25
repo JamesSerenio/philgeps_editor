@@ -34,6 +34,8 @@ export default function OngoingContractsEditor({ value = {}, onChange }) {
 
   return <div className="slcc-editor" style={{ padding: '12px', fontSize: '12px' }}>
     <h4 style={{ marginTop: 0, marginBottom: '16px', fontSize: '13px' }}>Ongoing Contracts Editor</h4>
+    <SupportingPdfUpload value={value} onChange={onChange} field="ongoingSupportingUpload"
+      title="ONGOING Supporting Docs" follows="Ongoing Contracts" />
     <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
       Contract Type
       <select value={type} onChange={event => onChange?.({
@@ -70,3 +72,4 @@ export default function OngoingContractsEditor({ value = {}, onChange }) {
     {totalRows >= 5 && <p style={{ color: '#6b7280', lineHeight: 1.45 }}>Maximum of five rows per page so the table and signature stay readable.</p>}
   </div>
 }
+import SupportingPdfUpload from '../components/SupportingPdfUpload'
