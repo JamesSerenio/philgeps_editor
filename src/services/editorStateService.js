@@ -7,6 +7,7 @@ import { assertSharedMetadata } from '../lib/projectMetadata'
 // =====================================================
 
 const TABLE = 'bid_docs_editor_state'
+const PROJECT_METADATA_COLUMNS = 'id,is_manual,title,reference_number,procuring_entity,lgu,area_of_delivery,manual_deadline'
 
 const JSON_FIELDS = [
   'technical_specs',
@@ -334,7 +335,7 @@ export async function getEditorState(
   const setup = restored.bid_security?.documentSetup
   if (setup) {
     try {
-      const result = await supabase.from('philgeps_posts').select('*').eq('id',String(projectId)).single()
+      const result = await supabase.from('philgeps_posts').select(PROJECT_METADATA_COLUMNS).eq('id',String(projectId)).single()
       if (result.error || !result.data) throw Error('Shared project information could not be verified.')
       assertSharedMetadata(result.data,setup)
     } catch (error) {
@@ -418,15 +419,26 @@ export async function saveEditorState(
 
   let expected = options.expectedUpdatedAt
   if (!Object.hasOwn(options,'expectedUpdatedAt')) expected = (await getEditorState(projectId))?.updated_at ?? null
-  const request = expected == null
-    ? supabase.from(TABLE).insert(payload)
-    : supabase.from(TABLE).update(payload).eq('project_id',String(projectId)).eq('updated_at',expected)
-  const { data, error } = await request.select('*').single()
+  let data, error
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const request = expected == null
+      ? supabase.from(TABLE).insert(payload)
+      : supabase.from(TABLE).update(payload).eq('project_id',String(projectId)).eq('updated_at',expected)
+    // The caller only needs the new revision. Avoid returning all document JSON
+    // (including uploaded PDFs) on every keystroke save.
+    ;({ data, error } = await request.select('project_id,updated_at').single())
+    if (error?.code !== '57014' || attempt === 2) break
+    // PostgreSQL canceled this statement, so it did not commit. Keep the same
+    // expected revision: another tab's successful save must still conflict.
+    await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)))
+  }
   if (error || !data) throw Error(error?.code === 'PGRST116' || error?.code === '23505'
     ? 'No editor row updated: another tab changed it or UPDATE access is missing. Your draft is retained. Reload the saved version and check editor permissions before retrying.'
-    : error?.message || 'No editor row was saved. Check this project’s editor INSERT/UPDATE permissions.')
+    : error?.code === '57014'
+      ? 'The database took too long to save. Your draft is retained on this device. Please retry saving shortly.'
+      : error?.message || 'No editor row was saved. Check this project’s editor INSERT/UPDATE permissions.')
   try { if (payload.bid_security?.documentSetup) {
-    const result = await supabase.from('philgeps_posts').select('*').eq('id',String(projectId)).single()
+    const result = await supabase.from('philgeps_posts').select(PROJECT_METADATA_COLUMNS).eq('id',String(projectId)).single()
     if (result.error || !result.data) throw Error('Document data saved, but the shared project row could not be verified. Check project read permissions and retry.')
     assertSharedMetadata(result.data,payload.bid_security.documentSetup)
   } } catch (error) { error.savedRevision=data.updated_at; throw error }

@@ -1,4 +1,7 @@
 import { getSlccVariant, getSlccContractType, getSlccEntry } from '../lib/slccEntries'
+import { useEffect, useRef, useState } from 'react'
+import { PDFDocument } from 'pdf-lib'
+import { appendPdfAsA4 } from '../services/pdf/fullBidPackagePdf'
 
 // =====================================================
 // STYLES
@@ -39,6 +42,40 @@ export default function SLCCEditor({
   const variant = getSlccVariant(value)
   const contractType = getSlccContractType(value, variant)
   const entry = getSlccEntry(value, variant, contractType)
+  const [uploadError, setUploadError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const latest = useRef(value)
+  const active = useRef(true)
+  useEffect(() => { latest.current = value }, [value])
+  useEffect(() => { active.current = true; return () => { active.current = false } }, [])
+
+  async function uploadSupporting(file) {
+    if (!file) return
+    const bidderId = value.bidderId
+    setUploading(true)
+    setUploadError('')
+    try {
+      if (file.size > 10 * 1024 * 1024) throw new Error('Choose a PDF smaller than 10 MB.')
+      const source = await PDFDocument.load(await file.arrayBuffer())
+      if (!source.getPageCount()) throw new Error('The PDF has no pages.')
+      const normalized = await PDFDocument.create()
+      await appendPdfAsA4(normalized, source)
+      const bytes = await normalized.save()
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = () => reject(new Error('Unable to read PDF.'))
+        reader.readAsDataURL(new Blob([bytes], { type: 'application/pdf' }))
+      })
+      if (active.current && latest.current.bidderId === bidderId) {
+        onChange?.({ ...latest.current, slccSupportingUpload: { name: file.name, dataUrl } })
+      }
+    } catch (error) {
+      if (active.current) setUploadError(error.message || 'Unable to upload PDF.')
+    } finally {
+      if (active.current) setUploading(false)
+    }
+  }
 
   // ===================================================
   // UPDATE SELECTED TEMPLATE
@@ -120,7 +157,7 @@ export default function SLCCEditor({
           htmlFor="slcc-template"
           style={labelStyle}
         >
-          SLCC Template
+          SLCC Supporting Docs
         </label>
 
         <select
@@ -141,6 +178,20 @@ export default function SLCCEditor({
           <option value="none">NONE</option>
         </select>
       </div>
+
+      <div style={groupStyle}>
+        <label htmlFor="slcc-supporting-upload" style={labelStyle}>Upload supporting PDF</label>
+        <input id="slcc-supporting-upload" type="file" accept="application/pdf,.pdf" disabled={uploading}
+          onChange={event => { void uploadSupporting(event.target.files?.[0]); event.target.value = '' }} />
+        <p>{uploading ? 'Converting PDF to A4...' : 'Uploaded pages are resized to A4 and included immediately after the SLCC in the bid package.'}</p>
+        {uploadError && <p role="alert">{uploadError}</p>}
+        {value.slccSupportingUpload?.dataUrl && <>
+          <a href={value.slccSupportingUpload.dataUrl} target="_blank" rel="noreferrer">{value.slccSupportingUpload.name} (A4)</a>
+          <button type="button" disabled={uploading} onClick={() => onChange?.({ ...value, slccSupportingUpload: null })}>Remove PDF</button>
+        </>}
+      </div>
+
+      <fieldset disabled={variant === 'none'} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
 
       {/* ============================================= */}
       {/* CONTRACT TYPE DROPDOWN */}
@@ -296,6 +347,8 @@ export default function SLCCEditor({
       {/* CURRENT SELECTION INFORMATION */}
       {/* ============================================= */}
 
+      </fieldset>
+
       <div
         style={{
           padding: '10px',
@@ -335,7 +388,7 @@ export default function SLCCEditor({
             color: '#4b5563',
           }}
         >
-          {contractType === 'government'
+          {variant === 'none' ? 'All GOVERNMENT and PRIVATE row values will show NONE.' : contractType === 'government'
             ? 'GOVERNMENT details are editable. All PRIVATE row values will show NONE.'
             : 'PRIVATE details are editable. All GOVERNMENT row values will show NONE.'}
         </p>

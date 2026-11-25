@@ -70,6 +70,10 @@ export function getSlccContractType(data = {}, variant = getSlccVariant(data)) {
 }
 
 export function getSlccEntry(data = {}, variant = getSlccVariant(data), type = getSlccContractType(data, variant)) {
+  if (variant === 'none') return Object.fromEntries(
+    ['ownerDetails', 'natureOfWork', 'description', 'percentage', 'awardCompletion', 'dates']
+      .map(field => [field, 'NONE'])
+  )
   const template = variant === 'none' ? 'streetlight' : variant
   const financial = FINANCIALS[template]
   const defaults = getBidderCompany(data).id === 'mikata'

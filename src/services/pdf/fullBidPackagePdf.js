@@ -316,7 +316,7 @@ async function loadPdf(source, name) {
 // - Keeps every source page
 // =====================================================
 
-async function appendPdfAsA4(
+export async function appendPdfAsA4(
   combined,
   sourcePdf
 ) {
@@ -902,6 +902,13 @@ export function getBidPackageDocuments({
   // Insert after ordering so existing section numbers and Initao dividers
   // still refer to the same generators. Supporting originals stay unchanged.
   const documents = [tabbing, ...orderedDocuments].flatMap(entry => {
+    if (entry.wordSection === 8 && setup.slccSupportingUpload?.dataUrl) {
+      return [entry, {
+        name: setup.slccSupportingUpload.name || 'SLCC Supporting Docs.pdf',
+        wordSection: 'slccSupporting',
+        path: setup.slccSupportingUpload.dataUrl,
+      }]
+    }
     if (entry.wordSection !== 8 || slccVariant === 'none') return [entry]
     const filename = slccVariant === 'cctv'
       ? 'SLCC_CCTV_template.pdf'

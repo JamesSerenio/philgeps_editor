@@ -2,24 +2,22 @@
 import test from 'node:test'
 import { getSlccEntry, getSlccContractType } from '../src/lib/slccEntries.js'
 
-test('NONE keeps existing streetlight defaults and saved details', () => {
+test('NONE clears every contract detail despite saved streetlight details', () => {
   const data = { bidderId: 'mikata', slccVariant: 'none', slccEntries: { streetlight: { government: { description: 'Construction Materials' } } } }
   const entry = getSlccEntry(data)
-  assert.equal(entry.ownerDetails, 'LGU SUMILAO')
-  assert.equal(entry.description, 'Construction Materials')
-  assert.match(entry.awardCompletion, /1,997,496.00/)
-  assert.match(entry.dates, /MARCH 31, 2026/)
+  assert.equal(Object.keys(entry).length, 6)
+  assert.ok(Object.values(entry).every(value => value === 'NONE'))
 })
 
 test('government/private overrides survive serialization and switching, including cleared values', () => {
-  const data = JSON.parse(JSON.stringify({ bidderId: 'mikata', slccVariant: 'none', slccContractTypes: { none: 'private' }, slccEntries: { none: {
+  const data = JSON.parse(JSON.stringify({ bidderId: 'mikata', slccVariant: 'streetlight', slccContractTypes: { streetlight: 'private' }, slccEntries: { streetlight: {
     government: { awardCompletion: 'A. 500.00', dates: 'JANUARY 1, 2026' },
     private: { awardCompletion: 'A. 900.00', dates: '', percentage: '75%' },
   } } }))
   assert.equal(getSlccContractType(data), 'private')
   assert.equal(getSlccEntry(data).awardCompletion, 'A. 900.00')
   assert.equal(getSlccEntry(data).dates, '')
-  data.slccContractTypes.none = 'government'
+  data.slccContractTypes.streetlight = 'government'
   assert.equal(getSlccEntry(data).awardCompletion, 'A. 500.00')
 })
 

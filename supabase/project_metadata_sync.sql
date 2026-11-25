@@ -42,7 +42,9 @@ begin
   end if;
   update public.philgeps_posts set title=p.title,reference_number=p.reference_number,
     procuring_entity=p.procuring_entity,lgu=p.lgu,area_of_delivery=p.area_of_delivery,
-    manual_deadline=p.manual_deadline,project_metadata_overrides=flags where id=p.id;
+    manual_deadline=p.manual_deadline,project_metadata_overrides=flags where id=p.id
+    and row(title,reference_number,procuring_entity,lgu,area_of_delivery,manual_deadline,project_metadata_overrides)
+      is distinct from row(p.title,p.reference_number,p.procuring_entity,p.lgu,p.area_of_delivery,p.manual_deadline,flags);
   return new;
 end $$;
 revoke all on function public.sync_editor_project_metadata() from public,anon,authenticated;
