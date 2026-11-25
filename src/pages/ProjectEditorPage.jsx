@@ -3,6 +3,7 @@ import { documentBidderName, normalizeBidderSetup } from '../lib/bidderCompanies
 import { restoreBidderVariants } from '../lib/bidderProfiles'
 import GenerateDocumentsModal from '../components/GenerateDocumentsModal'
 import { exportFilename } from '../lib/exportFilename'
+import { resolveMunicipalityTemplate, selectMunicipalityTemplate } from '../lib/municipalityTemplate'
 import { priceScheduleIdentity, loadPriceSchedule, readPriceScheduleCache } from '../lib/priceScheduleIdentity'
 import DashboardIcon from '../components/DashboardIcon'
 
@@ -397,7 +398,7 @@ function ProjectEditorContent({ id }) {
 
   const [schedule, setSchedule] = useState([])
   const [bidSecurity, setBidSecurity] = useState(null)
-  const [omnibus, setOmnibus] = useState(null)
+  const [savedOmnibus, setOmnibus] = useState(null)
 
   const [
     documentSetup,
@@ -529,7 +530,7 @@ const baseSetup = project
     createDocumentSetup(
       project,
       bidSecurity ?? {},
-      omnibus ?? {}
+      savedOmnibus ?? {}
     )
   : null
 
@@ -551,6 +552,11 @@ const setup = baseSetup
     }
   : null
 
+
+  const omnibus = {
+    ...savedOmnibus,
+    templateVariant: resolveMunicipalityTemplate(setup?.municipality, savedOmnibus),
+  }
 
   const sharedProject = setup
     ? setupProject(setup)
@@ -1227,11 +1233,12 @@ function changeSetup(value) {
   // ===================================================
 
   function changeOmnibus(value) {
-    setOmnibus(value)
+    const next = selectMunicipalityTemplate(setup?.municipality, value)
+    setOmnibus(next)
 
     persistence.change(
       'omnibus',
-      value
+      next
     )
   }
 
@@ -1736,7 +1743,7 @@ async function handleGenerateAll(format = 'pdf') {
           onSave={(value) =>
             persistence.save(
               'omnibus',
-              value
+              selectMunicipalityTemplate(setup?.municipality, value)
             )
           }
           saveStatus={
