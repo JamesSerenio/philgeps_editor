@@ -15,7 +15,6 @@ export async function bidFormWord(options = {}) {
     )
   }
   const required = [
-    ['Reference Number', bid.referenceNumber],
     ['Procuring Entity', bid.procuringEntity],
     ['Project Title', bid.projectTitle],
     ['Bidder Name', bid.bidderName],

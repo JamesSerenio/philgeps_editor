@@ -27,7 +27,9 @@ test('SLCC and Ongoing PDFs embed Bookman Old Style and use 10pt for every text 
         const url = await generate({ bidderId: 'mikata', bidderName: 'MIKATA PRIME CORPORATION',
           businessAddress: 'ZONE 13, CARMEN, CAGAYAN DE ORO CITY, MISAMIS ORIENTAL, 9000',
           procuringEntity: 'MUNICIPALITY OF SUMILAO, BUKIDNON', projectTitle: 'SUPPLY AND DELIVERY OF WATER METER AND FITTINGS',
-          referenceNumber: '132124', submittedBy: 'JHO ANN Q. CLEOPAS', designation: 'Authorized Representative', date: '2026-11-25', slccVariant })
+          referenceNumber: '132124', submittedBy: 'JHO ANN Q. CLEOPAS', designation: 'Authorized Representative', date: '2026-11-25', slccVariant,
+          slccEntries: { [slccVariant]: { government: { natureOfWork: 'PURCHASE / SUPPLY / INSTALLATION' } } },
+        })
         try {
           const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer())
           const pdf = await PDFDocument.load(bytes)
@@ -45,6 +47,11 @@ test('SLCC and Ongoing PDFs embed Bookman Old Style and use 10pt for every text 
               const content = await (await parsed.getPage(index)).getTextContent()
               for (const part of content.items.filter(part => part.str.trim())) {
                 assert.ok(Math.abs(part.height - 10) < 0.01, `Expected 10pt for ${part.str}; got ${part.height}`)
+              }
+              if (generate === generateSlccPreview && slccVariant !== 'none') {
+                const nature = content.items.filter(part => part.transform[4] >= 262 && part.transform[4] < 352 && part.transform[5] < 350 && part.str.trim() && part.str !== 'NONE')
+                assert.equal(nature.map(part => part.str).join('').replace(/\s/g, ''), 'PURCHASE/SUPPLY/INSTALLATION')
+                for (const part of nature) assert.ok(part.transform[4] + part.width <= 352 - 4, `Nature of Work overflowed its column: ${JSON.stringify({ text: part.str, x: part.transform[4], width: part.width })}`)
               }
             }
           } finally { await loading.destroy() }

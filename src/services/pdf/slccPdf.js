@@ -178,16 +178,6 @@ function wrapParagraph(
 
     // Preserve each award/date line.
     if (preserveLines && textWidth(font, paragraph, size) <= width) {
-      if (
-        textWidth(
-          font,
-          paragraph,
-          size
-        ) > width
-      ) {
-        return null
-      }
-
       lines.push(paragraph)
       continue
     }
@@ -207,14 +197,18 @@ function wrapParagraph(
         ) <= width
       ) {
         line = next
-      } else if (
-        !line ||
-        textWidth(font, word, size) > width
-      ) {
-        return null
       } else {
-        lines.push(line)
-        line = word
+        if (line) lines.push(line)
+        line = ''
+        // A single word can exceed a narrow column at the required 10pt.
+        // Split it at character boundaries instead of shrinking or aborting.
+        for (const character of word) {
+          if (line && textWidth(font, line + character, size) > width) {
+            lines.push(line)
+            line = ''
+          }
+          line += character
+        }
       }
     }
 
@@ -400,7 +394,7 @@ function drawMeta(
   const size = 10
 
   const lines = wrapParagraph(
-    flat(value) || '-',
+    label === 'REFERENCE NUMBER' ? flat(value) : flat(value) || '-',
     valueFont,
     size,
     valueWidth

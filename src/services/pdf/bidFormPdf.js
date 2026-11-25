@@ -569,7 +569,6 @@ export async function generateBidFormPreview(
 
   // Check Document Setup
   if (
-    !bid.referenceNumber ||
     !bid.procuringEntity ||
     !bid.projectTitle ||
     !bid.submittedBy ||
@@ -577,7 +576,7 @@ export async function generateBidFormPreview(
     !bid.date
   ) {
     throw new Error(
-      'Complete Reference Number, Procuring Entity, Project Title, Submitted By, Bidder Name and Date.'
+      'Complete Procuring Entity, Project Title, Submitted By, Bidder Name and Date.'
     )
   }
 
