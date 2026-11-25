@@ -2,7 +2,8 @@ import { getSlccVariant, getSlccContractType, getSlccEntry } from '../../lib/slc
 export { getSlccContractType, getSlccEntry } from '../../lib/slccEntries'
 import { getBidderCompany, getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { PDFDocument, rgb } from 'pdf-lib'
+import { embedBookmanFonts } from './bookmanFont'
 
 // ==================================================
 // CLEAN SLCC PDF - COMPLETE TABLE GENERATOR
@@ -141,34 +142,20 @@ function drawLineText(
   size,
   maxWidth
 ) {
+  size = 10
   const value = flat(text)
 
   if (!value) return
 
-  const measured = textWidth(
-    font,
-    value,
-    size
-  )
-
-  const fitted = Math.min(
-    size,
-    size * maxWidth / Math.max(0.001, measured)
-  )
-
-  if (fitted < 7) {
-    throw new Error(
-      `SLCC field is too long: ${value}`
-    )
-  }
-
-  page.drawText(value, {
+  const lines = wrapParagraph(value, font, 10, maxWidth)
+  if (!lines) throw new Error(`SLCC field is too long: ${value}`)
+  lines.forEach((line, index) => page.drawText(line, {
     x,
-    y: py(top) - fitted,
-    size: fitted,
+    y: py(top + index * 12) - size,
+    size,
     font,
     color: BLACK,
-  })
+  }))
 }
 
 // ==================================================
@@ -190,7 +177,7 @@ function wrapParagraph(
     if (!paragraph) continue
 
     // Preserve each award/date line.
-    if (preserveLines) {
+    if (preserveLines && textWidth(font, paragraph, size) <= width) {
       if (
         textWidth(
           font,
@@ -252,6 +239,7 @@ function measureCell(
     preserveLines = false,
   } = {}
 ) {
+  preferred = 10
   if (!flat(text)) {
     return {
       lines: [],
@@ -262,7 +250,7 @@ function measureCell(
 
   for (
     let size = preferred;
-    size >= 7.25;
+    size >= 10;
     size -= 0.25
   ) {
     const lines = wrapParagraph(
@@ -350,13 +338,14 @@ function drawMultilineInBox(
   right,
   top,
   bottom,
-  preferred = 9.1
+  preferred = 10
 ) {
+  preferred = 10
   const height = bottom - top
 
   for (
     let size = preferred;
-    size >= 7.25;
+    size >= 10;
     size -= 0.25
   ) {
     const lines = wrapParagraph(
@@ -405,10 +394,10 @@ function drawMeta(
   startTop
 ) {
   const labelX = 38
-  const colonX = 235
-  const valueX = 251
-  const valueWidth = 548
-  const size = 9.3
+  const colonX = 300
+  const valueX = 316
+  const valueWidth = 484
+  const size = 10
 
   const lines = wrapParagraph(
     flat(value) || '-',
@@ -863,13 +852,7 @@ export async function generateSlccPreview(
     PAGE_HEIGHT,
   ])
 
-  const regular = await pdf.embedFont(
-    StandardFonts.Helvetica
-  )
-
-  const bold = await pdf.embedFont(
-    StandardFonts.HelveticaBold
-  )
+  const { regular, bold } = await embedBookmanFonts(pdf)
 
   // ==================================================
   // DOCUMENT SETUP INFORMATION
@@ -922,7 +905,7 @@ export async function generateSlccPreview(
     91
   )
 
-  const titleSize = 12.4
+  const titleSize = 10
 
   const titleX =
     (

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { PDFDocument } from 'pdf-lib'
 import { appendPdfAsA4 } from '../services/pdf/fullBidPackagePdf'
+import { supportingUploads, appendSupportingUploads } from '../lib/supportingUploads'
 
 export default function SupportingPdfUpload({ value, onChange, field, title, follows }) {
   const [error, setError] = useState('')
@@ -10,12 +11,14 @@ export default function SupportingPdfUpload({ value, onChange, field, title, fol
   useEffect(() => { latest.current = value }, [value])
   useEffect(() => { active.current = true; return () => { active.current = false } }, [])
 
-  async function upload(file) {
-    if (!file) return
+  async function upload(files) {
+    if (!files.length) return
     const bidderId = value.bidderId
     setBusy(true)
     setError('')
     try {
+      const added = []
+      for (const file of files) {
       if (file.size > 10 * 1024 * 1024) throw new Error('Choose a PDF smaller than 10 MB.')
       const source = await PDFDocument.load(await file.arrayBuffer())
       if (!source.getPageCount()) throw new Error('The PDF has no pages.')
@@ -28,8 +31,10 @@ export default function SupportingPdfUpload({ value, onChange, field, title, fol
         reader.onerror = () => reject(new Error('Unable to read the PDF.'))
         reader.readAsDataURL(new Blob([bytes], { type: 'application/pdf' }))
       })
+      added.push({ name: file.name, dataUrl })
+      }
       if (active.current && latest.current.bidderId === bidderId) {
-        onChange?.({ ...latest.current, [field]: { name: file.name, dataUrl } })
+        onChange?.({ ...latest.current, [field]: appendSupportingUploads(latest.current[field], added) })
       }
     } catch (cause) {
       if (active.current) setError(cause.message || 'Unable to upload PDF.')
@@ -40,17 +45,19 @@ export default function SupportingPdfUpload({ value, onChange, field, title, fol
 
   return <div style={{ margin: '14px 0', padding: 10, border: '1px solid #c5d9cf', borderRadius: 6 }}>
     <h4 style={{ margin: '0 0 10px', fontSize: 12 }}>{title}</h4>
-    <label style={{ display: 'block' }}>Upload supporting PDF
-      <input type="file" accept="application/pdf,.pdf" aria-label={`Upload ${title}`} disabled={busy}
+    <label style={{ display: 'block' }}>Add supporting PDFs
+      <input type="file" multiple accept="application/pdf,.pdf" aria-label={`Upload ${title}`} disabled={busy}
         style={{ display: 'block', width: '100%', marginTop: 6 }}
-        onChange={event => { void upload(event.target.files?.[0]); event.target.value = '' }} />
+        onChange={event => { void upload(Array.from(event.target.files ?? [])); event.target.value = '' }} />
     </label>
-    <p role="status">{busy ? 'Converting PDF to A4...' : `Uploaded pages are resized to A4 and included immediately after ${follows} in the bid package.`}</p>
+    <p role="status">{busy ? 'Converting PDFs to A4...' : `Add more PDFs anytime. All pages are resized to A4 and included in the order below, immediately after ${follows} in the bid package.`}</p>
     {error && <p role="alert">{error}</p>}
-    {value[field]?.dataUrl && <>
-      <a href={value[field].dataUrl} target="_blank" rel="noreferrer">{value[field].name} (A4)</a>
-      <button type="button" disabled={busy} style={{ marginTop: 8 }}
-        onClick={() => onChange?.({ ...value, [field]: null })}>Remove PDF</button>
-    </>}
+    <ol style={{ paddingLeft: 20 }}>
+      {supportingUploads(value[field]).map((file, index) => <li key={index} style={{ marginBottom: 10 }}>
+        <a href={file.dataUrl} target="_blank" rel="noreferrer">{file.name} (A4)</a>
+        <button type="button" disabled={busy} style={{ display: 'block', marginTop: 6 }} aria-label={`Remove PDF ${index + 1}: ${file.name}`}
+          onClick={() => onChange?.({ ...value, [field]: supportingUploads(value[field]).filter((_, position) => position !== index) })}>Remove PDF</button>
+      </li>)}
+    </ol>
   </div>
 }

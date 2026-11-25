@@ -3,6 +3,7 @@ import { documentBidderName } from '../../lib/bidderCompanies'
 import { incompleteDocumentText } from '../../lib/incompleteDocument'
 import { generateTabbingPreview } from './tabbingPdf'
 import { getDeadline } from '../../lib/projectFormatters'
+import { supportingUploads } from '../../lib/supportingUploads'
 import { generateInitaoDividerPreview } from './initaoDividersPdf'
 
 import {
@@ -902,12 +903,12 @@ export function getBidPackageDocuments({
   // Insert after ordering so existing section numbers and Initao dividers
   // still refer to the same generators. Supporting originals stay unchanged.
   const documents = [tabbing, ...orderedDocuments].flatMap(entry => {
-    if (entry.wordSection === 7 && setup.ongoingSupportingUpload?.dataUrl) {
-      return [entry, {
-        name: setup.ongoingSupportingUpload.name || 'ONGOING Supporting Docs.pdf',
+    if (entry.wordSection === 7) {
+      return [entry, ...supportingUploads(setup.ongoingSupportingUpload).map((upload, index) => ({
+        name: upload.name || `ONGOING Supporting Docs ${index + 1}.pdf`,
         wordSection: 'ongoingSupporting',
-        path: setup.ongoingSupportingUpload.dataUrl,
-      }]
+        path: upload.dataUrl,
+      }))]
     }
     if (entry.wordSection === 8 && setup.slccSupportingUpload?.dataUrl) {
       return [entry, {

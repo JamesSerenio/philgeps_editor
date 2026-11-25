@@ -34,7 +34,7 @@ import {
 
 const PT = (n) => Math.round(n * 20)
 
-const FONT = 'Times New Roman'
+const FONT = 'Bookman Old Style'
 
 // IMPORTANT FIX:
 // The docx library automatically swaps width and
@@ -111,7 +111,7 @@ function p(content = '', options = {}) {
       new TextRun({
         text: line,
         font: FONT,
-        size: Math.round(size * 2),
+        size: 20,
         bold,
         underline: underline ? {} : undefined,
         break: index ? 1 : 0,
@@ -428,8 +428,7 @@ function ongoingRow(kind, row) {
     for (const name of names) {
       if (
         row?.[name] !== undefined &&
-        row?.[name] !== null &&
-        String(row[name]).trim()
+        row?.[name] !== null
       ) {
         return String(row[name])
       }
@@ -541,121 +540,43 @@ function ongoingRow(kind, row) {
 // ============================================
 
 function contractsTable(setup) {
+  const ownerBoxHeight = 112 / 3
   const VSTART = VerticalMergeType.RESTART
   const VCONT = VerticalMergeType.CONTINUE
 
+  // A shared row grid supports equal thirds and halves without blank cells.
+  const total = 112
+  const boundaries = [0, 28, ownerBoxHeight, total / 2, ownerBoxHeight * 2, total]
+  const definitions = [
+    [{ top: 0, text: 'Name of Contract', bold: true }],
+    [{ top: 0, text: "a. Owner's Name" }, { top: ownerBoxHeight, text: 'b. Address\nTelephone' }, { top: ownerBoxHeight * 2, text: 'c. Number' }],
+    [{ top: 0, text: 'Nature of Work' }],
+    [{ top: 28, text: 'Description' }],
+    [{ top: 28, text: '%' }],
+    [{ top: 0, text: 'a. Amount of\nAward' }, { top: total / 2, text: 'b. Completion\nDuration' }],
+    [{ top: 0, text: 'a. Date Awarded' }, { top: ownerBoxHeight, text: 'b. Contract\nEffectivity' }, { top: ownerBoxHeight * 2, text: 'c. Date Completed' }],
+  ]
+  const headers = boundaries.slice(0, -1).map((top, rowIndex) => {
+    const children = []
+    for (let column = 0; column < definitions.length; column++) {
+      if (top === 0 && column === 3) {
+        children.push(gridCell("Bidder's Role", 3, 4, { centered: true, bold: true, fontSize: 10 }))
+        column++
+        continue
+      }
+      const definition = definitions[column].filter(cell => cell.top <= top).at(-1)
+      children.push(gridCell(definition.top === top ? definition.text : '', column, column, {
+        verticalMerge: definition.top === top ? VSTART : VCONT,
+        centered: true, bold: definition.bold === true, fontSize: 9,
+      }))
+    }
+    return new TableRow({
+      height: { value: PT(boundaries[rowIndex + 1] - top), rule: HeightRule.EXACT },
+      children,
+    })
+  })
   const rows = [
-    // Preserve the official a./b./c. header arrangement used by the PDF.
-    // The cells are merged only where the printed form requires it.
-    new TableRow({
-      height: {
-        value: PT(20),
-        rule: HeightRule.ATLEAST,
-      },
-      children: [
-        gridCell(
-          'Name of Contract',
-          0,
-          0,
-          { verticalMerge: VSTART, centered: true, bold: true, fontSize: 9.5 }
-        ),
-
-        gridCell('', 1),
-
-        gridCell(
-          'Nature of Work',
-          2,
-          2,
-          { verticalMerge: VSTART, centered: true, fontSize: 9.5 }
-        ),
-
-        gridCell(
-          "Bidder's Role",
-          3,
-          4,
-          { centered: true, bold: true, fontSize: 10 }
-        ),
-
-        gridCell('', 5),
-        gridCell('', 6),
-      ],
-    }),
-
-    new TableRow({
-      height: {
-        value: PT(30),
-        rule: HeightRule.ATLEAST,
-      },
-      children: [
-        gridCell('', 0, 0, {
-          verticalMerge: VCONT,
-        }),
-
-        gridCell("a. Owner's Name", 1, 1, { fontSize: 9 }),
-
-        gridCell('', 2, 2, {
-          verticalMerge: VCONT,
-        }),
-
-        gridCell(
-          'Description',
-          3,
-          3,
-          {
-            centered: true,
-            fontSize: 9,
-            verticalMerge: VSTART,
-          }
-        ),
-
-        gridCell(
-          '%',
-          4,
-          4,
-          {
-            centered: true,
-            fontSize: 10,
-            verticalMerge: VSTART,
-          }
-        ),
-
-        gridCell('a. Amount of\nAward', 5, 5, { fontSize: 9 }),
-        gridCell('a. Date Awarded', 6, 6, { fontSize: 8.5 }),
-      ],
-    }),
-
-    new TableRow({
-      height: {
-        value: PT(30),
-        rule: HeightRule.ATLEAST,
-      },
-      children: [
-        gridCell('', 0, 0, { verticalMerge: VCONT }),
-        gridCell('b. Address\nTelephone', 1, 1, { fontSize: 9 }),
-        gridCell('', 2, 2, { verticalMerge: VCONT }),
-        gridCell('', 3, 3, { verticalMerge: VCONT }),
-        gridCell('', 4, 4, { verticalMerge: VCONT }),
-        gridCell('b. Completion\nDuration', 5, 5, { fontSize: 9 }),
-        gridCell('b. Contract\nEffectivity', 6, 6, { fontSize: 8.5 }),
-      ],
-    }),
-
-    new TableRow({
-      height: {
-        value: PT(16),
-        rule: HeightRule.ATLEAST,
-      },
-      children: [
-        gridCell('', 0, 0, { verticalMerge: VCONT }),
-        gridCell('c. Number', 1, 1, { fontSize: 8.75 }),
-        gridCell('', 2, 2, { verticalMerge: VCONT }),
-        gridCell('', 3, 3, { verticalMerge: VCONT }),
-        gridCell('', 4, 4, { verticalMerge: VCONT }),
-        gridCell('', 5),
-        gridCell('c. Date Completed', 6, 6, { fontSize: 8.25 }),
-      ],
-    }),
-
+    ...headers,
     ...getOngoingContractEntries(setup, 'government')
       .map(entry => ongoingRow('GOVERNMENT', entry)),
 
@@ -791,7 +712,9 @@ export function ongoingContractsWord(
 ) {
   const setup = options.setup ?? options
   if (getBidderCompany(setup).id !== 'mikata') {
-    return templateWord(options, options.sectionNumber ?? 7, { tables: true, tableExactGeometry: true, exactLineSpacing: true })
+    return templateWord(options, options.sectionNumber ?? 7, { tables: true, tableExactGeometry: true, exactLineSpacing: true,
+      preparePage(page) { page.fragments.forEach(part => { part.font = FONT; part.size = 10 }) },
+    })
   }
 
   const children = [

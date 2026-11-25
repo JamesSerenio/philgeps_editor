@@ -3,6 +3,7 @@ import test from 'node:test'
 import { createServer } from 'vite'
 import { PDFDocument, degrees } from 'pdf-lib'
 import { selectBidderProfile } from '../src/lib/bidderProfiles.js'
+import { supportingUploads, appendSupportingUploads } from '../src/lib/supportingUploads.js'
 
 test('uploaded ongoing and SLCC supporting pages use A4 and follow their statements in both package orders', async () => {
   const server = await createServer({ server: { middlewareMode: true, ws: false } })
@@ -38,6 +39,15 @@ test('uploaded ongoing and SLCC supporting pages use A4 and follow their stateme
       }
       const withoutUpload = getBidPackageDocuments({ setup: { bidderId: 'mikata', ongoingSupportingUpload: null }, omnibusVariant })
       assert.equal(withoutUpload.filter(entry => entry.wordSection === 'ongoingSupporting').length, 0)
+      const uploads = appendSupportingUploads(upload, [
+        { ...upload, name: 'Second.pdf' }, { ...upload, name: 'Third.pdf' },
+      ])
+      const multiple = getBidPackageDocuments({ setup: { bidderId: 'mikata', ongoingSupportingUpload: uploads }, omnibusVariant })
+      const statementIndex = multiple.findIndex(entry => entry.wordSection === 7)
+      assert.deepEqual(multiple.slice(statementIndex + 1, statementIndex + 4).map(entry => entry.name), uploads.map(file => file.name))
+      assert.equal(multiple[statementIndex + 4].wordSection, 8)
+      const serialized = copySavedUploads(uploads)
+      assert.deepEqual(supportingUploads(serialized), uploads)
     }
     const { copyEditorItems } = await server.ssrLoadModule('/src/services/editorStateService.js')
     const restored = copyEditorItems({ documentSetup: { ongoingSupportingUpload: upload } }, 'bid_security')
@@ -45,6 +55,20 @@ test('uploaded ongoing and SLCC supporting pages use A4 and follow their stateme
   } finally {
     await server.close()
   }
+})
+
+function copySavedUploads(uploads) {
+  return JSON.parse(JSON.stringify(uploads))
+}
+
+test('adding more PDFs preserves legacy uploads and removal preserves remaining order', () => {
+  const first = { name: 'First.pdf', dataUrl: 'data:application/pdf;base64,Zmlyc3Q=' }
+  const second = { name: 'Second.pdf', dataUrl: 'data:application/pdf;base64,c2Vjb25k' }
+  const third = { name: 'Third.pdf', dataUrl: 'data:application/pdf;base64,dGhpcmQ=' }
+  const uploads = appendSupportingUploads(first, [second, third])
+  assert.deepEqual(uploads, [first, second, third])
+  assert.deepEqual(supportingUploads(uploads).filter((_, index) => index !== 1), [first, third])
+  assert.deepEqual(supportingUploads(null), [])
 })
 
 test('ongoing supporting uploads stay with the selected bidder profile', () => {

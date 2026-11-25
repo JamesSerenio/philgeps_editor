@@ -21,7 +21,7 @@ export function getOngoingContractEntry(value = {}, type = getOngoingContractTyp
   if (typeof saved === 'string') {
     const parts = saved.split('|')
     return Object.fromEntries(
-      ongoingContractFields.map(([field], index) => [field, parts[index]?.trim() || 'NONE']),
+      ongoingContractFields.map(([field], index) => [field, parts[index]?.trim() ?? 'NONE']),
     )
   }
   return { ...ongoingContractDefaults, ...(saved && typeof saved === 'object' ? saved : {}) }

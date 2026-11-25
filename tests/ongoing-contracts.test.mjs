@@ -47,3 +47,11 @@ test('each contract type supports multiple independently editable rows', () => {
   assert.equal(rows[1].ownerDetails, 'LGU MALITBOG')
   assert.equal(rows[0].description, 'NONE')
 })
+
+test('explicitly cleared fields remain blank while missing fields retain their defaults', () => {
+  for (const government of [{ dates: '' }, [{ dates: '' }], 'LGU SUMILAO|SUPPLY|Materials|100%|1000|']) {
+    const entry = getOngoingContractEntries({ ongoingEntries: { government } }, 'government')[0]
+    assert.equal(entry.dates, '')
+  }
+  assert.equal(getOngoingContractEntries({ ongoingEntries: { government: [{ dates: '' }] } }, 'government')[0].description, 'NONE')
+})

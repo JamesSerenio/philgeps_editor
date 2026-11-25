@@ -51,8 +51,16 @@ export async function drawBidderOmnibusBody(pdf, data) {
     }
     top += leading + gap
   }
-  draw('REPUBLIC OF THE PHILIPPINES )', 72, 83)
-  draw('CITY/MUNICIPALITY OF ______ ) S.S.', 72, 97)
+  const republic = 'REPUBLIC OF THE PHILIPPINES'
+  const venue = 'CITY/MUNICIPALITY OF ____________________'
+  const parenthesisX = 72 + Math.max(
+    regular.widthOfTextAtSize(republic, size),
+    regular.widthOfTextAtSize(venue, size),
+  ) + 12
+  draw(republic, 72, 83)
+  draw(')', parenthesisX, 83)
+  draw(venue, 72, 97)
+  draw(') S.S.', parenthesisX, 97)
   const title = 'OMNIBUS SWORN STATEMENT'
   draw(title, (page.getWidth() - bold.widthOfTextAtSize(title, 13)) / 2, 126, bold, 13)
   paragraph([normal('I, '), strong(data.representative.displayName), normal(', of legal age, '),

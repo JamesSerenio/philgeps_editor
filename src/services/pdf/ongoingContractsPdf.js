@@ -1,6 +1,7 @@
 import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { getOngoingContractEntries } from '../../lib/ongoingContracts'
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { PDFDocument, rgb } from 'pdf-lib'
+import { embedBookmanFonts } from './bookmanFont'
 import { formatLongDate } from '../../lib/documentSetup'
 import { clean, wrapText } from './pdfHelpers'
 
@@ -22,10 +23,10 @@ export async function generateOngoingContractsPreview(project) {
     )
   }
 
-  const page = pdfDoc.getPage(0)
-
-  const regular = await pdfDoc.embedFont(StandardFonts.TimesRoman)
-  const bold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold)
+  const dimensions = pdfDoc.getPage(0).getSize()
+  pdfDoc.removePage(0)
+  let page = pdfDoc.insertPage(0, [dimensions.width, dimensions.height])
+  const { regular, bold } = await embedBookmanFonts(pdfDoc)
 
   const white = rgb(1, 1, 1)
   const black = rgb(0, 0, 0)
@@ -40,6 +41,7 @@ export async function generateOngoingContractsPreview(project) {
   const date = formatLongDate(project?.date)
 
   function text(value, x, y, size = 10, font = regular) {
+    size = 10
     if (!clean(value)) return
     page.drawText(clean(value), {
       x,
@@ -59,6 +61,7 @@ export async function generateOngoingContractsPreview(project) {
     font = bold,
     lineHeight = 12,
   ) {
+    size = 10
     const lines = wrapText(value, font, size, width)
 
     lines.forEach((line, index) => {
@@ -78,30 +81,61 @@ export async function generateOngoingContractsPreview(project) {
     ...governmentEntries.map(entry => ({ type: 'GOVERNMENT', entry })),
     ...privateEntries.map(entry => ({ type: 'PRIVATE', entry })),
   ].slice(0, 5)
-  const footerOffset = Math.max(0, contractRows.length - 2) * 16.5
+  const cellEdges = [139.83, 243.73, 346.43, 449.3, 551.85, 656.28, 759.88]
+  const cellSize = 10
+  const cellLeading = 12
+  // Respect explicit newlines and split long unbroken text at cell boundaries.
+  function cellLines(value, width) {
+    const lines = []
+    for (const paragraph of String(value ?? '').trim().split(/\r?\n/)) {
+      let current = ''
+      for (const character of paragraph) {
+        const candidate = current + character
+        if (regular.widthOfTextAtSize(candidate, cellSize) > width && current) {
+          const space = current.lastIndexOf(' ')
+          if (space > 0) {
+            lines.push(current.slice(0, space))
+            current = current.slice(space + 1) + character
+          } else { lines.push(current); current = character }
+        } else current = candidate
+      }
+      lines.push(current.trim())
+    }
+    return lines.length ? lines : ['']
+  }
+  const preparedRows = contractRows.flatMap(({ type, entry }) => {
+    const fields = [entry.ownerDetails, entry.natureOfWork, entry.description, entry.percentage, entry.awardCompletion, entry.dates]
+    const cells = fields.map((value, index) => cellLines(value, cellEdges[index + 1] - cellEdges[index] - 10))
+    const count = Math.max(...cells.map(lines => lines.length))
+    const chunks = []
+    // A long contract can continue on another page without shrinking its text.
+    const maxLines = Math.max(1, Math.floor((page.getHeight() - 152 - 146 - 8) / cellLeading))
+    for (let offset = 0; offset < count; offset += maxLines) {
+      const lines = cells.map(cell => cell.slice(offset, offset + maxLines))
+      chunks.push({ type, cells: lines, height: Math.max(22, Math.max(...lines.map(cell => cell.length)) * cellLeading + 8) })
+    }
+    return chunks
+  })
 
-  function drawOngoingRows() {
+  function drawOngoingRows(rows, tableTop = 255.25, showHeader = true) {
     const pageHeight = page.getHeight()
     const labelLeft = 35.25
-    const edges = [139.83, 243.73, 346.43, 449.3, 551.85, 656.28, 759.88]
-    const rowHeight = 16.5
-    const startTop = 367.25
-    const tableTop = 255.25
+    const edges = cellEdges
+    const startTop = tableTop + (showHeader ? 112 : 0)
     // Preserve the official a./b./c. header arrangement while redrawing it
     // as a single clean grid (instead of inheriting the uneven template).
     const headerRows = [28, 34, 34, 16]
     const headerTopHeight = headerRows[0]
     const tableRight = edges[edges.length - 1]
-    const tableBottom = startTop + rowHeight * contractRows.length
+    const tableBottom = startTop + rows.reduce((sum, row) => sum + row.height, 0)
 
     const drawHeaderText = (lines, left, right, top, height, size = 10, font = regular) => {
-      const textLines = lines.filter(Boolean)
+      size = 10
+      const textLines = lines.filter(Boolean).flatMap(line => wrapText(line, font, size, right - left - 8))
       const lineHeight = size + 2
       const totalHeight = textLines.length * lineHeight
       textLines.forEach((line, index) => {
-        let fitted = size
-        const available = right - left - 8
-        while (fitted > 6 && font.widthOfTextAtSize(line, fitted) > available) fitted -= 0.25
+        const fitted = size
         const width = font.widthOfTextAtSize(line, fitted)
         page.drawText(line, {
           x: left + Math.max(4, (right - left - width) / 2),
@@ -117,9 +151,9 @@ export async function generateOngoingContractsPreview(project) {
     // inheriting its uneven lines when more than one contract is added.
     page.drawRectangle({
       x: labelLeft,
-      y: pageHeight - tableBottom,
+      y: pageHeight - (tableTop === 255.25 ? Math.max(400.25, tableBottom) : tableBottom),
       width: tableRight - labelLeft,
-      height: tableBottom - tableTop,
+      height: (tableTop === 255.25 ? Math.max(400.25, tableBottom) : tableBottom) - tableTop,
       color: white,
     })
 
@@ -135,7 +169,7 @@ export async function generateOngoingContractsPreview(project) {
     const allEdges = [labelLeft, ...edges]
     allEdges.slice(1, -1).forEach((x, index) => {
       // Description and percentage share the Bidder's Role heading.
-      const startsBelowRoleHeading = index === 3
+      const startsBelowRoleHeading = showHeader && index === 3
       page.drawLine({
         start: { x, y: pageHeight - (startsBelowRoleHeading ? tableTop + headerTopHeight : tableTop) },
         end: { x, y: pageHeight - tableBottom },
@@ -144,7 +178,7 @@ export async function generateOngoingContractsPreview(project) {
       })
     })
 
-    const drawPartialRule = (top, from, to) => page.drawLine({
+    const drawPartialRule = (top, from, to) => showHeader && page.drawLine({
       start: { x: from, y: pageHeight - top },
       end: { x: to, y: pageHeight - top },
       color: black,
@@ -154,64 +188,64 @@ export async function generateOngoingContractsPreview(project) {
     // Header-only lines: Name/Nature stay merged; Owner, Amount and Date
     // keep their required a., b., c. sub-fields.
     const secondTop = tableTop + headerRows[0]
-    const thirdTop = secondTop + headerRows[1]
-    const fourthTop = thirdTop + headerRows[2]
-    drawPartialRule(secondTop, edges[0], edges[1])
+    const ownerBoxHeight = (startTop - tableTop) / 3
+    const amountBoxHeight = (startTop - tableTop) / 2
     drawPartialRule(secondTop, edges[2], edges[4])
-    drawPartialRule(thirdTop, edges[0], edges[1])
-    drawPartialRule(thirdTop, edges[4], edges[5])
-    drawPartialRule(thirdTop, edges[5], edges[6])
-    drawPartialRule(fourthTop, edges[0], edges[1])
-    drawPartialRule(fourthTop, edges[5], edges[6])
-    contractRows.forEach((_, index) => {
-      const top = startTop + index * rowHeight
+    drawPartialRule(tableTop + ownerBoxHeight, edges[0], edges[1])
+    drawPartialRule(tableTop + amountBoxHeight, edges[4], edges[5])
+    drawPartialRule(tableTop + ownerBoxHeight, edges[5], edges[6])
+    drawPartialRule(tableTop + ownerBoxHeight * 2, edges[0], edges[1])
+    drawPartialRule(tableTop + ownerBoxHeight * 2, edges[5], edges[6])
+    let ruleTop = startTop
+    rows.forEach(row => {
+      const top = ruleTop
       page.drawLine({
         start: { x: labelLeft, y: pageHeight - top },
         end: { x: tableRight, y: pageHeight - top },
         color: black,
         thickness: 0.7,
       })
+      ruleTop += row.height
     })
 
+    if (showHeader) {
     drawHeaderText(['Name of Contract'], labelLeft, edges[0], tableTop, startTop - tableTop, 10.5, bold)
-    drawHeaderText(["a. Owner's Name"], edges[0], edges[1], secondTop, headerRows[1], 9.5)
-    drawHeaderText(['b. Address', 'Telephone'], edges[0], edges[1], thirdTop, headerRows[2], 9.5)
-    drawHeaderText(['c. Number'], edges[0], edges[1], fourthTop, headerRows[3], 9.25)
+    drawHeaderText(["a. Owner's Name"], edges[0], edges[1], tableTop, ownerBoxHeight, 9.5)
+    drawHeaderText(['b. Address', 'Telephone'], edges[0], edges[1], tableTop + ownerBoxHeight, ownerBoxHeight, 9.5)
+    drawHeaderText(['c. Number'], edges[0], edges[1], tableTop + ownerBoxHeight * 2, ownerBoxHeight, 9.25)
     drawHeaderText(['Nature of Work'], edges[1], edges[2], tableTop, startTop - tableTop, 10.5)
     drawHeaderText(["Bidder's Role"], edges[2], edges[4], tableTop, headerTopHeight, 10.5, bold)
     drawHeaderText(['Description'], edges[2], edges[3], secondTop, startTop - secondTop, 10)
     drawHeaderText(['%'], edges[3], edges[4], secondTop, startTop - secondTop, 10.5)
-    drawHeaderText(['a. Amount of', 'Award'], edges[4], edges[5], secondTop, headerRows[1], 9.5)
-    drawHeaderText(['b. Completion', 'Duration'], edges[4], edges[5], thirdTop, headerRows[2], 9.5)
-    drawHeaderText(['a. Date Awarded'], edges[5], edges[6], secondTop, headerRows[1], 9.25)
-    drawHeaderText(['b. Contract', 'Effectivity'], edges[5], edges[6], thirdTop, headerRows[2], 9.25)
-    drawHeaderText(['c. Date Completed'], edges[5], edges[6], fourthTop, headerRows[3], 8.75)
+    drawHeaderText(['a. Amount of', 'Award'], edges[4], edges[5], tableTop, amountBoxHeight, 9.5)
+    drawHeaderText(['b. Completion', 'Duration'], edges[4], edges[5], tableTop + amountBoxHeight, amountBoxHeight, 9.5)
+    drawHeaderText(['a. Date Awarded'], edges[5], edges[6], tableTop, ownerBoxHeight, 9.25)
+    drawHeaderText(['b. Contract', 'Effectivity'], edges[5], edges[6], tableTop + ownerBoxHeight, ownerBoxHeight, 9.25)
+    drawHeaderText(['c. Date Completed'], edges[5], edges[6], tableTop + ownerBoxHeight * 2, ownerBoxHeight, 8.75)
+    }
 
-    contractRows.forEach(({ type, entry: values }, row) => {
-      const cells = [values.ownerDetails, values.natureOfWork, values.description, values.percentage, values.awardCompletion, values.dates]
-        .map(value => String(value ?? 'NONE').replace(/\s+/g, ' ').trim() || 'NONE')
-      const rowTop = startTop + row * rowHeight
-      const rowBottom = rowTop + rowHeight
+    let rowTop = startTop
+    rows.forEach(({ type, cells, height: rowHeight }) => {
 
       drawHeaderText([type], labelLeft, edges[0], rowTop, rowHeight, 8.5, bold)
 
       for (let index = 0; index < 6; index += 1) {
         const cellWidth = edges[index + 1] - edges[index]
-        const cellHeight = rowBottom - rowTop
-        const value = cells[index]
-        const availableWidth = cellWidth - 8
-        let size = 7.5
-        while (size > 4.5 && regular.widthOfTextAtSize(value, size) > availableWidth) size -= 0.25
-        const textWidth = regular.widthOfTextAtSize(value, size)
+        const lines = cells[index]
+        lines.forEach((value, lineIndex) => {
+        const textWidth = regular.widthOfTextAtSize(value, cellSize)
         page.drawText(value, {
           x: Math.max(edges[index] + 4, edges[index] + (cellWidth - textWidth) / 2),
-          y: pageHeight - rowTop - (cellHeight + size) / 2 + 1,
-          size,
+          y: pageHeight - rowTop - (rowHeight - lines.length * cellLeading) / 2 - cellSize - lineIndex * cellLeading,
+          size: cellSize,
           font: regular,
           color: black,
         })
+        })
       }
+      rowTop += rowHeight
     })
+    return tableBottom
   }
 
   // ==========================================================
@@ -270,13 +304,8 @@ export async function generateOngoingContractsPreview(project) {
       { label: 'REFERENCE NUMBER', top: referenceTop, lines: reference },
     ], bottom: referenceTop + Math.max(0, reference.length - 1) * lineHeight }
   }
-  let headerSize = 11.5
+  const headerSize = 10
   let header = headerLayout(headerSize)
-  while (headerSize > 6 && (header.bottom > 108 || header.rows.some(row =>
-    row.lines.some(line => bold.widthOfTextAtSize(line, headerSize) > headerWidth)))) {
-    headerSize -= .25
-    header = headerLayout(headerSize)
-  }
   if (header.bottom > 108 || header.rows.some(row => row.lines.some(line => bold.widthOfTextAtSize(line, headerSize) > headerWidth))) {
     throw new Error('Ongoing Contracts: project information is too long to fit above the statement heading.')
   }
@@ -285,6 +314,16 @@ export async function generateOngoingContractsPreview(project) {
     text(row.label, topLabelX, y, 11.5, regular)
     text(':', topColonX, y, 11.5, regular)
     row.lines.forEach((line, index) => text(line, topValueX, y - index * header.lineHeight, headerSize, bold))
+  }
+  for (const [index, title] of [
+    'STATEMENT OF ALL ITS ONGOING GOVERNMENT & PRIVATE CONTRACTS INCLUDING CONTRACTS',
+    'AWARDED BUT NOT YET STARTED',
+  ].entries()) {
+    const width = bold.widthOfTextAtSize(title, 10)
+    const x = (page.getWidth() - width) / 2
+    const y = page.getHeight() - 130 - index * 13
+    text(title, x, y, 10, bold)
+    page.drawLine({ start: { x, y: y - 1.5 }, end: { x: x + width, y: y - 1.5 }, thickness: 0.5, color: black })
   }
 
   // ==========================================================
@@ -303,6 +342,44 @@ export async function generateOngoingContractsPreview(project) {
   text(':', bidderColonX, 373, 11, regular)
   wrapped(businessAddress, bidderValueX, 373, 380, 11, bold, 13)
 
+  let tableTop = 255.25
+  let remaining = [...preparedRows]
+  let tableBottom
+  let showHeader = true
+  while (remaining.length) {
+    const bodyTop = tableTop + (showHeader ? 112 : 0)
+    const capacity = page.getHeight() - bodyTop - 35
+    // Fill the available page instead of moving a long contract wholesale.
+    if (remaining[0].height > capacity) {
+      const original = remaining.shift()
+      const count = Math.max(1, Math.floor((capacity - 8) / cellLeading))
+      const first = original.cells.map(lines => lines.slice(0, count))
+      const rest = original.cells.map(lines => lines.slice(count))
+      remaining.unshift(
+        { ...original, cells: first, height: Math.max(22, Math.max(...first.map(lines => lines.length)) * cellLeading + 8) },
+        { ...original, cells: rest, height: Math.max(22, Math.max(...rest.map(lines => lines.length)) * cellLeading + 8) },
+      )
+    }
+    let height = 0
+    const rows = []
+    while (remaining.length && height + remaining[0].height <= capacity) {
+      const row = remaining.shift()
+      rows.push(row)
+      height += row.height
+    }
+    tableBottom = drawOngoingRows(rows, tableTop, showHeader)
+    if (remaining.length) {
+      page = pdfDoc.addPage([page.getWidth(), page.getHeight()])
+      tableTop = 40
+      showHeader = false
+    }
+  }
+  if (page.getHeight() - tableBottom < 133) {
+    page = pdfDoc.addPage([page.getWidth(), page.getHeight()])
+    tableBottom = 40
+  }
+  const footerOffset = 157 - (page.getHeight() - tableBottom - 30)
+
   // ==========================================================
   // FOOTER INFO - BIGGER
   // ==========================================================
@@ -315,7 +392,7 @@ export async function generateOngoingContractsPreview(project) {
   text(':', footerColonX, 157 - footerOffset, 10.5, regular)
   text(submittedBy, footerValueX, 157 - footerOffset, 10.5, bold)
 
-  const submittedWidth = bold.widthOfTextAtSize(submittedBy, 10.5)
+  const submittedWidth = bold.widthOfTextAtSize(submittedBy, 10)
   page.drawLine({
     start: { x: footerValueX, y: 155 - footerOffset },
     end: { x: footerValueX + submittedWidth, y: 155 - footerOffset },
@@ -337,7 +414,6 @@ export async function generateOngoingContractsPreview(project) {
   text(':', footerColonX, 79 - footerOffset, 10.5, regular)
   text(date, footerValueX, 79 - footerOffset, 10.5, regular)
 
-  drawOngoingRows()
   const bytes = await pdfDoc.save()
   const blob = new Blob([bytes], {
     type: 'application/pdf',
