@@ -18,14 +18,25 @@ export async function generateTabbingPreview(data = {}) {
   const deadline = formatTabbingDeadline(data.closingDate ?? data.closing_date)
   const response = await fetchAsset(getTemplatePath("TABBING.pdf", data))
   if (!response.ok) throw new Error('Unable to load TABBING.pdf.')
-  const document = await PDFDocument.load(await response.arrayBuffer())
+  const template = await PDFDocument.load(await response.arrayBuffer())
+  const document = await PDFDocument.create()
+  // Page 3 has the consistent centered layout used by every envelope cover.
+  for (let index = 0; index < template.getPageCount(); index++) {
+    const [page] = await document.copyPages(template, [index < 8 ? 2 : index])
+    document.addPage(page)
+  }
   const bold = await document.embedFont(StandardFonts.TimesRomanBold)
   const office = await document.embedFont(StandardFonts.HelveticaBoldOblique)
   const white = rgb(1, 1, 1), red = rgb(1, 0, 0)
   const clean = value => String(value ?? '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim()
   const company = getBidderCompany(data)
   const logo = company.id === 'mikata' ? null : await getBidderLogo(data)
-  for (const page of document.getPages()) {
+  const coverLabels = [
+    ['TECHNICAL', 'ORIGINAL COPY'], ['TECHNICAL', 'COPY 1'], ['TECHNICAL', 'COPY 2'],
+    ['FINANCIAL', 'COPY 1'], ['FINANCIAL', 'COPY 2'], ['FINANCIAL', 'ORIGINAL COPY'],
+    ['TECHNICAL', 'ENVELOPE'], ['FINANCIAL', 'ENVELOPE'],
+  ]
+  for (const [index, page] of document.getPages().entries()) {
     const height = page.getHeight()
     const erase = (x, top, width, boxHeight) => page.drawRectangle({ x, y: height - top - boxHeight, width, height: boxHeight, color: white })
     const draw = (value, x, baseline, width, size, { centered = false, maxLines = 1, leading = 13.8, font = bold, color = rgb(0, 0, 0) } = {}) => {
@@ -57,6 +68,20 @@ export async function generateTabbingPreview(data = {}) {
     draw(data.referenceNumber, 287.16, 259.27, 285, 12, { color: red })
     erase(34, 349, 532, 110)
     draw(data.projectTitle, 45, 375.72, 506, 27.6, { centered: true, maxLines: 3, leading: 35.5 })
+    if (coverLabels[index]) {
+      // Repaint the label box so every copy has identical borders and spacing.
+      const box = { x: 92, top: 517, width: 408, height: 110 }
+      erase(88, 513, 417, 119)
+      for (let strip = 0; strip < box.height; strip++) {
+        const shade = 0.94 - 0.19 * strip / (box.height - 1)
+        page.drawRectangle({ x: box.x, y: height - box.top - strip - 1, width: box.width, height: 1,
+          color: rgb(shade, shade, shade) })
+      }
+      page.drawRectangle({ x: box.x, y: height - box.top - box.height, width: box.width, height: box.height,
+        borderColor: rgb(0, 0, 0), borderWidth: 0.6 })
+      draw(coverLabels[index][0], box.x + 8, 565.13, box.width - 16, 36, { centered: true })
+      draw(coverLabels[index][1], box.x + 8, 610.13, box.width - 16, 36, { centered: true })
+    }
     erase(34, 721, 532, 54)
     draw(data.procuringEntity, 45, 737.98, 506, 19.92, { centered: true, maxLines: 2, leading: 23.27 })
     erase(34, 810, 532, 31)

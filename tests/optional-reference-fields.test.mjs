@@ -50,7 +50,16 @@ test('blank/whitespace references omit complete visible PDF labels for all four 
       assert.equal(tabbing.name, 'TABBING.pdf')
       const coverUrl = await tabbing.generate()
       try {
-        const cover = (await readPdfLayout(coverUrl, 'package TABBING')).flatMap(page => page.fragments.map(part => part.str)).join(' ')
+        const coverPages = await readPdfLayout(coverUrl, 'package TABBING')
+        const cover = coverPages.flatMap(page => page.fragments.map(part => part.str)).join(' ')
+        const labels = [['TECHNICAL', 'ORIGINAL COPY'], ['TECHNICAL', 'COPY 1'], ['TECHNICAL', 'COPY 2'], ['FINANCIAL', 'COPY 1'], ['FINANCIAL', 'COPY 2'], ['FINANCIAL', 'ORIGINAL COPY'], ['TECHNICAL', 'ENVELOPE'], ['FINANCIAL', 'ENVELOPE']]
+        for (const [index, pair] of labels.entries()) {
+          for (const [line, label] of pair.entries()) {
+            const fragment = coverPages[index].fragments.find(part => part.str === label && Math.abs(part.y - (line ? 610.13 : 565.13)) < 1)
+            assert.ok(fragment, 'Missing aligned cover label: ' + label)
+            assert.ok(Math.abs(fragment.x + fragment.width / 2 - 296) < 1, 'Cover label must be centered')
+          }
+        }
         assert.match(cover, /TEST PROJECT TITLE/)
         assert.match(cover, /DECEMBER 3, 2026/)
         assert.doesNotMatch(cover, /DOCUMENT NOT YET AVAILABLE/)
