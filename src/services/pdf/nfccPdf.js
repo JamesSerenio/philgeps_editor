@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber'
 
 import {
   getTemplatePath,
@@ -438,6 +439,7 @@ export async function generateNfccPreview(project) {
     y,
     minSize = 7.4
   ) {
+    if (label === 'REFERENCE NUMBER' && !hasReferenceNumber(value)) return
     drawText(
       label,
       labelX,

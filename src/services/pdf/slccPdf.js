@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber'
 import { getSlccVariant, getSlccContractType, getSlccEntry } from '../../lib/slccEntries'
 export { getSlccContractType, getSlccEntry } from '../../lib/slccEntries'
 import { getBidderCompany, getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
@@ -387,6 +388,7 @@ function drawMeta(
   value,
   startTop
 ) {
+  if (label === 'REFERENCE NUMBER' && !hasReferenceNumber(value)) return startTop
   const labelX = 38
   const colonX = 300
   const valueX = 316

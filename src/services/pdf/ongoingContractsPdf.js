@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber'
 import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { getOngoingContractEntries } from '../../lib/ongoingContracts'
 import { PDFDocument, rgb } from 'pdf-lib'
@@ -309,7 +310,7 @@ export async function generateOngoingContractsPreview(project) {
   if (header.bottom > 108 || header.rows.some(row => row.lines.some(line => bold.widthOfTextAtSize(line, headerSize) > headerWidth))) {
     throw new Error('Ongoing Contracts: project information is too long to fit above the statement heading.')
   }
-  for (const row of header.rows) {
+  for (const row of header.rows.filter(row => row.label !== 'REFERENCE NUMBER' || hasReferenceNumber(referenceNumber))) {
     const y = page.getHeight() - row.top
     text(row.label, topLabelX, y, 11.5, regular)
     text(':', topColonX, y, 11.5, regular)

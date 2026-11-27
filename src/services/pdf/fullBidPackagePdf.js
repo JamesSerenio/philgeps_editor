@@ -1,3 +1,4 @@
+import { resolveDocumentTemplate } from '../../lib/municipalityTemplate'
 import { getStaticDocumentPath } from '../../lib/bidderAssets'
 import { documentBidderName } from '../../lib/bidderCompanies'
 import { incompleteDocumentText } from '../../lib/incompleteDocument'
@@ -167,7 +168,8 @@ function chooseOmnibusVariant(
     setup?.omnibusVariant ??
     setup?.omnibusTemplate ??
     omnibus?.selectedTemplate ??
-    omnibus?.templateVariant
+    omnibus?.templateVariant ??
+    'initao_lgu'
   )
 
   return value.includes('initao')
@@ -496,8 +498,8 @@ function createDocumentData({
   omnibusVariant,
 }) {
   const common = {
-    tableOfContentsVariant: omnibusVariant,
     ...setup,
+    tableOfContentsVariant: resolveDocumentTemplate(setup),
     bidderName: documentBidderName(setup),
     companyAddress: setup?.businessAddress ?? setup?.companyAddress ?? '',
 
@@ -886,7 +888,14 @@ export function getBidPackageDocuments({
   // ---------------------------------------------------
 
   // Keep generator identity independent of its position in either template order.
-  const tabbing = { name: 'TABBING.pdf', wordSection: 'tabbing', generate: () => generateTabbingPreview({ ...setup, closingDate: getDeadline(project) ?? setup.closingDate ?? setup.closing_date }) }
+  const tabbing = {
+    name: 'TABBING.pdf',
+    wordSection: 'tabbing',
+    generate: () => generateTabbingPreview({
+      ...setup,
+      closingDate: getDeadline(setup) ?? getDeadline(project),
+    }),
+  }
   const defaultDocuments = buildDocumentOrder(data).map((entry, index) => ({ ...entry, wordSection: index + 1 }))
   const initaoOrder = [1, 'legal', 9, 2, 3, 4, 5, 6, 'technical', 7, 8, 13, 12, 14, 15, 17, 18, 16, 'financial', 10, 11, 19, 20, 21, 22]
   const dividerNames = { legal: 'LEGAL DOCUMENTS (A-D)', technical: 'TECHNICAL DOCUMENTS (E-I)', financial: 'FINANCIAL DOCUMENTS (J-K)' }
@@ -896,7 +905,7 @@ export function getBidPackageDocuments({
     wordSection: 'initaoDivider',
     generate: () => generateInitaoDividerPreview(dividerPages[key], setup),
   })
-  const orderedDocuments = omnibusVariant === 'initao_lgu'
+  const orderedDocuments = resolveDocumentTemplate(setup) === 'initao_lgu'
     ? initaoOrder.map(item => typeof item === 'number' ? defaultDocuments[item - 1] : divider(item))
     : defaultDocuments
 
@@ -927,7 +936,7 @@ export function getBidPackageDocuments({
     return [entry, supporting]
   })
 
-  if (orderedDocuments.length !== (omnibusVariant === 'initao_lgu' ? 25 : 22)) {
+  if (orderedDocuments.length !== (resolveDocumentTemplate(setup) === 'initao_lgu' ? 25 : 22)) {
     throw new Error(
       'The bid package must contain 23 sections, or 26 with Initao dividers.'
     )

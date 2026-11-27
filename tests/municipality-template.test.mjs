@@ -1,38 +1,31 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createServer } from 'vite'
-import { resolveMunicipalityTemplate, selectMunicipalityTemplate } from '../src/lib/municipalityTemplate.js'
+import { resolveMunicipalityTemplate, selectMunicipalityTemplate, resolveDocumentTemplate } from '../src/lib/municipalityTemplate.js'
 
-test('municipality determines the automatic template, including stale saved variants', () => {
-  for (const municipality of ['Initao', ' INITAO ', 'Municipality of Initao']) {
+test('document setup defaults to Default and Omnibus to Initao regardless of municipality', () => {
+  for (const municipality of ['Initao', 'Salay', 'Sumilao', '', undefined]) {
+    assert.equal(resolveDocumentTemplate({ municipality }), 'old_default')
+    assert.equal(resolveMunicipalityTemplate(municipality, {}), 'initao_lgu')
     assert.equal(resolveMunicipalityTemplate(municipality, { templateVariant: 'old_default' }), 'initao_lgu')
   }
-  for (const municipality of ['Salay', 'Sumilao', '', undefined]) {
-    assert.equal(resolveMunicipalityTemplate(municipality, { templateVariant: 'initao_lgu' }), 'old_default')
-  }
 })
-
-test('manual selections remain editable and survive reload for the same municipality', () => {
-  const selected = JSON.parse(JSON.stringify(selectMunicipalityTemplate('Salay', { templateVariant: 'initao_lgu' })))
-  assert.equal(resolveMunicipalityTemplate(' SALAY ', selected), 'initao_lgu')
-  assert.equal(resolveMunicipalityTemplate('Sumilao', selected), 'old_default')
-  const defaultInInitao = selectMunicipalityTemplate('Initao', { templateVariant: 'old_default' })
-  assert.equal(resolveMunicipalityTemplate('Initao', defaultInInitao), 'old_default')
-  assert.equal(resolveMunicipalityTemplate('Salay', defaultInInitao), 'old_default')
+test('manual choices survive reload and municipality changes independently', () => {
+  const selected = JSON.parse(JSON.stringify(selectMunicipalityTemplate('Salay', { templateVariant: 'old_default' })))
+  assert.equal(resolveMunicipalityTemplate('Salay', selected), 'old_default')
+  assert.equal(resolveMunicipalityTemplate('Initao', selected), 'old_default')
+  assert.equal(resolveDocumentTemplate({ municipality: 'Initao', documentTemplateVariant: 'initao_lgu' }), 'initao_lgu')
+  assert.equal(resolveMunicipalityTemplate('Initao', { templateVariant: 'initao_lgu', templateMunicipality: 'initao' }), 'initao_lgu')
 })
-
-test('automatic selection and manual changes produce the matching export document order', async () => {
+test('package order follows Document Setup independently of Omnibus selection', async () => {
   const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
   try {
     const { getBidPackageDocuments } = await server.ssrLoadModule('/src/services/pdf/fullBidPackagePdf.js')
-    for (const [municipality, saved, expected] of [
-      ['Initao', {}, true], ['Salay', { templateVariant: 'initao_lgu' }, false],
-      ['Salay', selectMunicipalityTemplate('Salay', { templateVariant: 'initao_lgu' }), true],
-      ['Initao', selectMunicipalityTemplate('Initao', { templateVariant: 'old_default' }), false],
-    ]) {
-      const omnibus = { ...saved, templateVariant: resolveMunicipalityTemplate(municipality, saved) }
-      const documents = getBidPackageDocuments({ setup: { bidderId: 'mikata', municipality }, omnibus })
-      assert.equal(documents.some(entry => entry.wordSection === 'initaoDivider'), expected)
+    for (const documentTemplateVariant of ['old_default', 'initao_lgu']) for (const templateVariant of ['old_default', 'initao_lgu']) {
+      const documents = getBidPackageDocuments({ setup: { bidderId: 'mikata', municipality: 'Salay', documentTemplateVariant }, omnibus: { templateVariant } })
+      assert.equal(documents.some(entry => entry.wordSection === 'initaoDivider'), documentTemplateVariant === 'initao_lgu')
+      const toc = documents.find(entry => entry.wordSection === 1)
+      assert.ok(toc)
     }
   } finally { await server.close() }
 })

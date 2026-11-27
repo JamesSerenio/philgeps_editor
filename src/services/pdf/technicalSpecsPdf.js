@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber'
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
@@ -797,6 +798,7 @@ async function makePdf(
         const [label, value]
         of details
       ) {
+        if (label === 'REFERENCE NUMBER' && !hasReferenceNumber(value)) continue
         const lines = wrap(
           value,
           bold,

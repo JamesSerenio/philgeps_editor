@@ -27,7 +27,7 @@ export async function generateOmnibusPreview(project) {
   // =========================================================
 
   const variant =
-    String(project?.templateVariant ?? '')
+    String(project?.templateVariant ?? 'initao_lgu')
       .trim()
       .toLowerCase() === 'initao_lgu'
       ? 'initao_lgu'

@@ -1,3 +1,4 @@
+import { includeReferenceRow } from '../../lib/referenceNumber'
 import {
   AlignmentType,
   BorderStyle,
@@ -342,7 +343,7 @@ export async function technicalWord({ setup = {}, technical = [], sectionNumber 
     ],
     ['PROJECT TITLE', setup.projectTitle],
     ['REFERENCE NUMBER', setup.referenceNumber],
-  ].map(([label, value]) => ({ label, lines: wrap(value, bold, 10, 283) }))
+  ].filter(includeReferenceRow).map(([label, value]) => ({ label, lines: wrap(value, bold, 10, 283) }))
   const infoHeight = info.reduce(
     (n, row) => n + Math.max(18, row.lines.length * 12.5 + 4),
     0,

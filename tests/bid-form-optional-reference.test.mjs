@@ -5,6 +5,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { createServer } from 'vite'
 import { Document, Packer } from 'docx'
+import { createCanvas } from '@napi-rs/canvas'
 
 test('Bid Form PDF and Word generate with a blank reference and still validate other required fields', async () => {
   const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' })
@@ -33,6 +34,13 @@ test('Bid Form PDF and Word generate with a blank reference and still validate o
           const text = (await (await pdf.getPage(1)).getTextContent()).items
           const referenceSlot = text.filter(part => part.str.trim() && part.transform[4] >= 346 && part.transform[5] > 665 && part.transform[5] < 690)
           assert.equal(referenceSlot.map(part => part.str).join(''), referenceNumber || '')
+          const page = await pdf.getPage(1)
+          const canvas = createCanvas(612, 792)
+          const context = canvas.getContext('2d')
+          await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise
+          const pixels = context.getImageData(216, 111, 329, 17).data
+          const hasInk = pixels.some((value, index) => index % 4 !== 3 && value < 200)
+          assert.equal(hasInk, Boolean(referenceNumber), 'Reference label and value must be visibly absent when blank')
         } finally { await loading.destroy() }
       } finally { URL.revokeObjectURL(url) }
       const sections = await bidFormWord({ setup: { ...setup, referenceNumber }, technical, priceValues })

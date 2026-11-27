@@ -3,7 +3,7 @@ import { documentBidderName, normalizeBidderSetup } from '../lib/bidderCompanies
 import { restoreBidderVariants } from '../lib/bidderProfiles'
 import GenerateDocumentsModal from '../components/GenerateDocumentsModal'
 import { exportFilename } from '../lib/exportFilename'
-import { resolveMunicipalityTemplate, selectMunicipalityTemplate } from '../lib/municipalityTemplate'
+import { resolveMunicipalityTemplate, selectMunicipalityTemplate, resolveDocumentTemplate } from '../lib/municipalityTemplate'
 import { priceScheduleIdentity, loadPriceSchedule, readPriceScheduleCache } from '../lib/priceScheduleIdentity'
 import DashboardIcon from '../components/DashboardIcon'
 
@@ -781,17 +781,18 @@ const setup = baseSetup
                 : undefined,
 
           templateVariant:
-            (activeDocument === 'omnibus' || activeDocument === 'contents')
+            activeDocument === 'omnibus'
               ? (
                   omnibus?.templateVariant === 'initao_lgu'
                     ? 'initao_lgu'
                     : 'old_default'
                 )
-              : templateVariant,
+              : activeDocument === 'contents' ? resolveDocumentTemplate(setup) : templateVariant,
         }
       : null
 
   const previewKey = JSON.stringify({
+    layoutVersion: 2,
     document: activeDocument,
     data: previewData,
   })
@@ -1249,7 +1250,7 @@ function changeSetup(value) {
 
 
 const exportDocumentCount = getBidPackageDocuments({ setup: setup ?? { referenceNumber: id }, omnibus, bidSecurity }).length
-const exportContentKey = JSON.stringify({ closingDate: project?.closing_date ?? project?.closingDate, setup, technical, schedule: scheduleItems, bidSecurity, omnibus, priceValues })
+const exportContentKey = JSON.stringify({ layoutVersion: 2, closingDate: project?.closing_date ?? project?.closingDate, setup, technical, schedule: scheduleItems, bidSecurity, omnibus, priceValues })
 
 
 async function handleGenerateAll(format = 'pdf') {
@@ -1889,16 +1890,9 @@ async function handleGenerateAll(format = 'pdf') {
           value={setup}
           onChange={changeSetup}
           isBlankEditor={isManualProject}
-          templateVariant={
-            omnibus?.templateVariant === 'initao_lgu'
-              ? 'initao_lgu'
-              : 'old_default'
-          }
+          templateVariant={resolveDocumentTemplate(setup)}
           onTemplateChange={(nextVariant) =>
-            changeOmnibus({
-              ...omnibus,
-              templateVariant: nextVariant,
-            })
+            changeSetup({ ...setup, documentTemplateVariant: nextVariant })
           }
         />
 
@@ -1921,9 +1915,7 @@ async function handleGenerateAll(format = 'pdf') {
 
                 <p>{setup.projectTitle}</p>
 
-                <p>
-                  Reference No. {setup.referenceNumber}
-                </p>
+                {String(setup.referenceNumber ?? '').trim() && <p>Reference No. {setup.referenceNumber}</p>}
               </header>
 
               {isPricingDocument &&

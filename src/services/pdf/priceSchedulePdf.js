@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber'
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
@@ -388,22 +389,24 @@ export async function generatePriceSchedulePreview(
         }
       )
 
-      page.drawText('Project ID No.:', {
-        x: 455,
-        y: top,
-        font: regular,
-        size: 9.2,
-      })
-
-      page.drawText(
-        safe(data.referenceNumber),
-        {
-          x: 540,
+      if (hasReferenceNumber(data.referenceNumber)) {
+        page.drawText('Project ID No.:', {
+          x: 455,
           y: top,
-          font: bold,
+          font: regular,
           size: 9.2,
-        }
-      )
+        })
+
+        page.drawText(
+          safe(data.referenceNumber),
+          {
+            x: 540,
+            y: top,
+            font: bold,
+            size: 9.2,
+          }
+        )
+      }
 
       top -= 18
 

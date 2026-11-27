@@ -63,7 +63,7 @@ test('Mega Pluto profile, legal name, custom address and variants survive compan
   assert.equal(setup.corporateSecretaryName, '')
   assert.deepEqual(setup.financials, {})
   assert.equal(setup.businessAddress, 'Kihare, Bukidnon, 8703')
-  assert.equal(restored.omnibus.templateVariant, 'old_default')
+  assert.equal(restored.omnibus.templateVariant, 'initao_lgu')
   setup = { ...setup, registeredBusinessName: 'TEST REGISTERED MEGA PLUTO', submittedBy: 'TEST OWN PERSON',
     businessAddress: 'TEST CUSTOM ADDRESS', phone: 'TEST PHONE', financials: { currentAssets: 500, multiplier: 10 } }
   assert.equal(documentBidderName(setup), 'TEST REGISTERED MEGA PLUTO')

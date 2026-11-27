@@ -1,3 +1,4 @@
+import { includeReferenceRow } from '../../lib/referenceNumber'
 import { getBidderCompany } from '../../lib/bidderAssets'
 import { getOngoingContractEntries } from '../../lib/ongoingContracts'
 import { templateWord } from './templateWord'
@@ -239,7 +240,7 @@ function identityTable(setup, sectionNumber = 7) {
     ],
   ]
 
-  const rows = entries.map(
+  const rows = entries.filter(includeReferenceRow).map(
     ([label, data, height], index) =>
       new TableRow({
         height: {

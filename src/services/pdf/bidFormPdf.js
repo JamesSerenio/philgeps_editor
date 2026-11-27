@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber'
 import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 
 import {
@@ -607,6 +608,11 @@ export async function generateBidFormPreview(
   // ===================================================
   // PAGE 1 - REFERENCE NUMBER
   // ===================================================
+
+  if (!hasReferenceNumber(bid.referenceNumber)) {
+    // Clear the complete template label and value line, including glyph edges.
+    page1.drawRectangle({ x: 210, y: 660, width: 340, height: 25, color: WHITE })
+  }
 
   put(
     page1,

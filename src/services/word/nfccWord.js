@@ -1,3 +1,4 @@
+import { includeReferenceRow } from '../../lib/referenceNumber'
 
 import { getBidderCompany } from '../../lib/bidderAssets'
 import { templateWord } from './templateWord'
@@ -256,7 +257,7 @@ function informationTable(setup) {
     ],
   ]
 
-  const rows = entries.map(([label, value], index) => {
+  const rows = entries.filter(includeReferenceRow).map(([label, value], index) => {
     return new TableRow({
       height: {
         value: PT(index === 1 ? 26 : 19),

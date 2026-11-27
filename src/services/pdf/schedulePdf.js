@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber'
 
 import {
   PDFDocument,
@@ -483,6 +484,7 @@ export async function generateScheduleRequirementsPreview(
       ]
 
       for (const [label, value] of fields) {
+        if (label === 'REFERENCE NUMBER' && !hasReferenceNumber(value)) continue
         const rows = wrapText(
           value,
           fonts.bold,

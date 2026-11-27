@@ -5,9 +5,9 @@ export default function OmnibusEditor({
   saveStatus,
 }) {
   const templateVariant =
-    value?.templateVariant === 'initao_lgu'
-      ? 'initao_lgu'
-      : 'old_default'
+    value?.templateVariant === 'old_default'
+      ? 'old_default'
+      : 'initao_lgu'
 
   function handleTemplateChange(event) {
     const next = {

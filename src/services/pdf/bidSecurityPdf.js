@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber'
 import { getTemplatePath, fetchAsset } from '../../lib/bidderAssets'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
@@ -311,7 +312,7 @@ export async function generateBidSecurityPreview(project) {
     draw(page1, venue, 72, 692, timesBold, venueSize)
     draw(page1, ') S.S.', parenthesisX, 692, timesBold, venueSize)
 
-    erase(page1, 341, 632, 65, 17)
+    erase(page1, hasReferenceNumber(referenceNumber) ? 341 : 224, 632, hasReferenceNumber(referenceNumber) ? 65 : 182, 17)
 
     draw(
       page1,

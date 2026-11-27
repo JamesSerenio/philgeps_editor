@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber'
 import { formatBidDate } from '../../lib/bidFormData'
 import { AlignmentType, Bookmark, BorderStyle, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, SectionType, PageOrientation } from 'docx'
 
@@ -34,10 +35,7 @@ export function details(setup) {
       (setup.projectTitle ?? '')
     ),
 
-    paragraph(
-      'Reference No.: ' +
-      (setup.referenceNumber ?? '')
-    ),
+    ...(hasReferenceNumber(setup.referenceNumber) ? [paragraph('Reference No.: ' + String(setup.referenceNumber).trim())] : []),
   ]
 }
 

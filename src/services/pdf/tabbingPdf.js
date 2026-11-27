@@ -1,3 +1,4 @@
+import { hasReferenceNumber } from '../../lib/referenceNumber.js'
 import { applyBidderLetterhead } from './bidderLetterhead'
 import { documentBidderName } from '../../lib/bidderCompanies'
 import { getBidderCompany, getBidderLogo } from '../../lib/bidderAssets'
@@ -52,7 +53,7 @@ export async function generateTabbingPreview(data = {}) {
     draw(data.procuringEntity, 287.16, 191.09, 285, 12, { maxLines: 2, color: red })
     erase(286, 205, 291, 38)
     draw(data.projectTitle, 287.16, 218.47, 285, 12, { maxLines: 2, color: red })
-    erase(286, 246, 291, 18)
+    erase(hasReferenceNumber(data.referenceNumber) ? 286 : 34, 246, hasReferenceNumber(data.referenceNumber) ? 291 : 543, 18)
     draw(data.referenceNumber, 287.16, 259.27, 285, 12, { color: red })
     erase(34, 349, 532, 110)
     draw(data.projectTitle, 45, 375.72, 506, 27.6, { centered: true, maxLines: 3, leading: 35.5 })

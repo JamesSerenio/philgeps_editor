@@ -11,7 +11,7 @@ export default function DeclarationForm({ title, designationField, project, comp
   }
   return (
     <section className="technical-editor declaration-editor" aria-label={title}>
-      {!compact && <header className="technical-header"><div><span className="eyebrow">Bidding documents</span><h2>{title}</h2><p>{project?.title || project?.project_title || project?.projectTitle}</p><p>Reference No. {value.referenceNumber}</p></div></header>}
+      {!compact && <header className="technical-header"><div><span className="eyebrow">Bidding documents</span><h2>{title}</h2><p>{project?.title || project?.project_title || project?.projectTitle}</p>{String(value.referenceNumber ?? '').trim() && <p>Reference No. {value.referenceNumber}</p>}</div></header>}
       <div className="declaration-fields">
         <fieldset><legend>Template Variant</legend><label>Template<select value={value.templateVariant} onChange={(event) => change('templateVariant', event.target.value)}><option value="old">OLD / Default</option><option value="initao_lgu">INITAO LGU</option></select></label></fieldset>
         {declarationGroups.filter(([group]) => !compact || group === 'Notarial / Jurat').map(([group, fields]) => <fieldset key={group}><legend>{group}</legend><div className="declaration-grid">{fields.map(([field, label, type = 'text']) => {

@@ -22,13 +22,13 @@ export function restoreBidderVariants(previousSetup, nextSetup, bidSecurity, omn
   const nextId = nextSetup?.bidderId
   if (!previousId || !nextId || previousId === nextId) return { setup: nextSetup, bidSecurity, omnibus }
   const variants = { ...previousSetup.bidderTemplateVariants, ...nextSetup.bidderTemplateVariants,
-    [previousId]: { bidSecurity: bidSecurity?.templateVariant ?? 'old_default', omnibus: omnibus?.templateVariant ?? 'old_default' } }
+    [previousId]: { bidSecurity: bidSecurity?.templateVariant ?? 'old_default', omnibus: omnibus?.templateVariant ?? 'initao_lgu' } }
   const selected = variants[nextId] ?? (['MEGA_PLUTO'].includes(previousId) || ['MEGA_PLUTO'].includes(nextId)
     ? { bidSecurity: 'old_default', omnibus: 'old_default' }
     : variants[previousId])
   return { setup: { ...nextSetup, bidderTemplateVariants: variants },
     bidSecurity: { ...bidSecurity, templateVariant: selected.bidSecurity },
-    omnibus: { ...omnibus, templateVariant: selected.omnibus } }
+    omnibus: { ...omnibus, templateVariant: variants[nextId]?.omnibus ?? 'initao_lgu', templateSelection: 'manual' } }
 }
 
 export function selectBidderProfile(setup, previousId, nextId) {
