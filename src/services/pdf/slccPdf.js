@@ -185,7 +185,8 @@ function wrapParagraph(
 
     let line = ''
 
-    for (const word of paragraph.split(/\s+/)) {
+    // Slashes separate work categories; wrap there before splitting any word.
+    for (const word of paragraph.replace(/\/(?=\S)/g, '/ ').split(/\s+/)) {
       const next = line
         ? `${line} ${word}`
         : word
@@ -252,7 +253,7 @@ function measureCell(
       text,
       font,
       size,
-      columnWidth - 14,
+      columnWidth - 8,
       preserveLines
     )
 
@@ -898,7 +899,7 @@ export async function generateSlccPreview(
 
   const titleY = Math.max(
     y + 13,
-    91
+    hasReferenceNumber(data.referenceNumber) ? 91 : 0
   )
 
   const titleSize = 10
@@ -966,7 +967,7 @@ export async function generateSlccPreview(
 
   const tableTop = Math.max(
     businessY + 9,
-    171
+    hasReferenceNumber(data.referenceNumber) ? 171 : 0
   )
 
   const fields = [entry.ownerDetails, entry.natureOfWork, entry.description,

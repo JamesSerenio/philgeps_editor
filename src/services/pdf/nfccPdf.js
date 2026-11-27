@@ -688,6 +688,7 @@ export async function generateNfccPreview(project) {
   // ======================================
 
   const addressLeading = 14
+  const omittedReferenceHeight = hasReferenceNumber(referenceNumber) ? 0 : 26
 
   const titleExtraHeight = Math.max(
     0,
@@ -699,7 +700,7 @@ export async function generateNfccPreview(project) {
     Math.max(
       0,
       addressLines.length - 1
-    ) * addressLeading
+    ) * addressLeading - omittedReferenceHeight
 
   if (extraHeight) {
     // Keep original body, table,
@@ -716,15 +717,6 @@ export async function generateNfccPreview(project) {
       )
 
     bodyDocument.addPage(bodyPage)
-
-    bodyPage.drawRectangle({
-      x: 0,
-      y: bodyHeight,
-      width: page.getWidth(),
-      height:
-        page.getHeight() - bodyHeight,
-      color: white,
-    })
 
     const body = await pdfDoc.embedPage(
       bodyPage,
@@ -748,10 +740,7 @@ export async function generateNfccPreview(project) {
 
     if (extraHeight <= 120) {
       page.drawPage(body, {
-        x: 0,
-        y: -extraHeight,
-        width: page.getWidth(),
-        height: bodyHeight,
+        x: 0, y: -extraHeight, width: page.getWidth(), height: bodyHeight,
       })
     } else {
       const continuation =
@@ -777,10 +766,10 @@ export async function generateNfccPreview(project) {
 
     page.drawRectangle({
       x: 0,
-      y: bodyHeight,
+      y: bodyHeight + Math.max(0, -extraHeight),
       width: page.getWidth(),
       height:
-        page.getHeight() - bodyHeight,
+        page.getHeight() - bodyHeight - Math.max(0, -extraHeight),
       color: white,
     })
 
@@ -826,7 +815,7 @@ export async function generateNfccPreview(project) {
         y:
           options.y <= 715
             ? options.y -
-              titleExtraHeight
+              titleExtraHeight + omittedReferenceHeight
             : options.y,
       })
     }
@@ -860,7 +849,7 @@ export async function generateNfccPreview(project) {
         valueX,
         677 -
           titleExtraHeight -
-          index * addressLeading,
+          index * addressLeading + omittedReferenceHeight,
         valueSize,
         bold,
         red

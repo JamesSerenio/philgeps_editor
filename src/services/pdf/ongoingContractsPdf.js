@@ -303,7 +303,9 @@ export async function generateOngoingContractsPreview(project) {
       { label: 'NAME OF THE PROCURING ENTITY', top: 34, lines: entity },
       { label: 'PROJECT TITLE', top: titleTop, lines: title },
       { label: 'REFERENCE NUMBER', top: referenceTop, lines: reference },
-    ], bottom: referenceTop + Math.max(0, reference.length - 1) * lineHeight }
+    ], bottom: hasReferenceNumber(referenceNumber)
+      ? referenceTop + Math.max(0, reference.length - 1) * lineHeight
+      : titleTop + Math.max(0, title.length - 1) * lineHeight }
   }
   const headerSize = 10
   let header = headerLayout(headerSize)
@@ -316,13 +318,14 @@ export async function generateOngoingContractsPreview(project) {
     text(':', topColonX, y, 11.5, regular)
     row.lines.forEach((line, index) => text(line, topValueX, y - index * header.lineHeight, headerSize, bold))
   }
+  const omittedReferenceSpace = hasReferenceNumber(referenceNumber) ? 0 : Math.max(0, 130 - (header.bottom + 26))
   for (const [index, title] of [
     'STATEMENT OF ALL ITS ONGOING GOVERNMENT & PRIVATE CONTRACTS INCLUDING CONTRACTS',
     'AWARDED BUT NOT YET STARTED',
   ].entries()) {
     const width = bold.widthOfTextAtSize(title, 10)
     const x = (page.getWidth() - width) / 2
-    const y = page.getHeight() - 130 - index * 13
+    const y = page.getHeight() - 130 + omittedReferenceSpace - index * 13
     text(title, x, y, 10, bold)
     page.drawLine({ start: { x, y: y - 1.5 }, end: { x: x + width, y: y - 1.5 }, thickness: 0.5, color: black })
   }
@@ -335,15 +338,15 @@ export async function generateOngoingContractsPreview(project) {
   const bidderColonX = 365
   const bidderValueX = 392
 
-  text('REGISTERED BUSINESS NAME OF BIDDER', bidderLabelX, 400, 11, regular)
-  text(':', bidderColonX, 400, 11, regular)
-  wrapped(bidderName, bidderValueX, 400, 380, 11, bold, 13)
+  text('REGISTERED BUSINESS NAME OF BIDDER', bidderLabelX, 400 + omittedReferenceSpace, 11, regular)
+  text(':', bidderColonX, 400 + omittedReferenceSpace, 11, regular)
+  wrapped(bidderName, bidderValueX, 400 + omittedReferenceSpace, 380, 11, bold, 13)
 
-  text('BUSINESS ADDRESS', bidderLabelX, 373, 11, regular)
-  text(':', bidderColonX, 373, 11, regular)
-  wrapped(businessAddress, bidderValueX, 373, 380, 11, bold, 13)
+  text('BUSINESS ADDRESS', bidderLabelX, 373 + omittedReferenceSpace, 11, regular)
+  text(':', bidderColonX, 373 + omittedReferenceSpace, 11, regular)
+  wrapped(businessAddress, bidderValueX, 373 + omittedReferenceSpace, 380, 11, bold, 13)
 
-  let tableTop = 255.25
+  let tableTop = 255.25 - omittedReferenceSpace
   let remaining = [...preparedRows]
   let tableBottom
   let showHeader = true

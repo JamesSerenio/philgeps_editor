@@ -71,6 +71,17 @@ test('blank/whitespace references omit complete visible PDF labels for all four 
         try {
           const pages = await readPdfLayout(url, name)
           const text = pages.flatMap(page=>page.fragments.map(part=>part.str)).join(' ')
+          if (['slccPdf', 'ongoingContractsPdf'].includes(name) && !referenceNumber.trim()) {
+            const title = pages[0].fragments.find(part => part.str === 'PROJECT TITLE')
+            const heading = pages[0].fragments.find(part => part.str.startsWith(name === 'slccPdf' ? "STATEMENT OF BIDDER'S" : 'STATEMENT OF ALL ITS'))
+            assert.ok(heading.y - title.y < 45, name + ' must close the blank reference gap')
+          }
+          if (name === 'nfccPdf' && !referenceNumber.trim()) {
+            const title = pages[0].fragments.find(part => part.str === 'PROJECT TITLE')
+            const contractor = pages[0].fragments.find(part => part.str === 'CONTRACTOR')
+            assert.ok(contractor.y - title.y < 40, 'NFCC must close the omitted reference row gap')
+            assert.match(text, /undersigned/)
+          }
           if (!referenceNumber.trim()) assert.doesNotMatch(text, forbidden, bidderId+' '+name+' blank reference label')
           else assert.match(text, /TEST-REF-123/, bidderId+' '+name+' populated reference missing')
         } finally { URL.revokeObjectURL(url) }

@@ -51,6 +51,7 @@ test('SLCC and Ongoing PDFs embed Bookman Old Style and use 10pt for every text 
               if (generate === generateSlccPreview && slccVariant !== 'none') {
                 const nature = content.items.filter(part => part.transform[4] >= 262 && part.transform[4] < 352 && part.transform[5] < 350 && part.str.trim() && part.str !== 'NONE')
                 assert.equal(nature.map(part => part.str).join('').replace(/\s/g, ''), 'PURCHASE/SUPPLY/INSTALLATION')
+                assert.ok(nature.some(part => part.str.includes('INSTALLATION')), 'INSTALLATION must stay on one line')
                 for (const part of nature) assert.ok(part.transform[4] + part.width <= 352 - 4, `Nature of Work overflowed its column: ${JSON.stringify({ text: part.str, x: part.transform[4], width: part.width })}`)
               }
             }
