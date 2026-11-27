@@ -1,4 +1,12 @@
 // A unit price may contain five decimal places; delivered amounts use cents.
+export function formatPriceCents(cents, roundToTwoDecimals = false) {
+  const amount = roundToTwoDecimals ? Math.round(Math.round(cents * 1000) / 1000) : cents
+  return (amount / 100).toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: roundToTwoDecimals ? 2 : 5,
+  })
+}
+
 export function priceUnits(value) {
   const number = Number(String(value ?? '').replace(/,/g, ''))
   return Number.isFinite(number) && number > 0 ? Math.round(number * 100000) : 0

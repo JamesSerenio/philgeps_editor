@@ -8,19 +8,13 @@ import {
 
 import { supabase } from '../supabase'
 import { pastedAmount } from '../lib/pastedAmount'
-import { preciseCents, priceAmounts } from '../lib/pricePrecision'
+import { preciseCents, priceAmounts, formatPriceCents } from '../lib/pricePrecision'
 import { groupTechnicalItems } from '../lib/technicalSpecs'
 import { priceScheduleIdentity, loadPriceSchedule, readPriceScheduleCache } from '../lib/priceScheduleIdentity'
 
 // ==========================================
 // PRICE FORMATTING
 // ==========================================
-
-const peso = (cents) =>
-  `₱ ${new Intl.NumberFormat('en-PH', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 5,
-  }).format(cents / 100)}`
 
 const centsOf = preciseCents
 
@@ -83,6 +77,8 @@ export default function PriceScheduleEditor({
   items: sourceItems = [],
   referenceNumber = '',
   projectId = '',
+  roundUpToTwoDecimals = false,
+  onRoundingChange,
   onValuesChange,
 }) {
   const items = groupTechnicalItems(sourceItems)
@@ -520,6 +516,16 @@ export default function PriceScheduleEditor({
         )}
       </div>
 
+      <div className="price-rounding-card">
+        <label className="price-rounding-option">
+          <input type="checkbox" checked={roundUpToTwoDecimals} onChange={event => onRoundingChange?.(event.target.checked)} />
+          <span>
+            <span className="price-rounding-title">Round to 2 decimal places</span>
+            <span className="price-rounding-description">Apply to preview and exports</span>
+          </span>
+        </label>
+      </div>
+
       {/* EMPTY ITEMS */}
 
       {(
@@ -823,7 +829,7 @@ export default function PriceScheduleEditor({
                     }}
                   >
                     {hasPrice
-                      ? peso(amount)
+                      ? `₱ ${formatPriceCents(amount, roundUpToTwoDecimals)}`
                       : '—'}
                   </strong>
                 </div>
@@ -879,7 +885,7 @@ export default function PriceScheduleEditor({
                   }}
                 >
                   {hasPrice
-                    ? peso(finalCents)
+                    ? `₱ ${formatPriceCents(finalCents, roundUpToTwoDecimals)}`
                     : '₱ —'}
                 </div>
               </div>

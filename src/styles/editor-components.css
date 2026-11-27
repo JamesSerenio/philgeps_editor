@@ -41,6 +41,33 @@
 .pdf-editor-shell .premium-pricing strong { font-variant-numeric: tabular-nums; }
 
 .premium-pricing { padding: 2px; color: var(--editor-ink); }
+.pdf-editor-shell .premium-pricing .price-rounding-card {
+  margin: 12px 0 16px;
+  padding: 12px;
+  border: 1px solid #cfe5db;
+  border-radius: 12px;
+  background: #f5fbf8;
+}
+.pdf-editor-shell .premium-pricing .price-rounding-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  cursor: pointer;
+}
+.pdf-editor-shell .premium-pricing .price-rounding-option input[type="checkbox"] {
+  flex: 0 0 16px;
+  width: 16px !important;
+  height: 16px;
+  min-height: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  accent-color: #087f5b;
+  box-shadow: none;
+}
+.price-rounding-option > span { min-width: 0; }
+.price-rounding-title { display: block; color: #164b3b; font-size: 12px; font-weight: 600; line-height: 1.5; }
+.price-rounding-description { display: block; margin-top: 2px; color: #62776d; font-size: 10px; line-height: 1.5; }
 .premium-spec-line { display: grid; grid-template-columns: 26px minmax(0,1fr) 24px; gap: 6px; align-items: start; margin-bottom: 14px; }
 .premium-spec-line > div { grid-column: 2; grid-row: 1 / 3; }
 .premium-spec-line > input { grid-column: 2; grid-row: 3; }

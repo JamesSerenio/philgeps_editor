@@ -319,13 +319,14 @@ export async function generateOngoingContractsPreview(project) {
     row.lines.forEach((line, index) => text(line, topValueX, y - index * header.lineHeight, headerSize, bold))
   }
   const omittedReferenceSpace = hasReferenceNumber(referenceNumber) ? 0 : Math.max(0, 130 - (header.bottom + 26))
+  const headingBalanceOffset = hasReferenceNumber(referenceNumber) ? 0 : 14
   for (const [index, title] of [
     'STATEMENT OF ALL ITS ONGOING GOVERNMENT & PRIVATE CONTRACTS INCLUDING CONTRACTS',
     'AWARDED BUT NOT YET STARTED',
   ].entries()) {
     const width = bold.widthOfTextAtSize(title, 10)
     const x = (page.getWidth() - width) / 2
-    const y = page.getHeight() - 130 + omittedReferenceSpace - index * 13
+    const y = page.getHeight() - 130 + omittedReferenceSpace - headingBalanceOffset - index * 13
     text(title, x, y, 10, bold)
     page.drawLine({ start: { x, y: y - 1.5 }, end: { x: x + width, y: y - 1.5 }, thickness: 0.5, color: black })
   }

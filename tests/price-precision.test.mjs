@@ -1,9 +1,20 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { priceAmounts, preciseCents } from '../src/lib/pricePrecision.js'
+import { priceAmounts, preciseCents, formatPriceCents } from '../src/lib/pricePrecision.js'
 import { summaryRows } from '../src/lib/summaryPrices.js'
 import { buildBidFormData } from '../src/lib/bidFormData.js'
 import { createServer } from 'vite'
+
+test('optional two-decimal display rounds half up without altering calculation precision', () => {
+  assert.equal(formatPriceCents(1944444.45, true), '19,444.44')
+  assert.equal(formatPriceCents(1944444.5, true), '19,444.45')
+  assert.equal(formatPriceCents(1944444.499, true), '19,444.44')
+  assert.equal(formatPriceCents(100.5, true), '1.01')
+  assert.equal(formatPriceCents(1944444.45), '19,444.4445')
+  assert.equal(formatPriceCents(1944445, true), '19,444.45')
+  assert.equal(formatPriceCents(0, true), '0.00')
+  assert.equal(formatPriceCents(1999999.999, true), '20,000.00')
+})
 
 test('three and five decimal deductions are preserved until the delivered total is rounded', () => {
   for (const deduction of ['11.111', '11.11111']) {

@@ -4,6 +4,17 @@ import { createServer } from 'vite'
 import { bidderAddresses, changeBidderAddress, getDefaultBidderAddress, selectBidder } from '../src/lib/bidderAddresses.js'
 import { documentBidderName, normalizeBidderSetup } from '../src/lib/bidderCompanies.js'
 
+test('Megapluto uses the complete address for new and previously saved defaults', () => {
+  const address = 'Kihare, Tankulan, Manolo Fortich, Bukidnon, 8703'
+  const saved = normalizeBidderSetup({ bidderId: 'mega-pluto', businessAddress: 'Kihare, Bukidnon, 8703',
+    companyAddress: 'Kihare, Bukidnon, 8703', bidderBusinessAddresses: { 'mega-pluto': 'Kihare, Bukidnon, 8703' } })
+  assert.equal(saved.businessAddress, address)
+  assert.equal(saved.companyAddress, address)
+  assert.equal(saved.bidderBusinessAddresses.MEGA_PLUTO, address)
+  assert.equal(getDefaultBidderAddress('MEGA_PLUTO'), address)
+  assert.equal(normalizeBidderSetup({ bidderId: 'MEGA_PLUTO', businessAddress: 'Custom office' }).businessAddress, 'Custom office')
+})
+
 test('legacy Mikata names become MIKATA PRIME CORPORATION without losing saved project data', () => {
   const saved = { bidderId: 'mikata', bidderName: 'MIKATA CORPORATION', businessAddress: 'Custom address', slccVariant: 'cctv' }
   const updated = normalizeBidderSetup(saved)
@@ -33,7 +44,7 @@ test('custom addresses persist by bidder through switching and a saved JSON roun
   let setup = selectBidder({}, 'BUILTECH SOLUTIONS')
   setup = changeBidderAddress(setup, 'Custom Builtech address')
   setup = selectBidder(setup, 'MEGA PLUTO')
-  assert.equal(setup.businessAddress, 'Kihare, Bukidnon, 8703')
+  assert.equal(setup.businessAddress, 'Kihare, Tankulan, Manolo Fortich, Bukidnon, 8703')
   setup = JSON.parse(JSON.stringify({ documentSetup: setup })).documentSetup
   setup = selectBidder(setup, 'BUILTECH SOLUTIONS')
   assert.equal(setup.businessAddress, 'Custom Builtech address')

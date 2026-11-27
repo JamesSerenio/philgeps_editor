@@ -2,7 +2,7 @@ import { hasReferenceNumber } from '../../lib/referenceNumber'
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { quantityUnitLayout, quantityText, quantityColumnWidths } from '../../lib/quantityUnitLayout'
-import { preciseCents, priceAmounts } from '../../lib/pricePrecision'
+import { preciseCents, priceAmounts, formatPriceCents } from '../../lib/pricePrecision'
 
 // =====================================================
 // PAGE CONFIGURATION - A4 LANDSCAPE
@@ -69,13 +69,6 @@ function safe(value) {
 
 function pesoCents(value) {
   return preciseCents(value)
-}
-
-function money(cents) {
-  return (cents / 100).toLocaleString('en-PH', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 5,
-  })
 }
 
 function getEntry(values, item, index) {
@@ -703,7 +696,7 @@ export async function generatePriceSchedulePreview(
       if (firstFragment) {
         const display = (value) =>
           entry.hasPrice
-            ? money(value)
+            ? formatPriceCents(value, data.roundUpToTwoDecimals)
             : ''
 
         const fields = [
@@ -808,7 +801,7 @@ export async function generatePriceSchedulePreview(
 
   boxText(
     page,
-    money(grandTotal),
+    formatPriceCents(grandTotal, data.roundUpToTwoDecimals),
     EDGE[10],
     cursor,
     WIDTHS[10],

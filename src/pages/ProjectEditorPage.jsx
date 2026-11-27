@@ -1610,6 +1610,8 @@ async function handleGenerateAll(format = 'pdf') {
           projectId={id}
           items={technical}
           referenceNumber={setup.referenceNumber}
+          roundUpToTwoDecimals={setup.roundUpToTwoDecimals === true}
+          onRoundingChange={checked => changeSetup({ ...setup, roundUpToTwoDecimals: checked })}
           onValuesChange={setPriceValues}
         />
       )

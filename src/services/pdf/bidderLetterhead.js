@@ -1,9 +1,10 @@
 import { rgb, StandardFonts } from 'pdf-lib'
 import { getBidderCompany, getBidderLogo, letterheadLogoLayout } from '../../lib/bidderAssets'
 import { getDefaultBidderAddress } from '../../lib/bidderAddresses'
-import { MEGA_PLUTO_DISPLAY_NAME } from '../../lib/bidderCompanies'
+import { MEGA_PLUTO_DISPLAY_NAME, normalizeBidderSetup } from '../../lib/bidderCompanies'
 
 export async function applyBidderLetterhead(document, page, setup, geometry, suppliedLogo) {
+  setup = normalizeBidderSetup(setup)
   const company = getBidderCompany(setup)
   // Replace the old company title while retaining the existing logo/contact lines.
   if (company.id === 'mikata') {
